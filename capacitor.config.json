@@ -1,0 +1,9 @@
+{
+  "appId": "app.mathclash.game",
+  "appName": "Math Clash",
+  "webDir": "build/app-www",
+  "android": {
+    "backgroundColor": "#0A1230",
+    "allowMixedContent": false
+  }
+}

@@ -10,6 +10,7 @@ import { sfx, buzz } from '../ui/audio.js';
 import { toast, confetti, reducedMotion } from '../ui/fx.js';
 import { t, locale } from '../i18n.js';
 import { commitRound } from '../core/progression.js';
+import * as pgs from '../net/playgames.js';
 import * as net from '../net/online.js';
 import { topbar, seg, field } from './setup.js';
 
@@ -106,6 +107,13 @@ registerScreen('online', (app) => {
       bigBtn('weeklyBtn', '🌧️', '#3DDC97', t('net.weekly'), t('net.weeklySub'), () => startWeekly()),
       bigBtn('lbBtn', '📊', '#FF9F5A', t('net.leaderboards'), t('net.leaderboardsSub'), () => app.go('leaderboards')),
       bigBtn('friendsBtn', '🤝', '#FF7BB0', t('net.friends'), t('net.friendsSub'), () => app.go('friends'))));
+    if (pgs.available() && pgs.signedIn()) {
+      const row = h('div.row-btns.section');
+      if (pgs.hasAchievements()) row.append(h('button.btn.ghost', { type: 'button', on: { click: () => pgs.showAchievements() } }, '🏅 ' + t('net.pgsAch')));
+      if (pgs.hasLeaderboards()) row.append(h('button.btn.ghost', { type: 'button', on: { click: () => pgs.showLeaderboards() } }, '📈 ' + t('net.pgsLb')));
+      if (app.data.online?.pgs) box.append(h('p.note', t('net.pgsLinked')));
+      if (row.children.length) box.append(row);
+    }
     if (meRes.rewards.length) {
       box.append(h('section.card.section', h('h2.section-title', '🏅 ' + t('net.myRewards')),
         ...meRes.rewards.map((r) => h('div.row', h('span', { style: { fontSize: '1.6rem' } }, r.icon), h('div.grow', h('div.t', L(r, 'label')), h('div.d', t('net.rank', { n: r.rank })))))));

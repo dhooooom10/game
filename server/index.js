@@ -10,6 +10,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { openDb } from './db.js';
 import { createServices, HttpError, OCCASIONS } from './services.js';
 import { createRealtime } from './realtime.js';
+import { createPlayGames } from './playgames.js';
 import { dailyRain } from '../public/src/core/modes.js';
 
 const PUBLIC = fileURLToPath(new URL('../public/', import.meta.url));
@@ -20,8 +21,9 @@ const SECURITY = {
   'Content-Security-Policy': "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'",
 };
 
-export function startServer({ port = 0, dbPath = ':memory:', adminToken = '', now = () => Date.now(), realtimeOpts = {}, corsOrigins = [], registerLimit = 40 } = {}) {
+export function startServer({ port = 0, dbPath = ':memory:', adminToken = '', now = () => Date.now(), realtimeOpts = {}, corsOrigins = [], registerLimit = 40, playGames = {} } = {}) {
   const db = openDb(dbPath);
+  const pgs = createPlayGames(playGames);
   const svc = createServices(db, { now });
   svc.currentSeason();
 
@@ -60,11 +62,19 @@ export function startServer({ port = 0, dbPath = ':memory:', adminToken = '', no
 
   route('GET', '/api/health', () => ({ ok: true, time: now() }));
   route('POST', '/api/register', async (req, _p, body, ip) => { limit(ip, 'register', registerLimit, 3600000); /* المدارس قد تشترك في عنوان واحد */ return svc.register(body.name); });
+  /* تسجيل الدخول/الربط عبر Google Play Games (تطبيق Android فقط) */
+  route('POST', '/api/auth/playgames', async (req, _p, body, ip) => {
+    limit(ip, 'pgs', 30, 600000);
+    let cur = null;
+    try { cur = svc.auth(bearer(req)); } catch (e) { if (e.code === 'banned') throw e; }
+    const v = await pgs.verify(body.authCode);
+    return svc.linkPlayGames(v.playerId, v.displayName, cur?.id || null);
+  });
   route('GET', '/api/me', (req) => { const p = player(req); return { player: svc.publicPlayer(p), rating: svc.rating(p.id), rewards: svc.rewards(p.id) }; });
   route('DELETE', '/api/me', (req) => { const p = player(req); svc.deleteAccount(p.id); return { ok: true }; });
   route('POST', '/api/me/name', async (req, _p, body) => { const p = player(req); return { name: svc.rename(p, body.name) }; });
   route('POST', '/api/me/skin', async (req, _p, body) => { const p = player(req); svc.setSkin(p, String(body.skin || '')); return { ok: true }; });
-  route('GET', '/api/config', (req) => { let pid = null; try { pid = svc.auth(bearer(req))?.id; } catch { /* ignore */ } return svc.config(pid); });
+  route('GET', '/api/config', (req) => { let pid = null; try { pid = svc.auth(bearer(req))?.id; } catch { /* ignore */ } return { ...svc.config(pid), playGames: pgs.enabled }; });
   route('GET', '/api/leaderboard/:board', (req, p, _b, _ip, url) => {
     let pid = null; try { pid = svc.auth(bearer(req))?.id; } catch { /* ignore */ }
     if (p.board === 'friends' && !pid) throw new HttpError(401, 'unauthorized');
@@ -171,6 +181,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const adminToken = process.env.ADMIN_TOKEN || '';
   if (adminToken.length < 12) console.warn('⚠️  ADMIN_TOKEN غير مضبوط أو قصير (12 حرفًا على الأقل) — لوحة الإدارة معطّلة.');
   const s = await startServer({ port: +process.env.PORT || 8080, dbPath: process.env.DB_PATH || './data/mathclash.db', adminToken,
-    corsOrigins: (process.env.CORS_ORIGINS || '').split(',').filter(Boolean) });
+    corsOrigins: (process.env.CORS_ORIGINS || '').split(',').filter(Boolean),
+    playGames: { clientId: process.env.GOOGLE_CLIENT_ID || '', clientSecret: process.env.GOOGLE_CLIENT_SECRET || '' } });
   console.log(`Math Clash server on ${s.url}  (admin: ${s.url}/admin)`);
 }

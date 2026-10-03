@@ -42,6 +42,11 @@ export async function api(method, path, body, { auth = true, timeout = 10000 } =
 export async function ensureIdentity(app) {
   const d = app.data;
   if (d.online?.token) { identity = d.online; return identity; }
+  // داخل تطبيق Android: حساب Play Games يسترجع التقدّم الأونلاين على أي جهاز
+  try {
+    const pg = await import('./playgames.js');
+    if (pg.available() && (await pg.signIn({ interactive: true })) && (await pg.linkAccount(app))) { identity = d.online; return identity; }
+  } catch { /* نكمل بالتسجيل العادي */ }
   const name = (app.playerName || '').trim();
   const r = await api('POST', '/api/register', { name }, { auth: false });
   d.online = { id: r.id, token: r.token, name: r.name, code: r.code };

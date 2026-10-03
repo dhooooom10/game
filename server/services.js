@@ -68,7 +68,9 @@ export function createServices(db, { now = () => Date.now() } = {}) {
   };
   S.auth = (token) => {
     if (!token) return null;
-    const p = db.get('SELECT * FROM players WHERE token_hash=?', hashToken(token));
+    const h = hashToken(token);
+    let p = db.get('SELECT * FROM players WHERE token_hash=?', h);
+    if (!p) p = db.get('SELECT p.* FROM player_tokens t JOIN players p ON p.id=t.player_id WHERE t.token_hash=?', h);
     if (!p) return null;
     if (p.banned) throw new HttpError(403, 'banned');
     db.run('UPDATE players SET last_seen=? WHERE id=?', now(), p.id);
@@ -76,11 +78,39 @@ export function createServices(db, { now = () => Date.now() } = {}) {
   };
   /** حذف الحساب وكل بياناته (متطلب من Google Play) */
   S.deleteAccount = (pid) => db.tx(() => {
-    for (const sql of ['DELETE FROM runs WHERE player_id=?', 'DELETE FROM friends WHERE a=? OR b=?', 'DELETE FROM season_ratings WHERE player_id=?',
+    for (const sql of ['DELETE FROM runs WHERE player_id=?', 'DELETE FROM player_tokens WHERE player_id=?', 'DELETE FROM friends WHERE a=? OR b=?', 'DELETE FROM season_ratings WHERE player_id=?',
       'DELETE FROM rewards WHERE player_id=?', 'DELETE FROM challenges WHERE creator=?', 'DELETE FROM players WHERE id=?']) {
       const n = (sql.match(/\?/g) || []).length;
       db.run(sql, ...Array(n).fill(pid));
     }
+  });
+  /**
+   * ربط Google Play Games: حساب Play هو المرجع الدائم للاعب.
+   *  - إن كان حساب Play مربوطًا مسبقًا بلاعب ← نعيد هوية ذلك اللاعب (استرجاع التقدّم على جهاز جديد).
+   *  - وإلا إن كان على الجهاز لاعب غير مربوط ← نربطه به.
+   *  - وإلا ← ننشئ لاعبًا جديدًا باسم Play.
+   * عند الاسترجاع يصدر رمز دخول إضافي لهذا الجهاز (الأجهزة الأخرى تبقى مسجّلة). token=null يعني: احتفظ برمزك.
+   */
+  S.linkPlayGames = (pgsId, displayName, currentPid = null) => db.tx(() => {
+    if (!pgsId || typeof pgsId !== 'string' || pgsId.length > 128) throw new HttpError(400, 'bad_player');
+    let p = db.get('SELECT * FROM players WHERE pgs_id=?', pgsId);
+    let linked = false;
+    if (!p && currentPid) {
+      const cur = db.get('SELECT * FROM players WHERE id=?', currentPid);
+      if (cur && !cur.pgs_id) { db.run('UPDATE players SET pgs_id=? WHERE id=?', pgsId, cur.id); p = { ...cur, pgs_id: pgsId }; linked = true; }
+    }
+    if (!p) {
+      const r = S.register(displayName);
+      db.run('UPDATE players SET pgs_id=? WHERE id=?', pgsId, r.id);
+      return { ...r, created: true, linked: false };
+    }
+    if (p.banned) throw new HttpError(403, 'banned');
+    if (linked || p.id === currentPid) return { id: p.id, token: null, name: p.name, code: p.code, created: false, linked };
+    const token = randomBytes(24).toString('base64url');
+    db.run('INSERT INTO player_tokens(token_hash, player_id, created) VALUES (?,?,?)', hashToken(token), p.id, now());
+    // حدّ معقول للأجهزة: نُبقي أحدث ١٠ رموز
+    db.run('DELETE FROM player_tokens WHERE player_id=? AND token_hash NOT IN (SELECT token_hash FROM player_tokens WHERE player_id=? ORDER BY created DESC LIMIT 10)', p.id, p.id);
+    return { id: p.id, token, name: p.name, code: p.code, created: false, linked };
   });
   S.publicPlayer = (p) => ({ id: p.id, name: p.name, code: p.code, skin: p.skin });
   S.rename = (p, name) => { const n = cleanName(name); db.run('UPDATE players SET name=? WHERE id=?', n, p.id); return n; };

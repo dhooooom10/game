@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- معرّف مشروع Play Games (أرقام فقط) من Play Console ← Play Games Services ← Setup and management ← Configuration.
+         اتركه فارغًا لتعطيل Play Games دون أي أعطال. انظر docs/WHAT_YOU_NEED.md -->
+    <string name="game_services_project_id" translatable="false"></string>
+</resources>

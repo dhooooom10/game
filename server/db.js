@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS season_ratings (
 CREATE TABLE IF NOT EXISTS announcements (
   id TEXT PRIMARY KEY, text_ar TEXT NOT NULL, text_en TEXT, active INTEGER NOT NULL DEFAULT 1, starts INTEGER, ends INTEGER, created INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS player_tokens (token_hash TEXT PRIMARY KEY, player_id TEXT NOT NULL, created INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS player_tokens_p ON player_tokens(player_id);
 CREATE TABLE IF NOT EXISTS friends (a TEXT NOT NULL, b TEXT NOT NULL, created INTEGER NOT NULL, PRIMARY KEY (a, b));
 CREATE TABLE IF NOT EXISTS challenges (
   id TEXT PRIMARY KEY, creator TEXT NOT NULL, seed TEXT NOT NULL, cfg TEXT NOT NULL, score INTEGER NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL
@@ -49,6 +51,10 @@ export function openDb(path = ':memory:') {
   const db = new DatabaseSync(path);
   db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   db.exec(SCHEMA);
+  // ترقية: ربط حساب Google Play Games (عمود اختياري لقواعد بيانات قديمة)
+  const cols = db.prepare('PRAGMA table_info(players)').all().map((c) => c.name);
+  if (!cols.includes('pgs_id')) db.exec('ALTER TABLE players ADD COLUMN pgs_id TEXT');
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS players_pgs ON players(pgs_id) WHERE pgs_id IS NOT NULL');
   const cache = new Map();
   const q = (sql) => { let s = cache.get(sql); if (!s) { s = db.prepare(sql); cache.set(sql, s); } return s; };
   return {

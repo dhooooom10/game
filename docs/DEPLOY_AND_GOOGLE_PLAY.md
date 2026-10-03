@@ -3,7 +3,7 @@
 ## الصورة الكاملة
 
 ```
-جوال اللاعب (تطبيق Google Play = غلاف TWA لموقع اللعبة)
+جوال اللاعب (تطبيق Google Play عبر Capacitor + Google Play Games)
         │  HTTPS + WebSocket
         ▼
 خادمك (Docker):  Caddy (HTTPS تلقائي)  →  خادم Math Clash (Node 22)
@@ -54,7 +54,9 @@ npm run dev            # http://localhost:8080 ، لوحة الإدارة: http:
 | `ADMIN_TOKEN` | رمز لوحة الإدارة (12 حرفًا على الأقل، يفضّل 48 عشوائيًا). بدونه تتعطل لوحة الإدارة. |
 | `DB_PATH` | مسار قاعدة البيانات (افتراضي `./data/mathclash.db`) |
 | `PORT` | المنفذ (افتراضي 8080) |
-| `CORS_ORIGINS` | فقط إن استضفت ملفات اللعبة على نطاق مختلف عن الخادم (مفصولة بفواصل) |
+| `CORS_ORIGINS` | الأصول المسموح لها بالاتصال من نطاق آخر، مفصولة بفواصل. لتطبيق Android: `https://localhost` |
+| `GOOGLE_CLIENT_ID` | معرّف عميل OAuth (Web application) لـ Play Games — اختياري، بدونه يتعطل ربط Play Games فقط |
+| `GOOGLE_CLIENT_SECRET` | السر المقابل — لا تضعه أبدًا في التطبيق أو المستودع |
 
 إن استضفت ملفات `public/` على نطاق آخر (مثل Cloudflare Pages) والخادم على نطاق مختلف، ضع في `index.html`:
 `<meta name="mc-server" content="https://api.yourdomain.com">` وأضف `connect-src` للنطاق في سياسة المحتوى. **الأبسط: خادم واحد يخدم الاثنين.**
@@ -75,33 +77,46 @@ npm run dev            # http://localhost:8080 ، لوحة الإدارة: http:
 
 ---
 
-## ٣) النشر على Google Play (تطبيق TWA)
+## ٣) النشر على Google Play (تطبيق Android أصلي عبر Capacitor + Google Play Games)
 
-اللعبة تطبيق ويب تقدّمي (PWA)، وأسهل وأرسمي طريقة لنشرها على Google Play هي **Trusted Web Activity** عبر أداة جوجل **Bubblewrap**:
+التطبيق في المجلد `android/` (مشروع Capacitor 8). ملفات اللعبة تُنسخ داخله، ويتصل بخادمك للأونلاين.
+لماذا ليس TWA؟ غلاف TWA لا يستطيع استخدام **Google Play Games** (تسجيل الدخول، الإنجازات، لوحات Play). Capacitor يستطيع، وما زالت اللعبة نفسها تعمل في المتصفح.
 
+### البناء
 ```bash
-npm i -g @bubblewrap/cli
-bubblewrap init --manifest https://play.yourdomain.com/manifest.webmanifest
-#   Application ID مثل: app.mathclash.twa  ،  اسم التطبيق: Math Clash
-bubblewrap build          # ينتج app-release-bundle.aab و app-release-signed.apk
+npm install
+MC_SERVER=https://play.yourdomain.com npm run build:app   # ينسخ public/ إلى build/app-www ويضبط عنوان الخادم
+npx cap sync android
+cd android && ./gradlew bundleRelease                      # ينتج app/build/outputs/bundle/release/app-release.aab
 ```
-(تحتاج Java JDK 17 وAndroid SDK — يعرض Bubblewrap تنزيلهما تلقائيًا.)
+تحتاج **Android Studio** (أسهل) أو JDK 21 + Android SDK. افتح المجلد `android/` في Android Studio ← Build ← Generate Signed App Bundle.
 
-### ربط النطاق بالتطبيق (Digital Asset Links) — ضروري لإخفاء شريط المتصفح
-1. بعد `bubblewrap build` اعرض البصمة: `bubblewrap fingerprint` (أو من Play Console ← App integrity ← App signing key SHA-256).
-2. أنشئ الملف `public/.well-known/assetlinks.json` من القالب `docs/assetlinks.example.json` وضع اسم الحزمة والبصمة، ثم أعد النشر.
-3. تحقّق: `https://play.yourdomain.com/.well-known/assetlinks.json`
+- **اسم الحزمة** `app.mathclash.game` — يمكنك تغييره قبل أول رفع فقط (في `capacitor.config.json` و`android/app/build.gradle` ومسار مجلد Java)، وبعد الرفع لا يتغير أبدًا.
+- **على الخادم** أضف `CORS_ORIGINS=https://localhost` (أصل صفحات التطبيق داخل Capacitor).
+
+### Google Play Games
+1. Play Console ← اللعبة ← **Grow users ← Play Games Services ← Setup and management ← Configuration** ← أنشئ مشروع Play Games (أو اربط مشروع Google Cloud).
+2. **Credentials**: أنشئ بيانات اعتماد Android (اسم الحزمة + بصمة SHA-1 لمفتاح التوقيع — من Play Console ← App integrity لمفتاح Play، ومفتاح الرفع/التصحيح أيضًا للتجربة).
+3. أنشئ بيانات اعتماد **Game server** ← عميل OAuth من نوع **Web application** ← انسخ Client ID وClient secret.
+4. ضع **Project ID** (أرقام) في `android/app/src/main/res/values/playgames.xml`.
+5. ضع **Web Client ID** في `public/src/net/playgames-config.js` (`webClientId`)، وعلى الخادم: `GOOGLE_CLIENT_ID` (القيمة نفسها) و`GOOGLE_CLIENT_SECRET`.
+6. أنشئ الإنجازات (١٨، واحد لكل شارة) ولوحات الصدارة (٤) وانسخ معرّفاتها إلى `playgames-config.js`.
+7. أضف حسابات المختبرين في **Testers** ثم انشر إعدادات Play Games.
+
+ما الذي يحدث في التطبيق: دخول تلقائي صامت إلى Play Games ← يرسل التطبيق رمزًا لمرة واحدة إلى خادمك (`POST /api/auth/playgames`) ← يتحقق الخادم منه لدى Google ويربط الحساب. النتيجة: تقدّم الأونلاين (الاسم، التصنيف، الأصدقاء، الجوائز) يُسترجع على أي جهاز بنفس حساب Google. الإنجازات وأفضل النتائج تُرسل إلى Play تلقائيًا. **المباريات المباشرة والغرف والبطولات تبقى على خادمك** — خدمة اللعب الجماعي المباشر في Play Games أُوقفت منذ ٢٠٢٠.
 
 ### Play Console
 - ارفع ملف **AAB** في مسار الاختبار الداخلي أولًا ثم الإنتاج.
 - **سياسة الخصوصية**: الرابط `https://play.yourdomain.com/privacy.html` (ضع بريد التواصل داخله قبل النشر).
 - **حذف الحساب** (إلزامي في Play للتطبيقات التي تنشئ حسابات): متوفر داخل اللعبة (أونلاين ← حذف حسابي الأونلاين) — اذكر ذلك في نموذج «Data safety» واذكر رابط الصفحة.
-- **نموذج Data safety**: البيانات المجمّعة = اسم مستعار، معرّف عشوائي، نتائج اللعب، قائمة الأصدقاء. لا موقع، لا جهات اتصال، لا إعلانات. مشفّرة أثناء النقل (HTTPS). قابلة للحذف.
+- **نموذج Data safety**: البيانات المجمّعة = اسم مستعار، معرّف عشوائي، معرّف لاعب Play Games (عند الربط)، نتائج اللعب، قائمة الأصدقاء. لا موقع، لا جهات اتصال، لا إعلانات. مشفّرة أثناء النقل (HTTPS). قابلة للحذف.
 - **الفئة العمرية**: إن استهدفت الأطفال فسيطبّق برنامج **Families**: اللعبة لا تحتوي إعلانات أو دردشة مفتوحة، والتفاعل برموز جاهزة فقط، والأسماء مُفلترة ويمكنك إيقاف أي اسم من لوحة الإدارة.
-- **التصنيف المحتوى (IARC)**: اختر «Educational / Puzzle»، بلا عنف أو مقامرة.
+- **تصنيف المحتوى (IARC)**: اختر «Educational / Puzzle»، بلا عنف أو مقامرة.
 
 ### التحديثات
-تحديث الموقع على الخادم يصل لكل اللاعبين فورًا دون رفع نسخة جديدة على Play (عامل الخدمة يجلب الإصدار الجديد). شغّل `npm run build:sw` قبل كل نشر.
+- **الخادم** (البطولات، المواسم، الإعلانات، القواعد): تتغير فورًا من لوحة الإدارة دون تحديث التطبيق.
+- **ملفات اللعبة داخل التطبيق** (الشكل، المراحل): تحتاج رفع إصدار جديد إلى Play (ارفع `versionCode` في `android/app/build.gradle`).
+- نسخة المتصفح (PWA) تتحدث فورًا من الخادم؛ شغّل `npm run build:sw` قبل كل نشر.
 
 ---
 

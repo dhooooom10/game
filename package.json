@@ -3,19 +3,24 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "Math Clash \u2014 Arabic-first mental math game (static site, no build step)",
+  "description": "Math Clash — Arabic-first mental math game (static site, no build step)",
   "scripts": {
     "start": "node --no-warnings server/index.js",
     "dev": "ADMIN_TOKEN=dev-admin-token-please-change DB_PATH=./data/dev.db node --no-warnings server/index.js",
     "test": "node --no-warnings --test tests/unit/*.test.js && node --no-warnings --test --test-concurrency=1 tests/server/*.test.js",
     "test:e2e": "node --no-warnings --test --test-concurrency=1 tests/e2e/*.test.js",
     "test:all": "npm test && npm run test:e2e",
-    "build:sw": "node scripts/build-sw.mjs"
+    "build:sw": "node scripts/build-sw.mjs",
+    "build:app": "node scripts/build-app.mjs",
+    "android": "node scripts/build-app.mjs && npx cap sync android"
   },
   "engines": {
     "node": ">=22.13"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
     "playwright": "^1.56.1"
   },
   "dependencies": {

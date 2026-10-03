@@ -8,6 +8,7 @@ import { h, clear, icon } from './ui/dom.js';
 import { setLevels, setHaptics, sfx, unlockAudio, startMusic, pauseAll, resumeAll } from './ui/audio.js';
 import { setMotion } from './ui/fx.js';
 import { useIdentity } from './net/online.js';
+import * as pgs from './net/playgames.js';
 
 export const VERSION = '2.0.0';
 
@@ -34,6 +35,7 @@ export const app = {
     if (!this.pid || !this.data) return;
     const ok = this.store.save(this.pid, this.data);
     if (!ok) console.warn('save failed (storage full or blocked)');
+    pgs.scheduleSync(this);
   },
 
   loadProfile(id) {
@@ -212,6 +214,8 @@ export async function boot() {
     app.loadProfile(id);
     app.go('home', {}, { root: true });
   }
+  // تطبيق Android: Google Play Games (دخول صامت، ربط الحساب، الإنجازات ولوحات الصدارة)
+  pgs.init(app).catch(() => {});
 
   // أول لمسة تفتح الصوت (سياسة المتصفحات)
   const unlock = () => { unlockAudio(); if (app.settings.music > 0) startMusic(); window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock); };
