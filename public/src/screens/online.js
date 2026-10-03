@@ -365,11 +365,11 @@ registerScreen('nations', (app) => {
         h('div.grow', h('div.t', countryName(cur, lang)),
           h('div.d', m.rank ? t('nat.rank', { n: num(m.rank) }) : t('nat.noRank')),
           h('div.d', t('nat.myPoints', { n: num(m.myPoints) }) + (m.myRank ? ' · ' + t('nat.myRank', { n: num(m.myRank) }) : ''))),
-        h('b.nat-pts', num(m.points))));
+        m.points ? h('b.nat-pts', num(m.points)) : null));
       box.append(h('p.note', t('nat.how')));
       box.append(h('button.btn.block.primary', { on: { click: () => { sfx.tap(); app.go('home', {}, { root: true }); } } }, '💧 ', t('nat.play')));
     }
-    const list = h('section.card.section', h('h2.section-title', t('nat.board'), h('small', nat.week)));
+    const list = h('section.card.section', h('h2.section-title', t('nat.board'), h('small', { dir: 'ltr' }, nat.week)));
     if (!nat.list.length) list.append(h('p.note', t('nat.empty')));
     const medal = (r) => r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '🥉' : num(r);
     for (const r of nat.list) list.append(h('div.lb-row' + (r.country === cur ? '.me' : ''), h('span.rk', medal(r.rank)), h('span.nat-f', flag(r.country)),

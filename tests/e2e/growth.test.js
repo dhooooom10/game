@@ -99,3 +99,23 @@ test('clubs: create, invite link joins a second player, owner sees member', asyn
   assert.deepEqual(owner.errors, []);
   assert.deepEqual(m.errors, []);
 });
+
+test('languages: full translations load on demand (Spanish), LTR, no missing-key fallbacks on home', async () => {
+  const p = await page();
+  await p.goto(S.url + '/?e2e=1');
+  await waitScreen(p, 'home');
+  await p.evaluate(() => window.__mc.go('settings'));
+  await waitScreen(p, 'settings');
+  await p.selectOption('main select', 'es');
+  await p.waitForFunction(() => document.documentElement.lang === 'es' && document.documentElement.dir === 'ltr');
+  await p.evaluate(() => window.__mc.go('home', {}, { root: true }));
+  await waitScreen(p, 'home');
+  const txt = await p.locator('#app').innerText();
+  assert.match(txt, /Jugar/);
+  assert.doesNotMatch(txt, /\b[a-z]+\.[a-zA-Z]+\b/, 'no raw keys');
+  // إعادة التحميل: اللغة تُحمَّل قبل أول رسم
+  await p.reload();
+  await waitScreen(p, 'home');
+  assert.match(await p.locator('#app').innerText(), /Desafío diario|Jugar/);
+  assert.deepEqual(p.errors, []);
+});

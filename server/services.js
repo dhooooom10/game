@@ -40,10 +40,10 @@ export const isoWeek = (ms = Date.now()) => {
 
 export class HttpError extends Error { constructor(status, code) { super(code); this.status = status; this.code = code; } }
 
-export function cleanName(name) {
+export function cleanName(name, max = 16) {
   const n = String(name ?? '').normalize('NFC').replace(/\s+/g, ' ').trim();
-  if (n.length < 2 || n.length > 16) throw new HttpError(400, 'name_length');
-  if (!/^[\p{L}\p{N} _.-]+$/u.test(n)) throw new HttpError(400, 'name_chars');
+  if (n.length < 2 || n.length > max) throw new HttpError(400, 'name_length');
+  if (!/^[\p{L}\p{N} _.\-—]+$/u.test(n)) throw new HttpError(400, 'name_chars');
   const low = n.toLowerCase();
   if (BAD_WORDS.some((w) => low.includes(w))) throw new HttpError(400, 'name_blocked');
   return n;
@@ -189,7 +189,7 @@ export function createServices(db, { now = () => Date.now(), play = null } = {})
   const clubOf = (id) => { const c = db.get('SELECT * FROM clubs WHERE id=?', id); if (!c) throw new HttpError(404, 'not_found'); return c; };
   const isMember = (cid, pid) => !!db.get('SELECT 1 FROM club_members WHERE club_id=? AND player_id=?', cid, pid);
   S.createClub = (pid, name) => {
-    const nm = cleanName(name);
+    const nm = cleanName(name, 24);
     if (db.get('SELECT COUNT(*) AS n FROM clubs WHERE owner=?', pid).n >= CLUBS_OWNED) throw new HttpError(429, 'too_many_clubs');
     const id = newId('c_'), code = clubCode();
     db.tx(() => {
