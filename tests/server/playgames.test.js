@@ -128,3 +128,42 @@ test('nations league: country validation, weekly points from daily bests, top pl
     assert.equal(n.list.find((x) => x.country === 'EG').points, 250);
   } finally { await s.close(); }
 });
+
+test('clubs: create, join by code, owner dashboard, members see no private stats, league, leave/remove, delete', async () => {
+  const s = await boot();
+  try {
+    const { isoWeek } = await import('../../server/services.js');
+    const ins = (pid, score) => s.db.run("INSERT INTO runs(id, player_id, kind, seed, cfg, started, submitted, score, accuracy, valid, week) VALUES (?,?,?,?,?,?,?,?,0.9,1,?)", 'r' + Math.random(), pid, 'weekly', 's', '{}', s.clock.t, s.clock.t, score, isoWeek(s.clock.t));
+    const t = await s.api('POST', '/api/register', { name: 'الأستاذ' });
+    const st = [];
+    for (let i = 0; i < 3; i++) st.push(await s.api('POST', '/api/register', { name: 'طالب ' + i }));
+    const c = await s.api('POST', '/api/clubs', { name: 'فصل ٣ب' }, t.token);
+    assert.match(c.code, /^[0-9A-F]{6}$/);
+    for (const x of st) assert.equal((await s.api('POST', '/api/clubs/join', { code: c.code.toLowerCase() }, x.token)).id, c.id);
+    assert.equal((await s.api('POST', '/api/clubs/join', { code: 'ZZZZZZ' }, st[0].token)).status, 404);
+    ins(st[0].id, 500); ins(st[1].id, 200);
+    const asOwner = (await s.api('GET', `/api/clubs/${c.id}`, null, t.token)).club;
+    assert.equal(asOwner.owner, true);
+    assert.equal(asOwner.members.length, 4);
+    assert.equal(asOwner.members[0].name, 'طالب 0');
+    assert.equal(asOwner.members[0].runs, 1);
+    assert.equal(asOwner.members[0].accuracy, 90);
+    assert.equal(asOwner.points, 700);
+    const asMember = (await s.api('GET', `/api/clubs/${c.id}`, null, st[1].token)).club;
+    assert.equal(asMember.owner, false);
+    assert.equal(asMember.members[0].runs, undefined, 'private stats only for the owner');
+    const outsider = await s.api('POST', '/api/register', { name: 'غريب' });
+    assert.equal((await s.api('GET', `/api/clubs/${c.id}`, null, outsider.token)).status, 403);
+    const lg = (await s.api('GET', '/api/clubs/league', null, st[0].token)).league;
+    assert.equal(lg[0].id, c.id); assert.equal(lg[0].mine, true);
+    assert.equal((await s.api('GET', '/api/clubs', null, st[2].token)).clubs.length, 1);
+    // عضو يغادر، المالك يحذف عضوًا، غير المالك لا يحذف غيره
+    assert.equal((await s.api('DELETE', `/api/clubs/${c.id}/members/${st[0].id}`, null, st[1].token)).status, 403);
+    await s.api('DELETE', `/api/clubs/${c.id}/members/me`, null, st[2].token);
+    await s.api('DELETE', `/api/clubs/${c.id}/members/${st[1].id}`, null, t.token);
+    assert.equal((await s.api('GET', `/api/clubs/${c.id}`, null, t.token)).club.members.length, 2);
+    assert.equal((await s.api('DELETE', `/api/clubs/${c.id}`, null, st[0].token)).status, 403);
+    await s.api('DELETE', `/api/clubs/${c.id}`, null, t.token);
+    assert.equal((await s.api('GET', '/api/clubs', null, st[0].token)).clubs.length, 0);
+  } finally { await s.close(); }
+});

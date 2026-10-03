@@ -78,3 +78,24 @@ test('nations league: country auto-detected, ranking shown, home chip', async ()
   await p.waitForSelector('#natChip', { timeout: 8000 });
   assert.deepEqual(p.errors, []);
 });
+
+test('clubs: create, invite link joins a second player, owner sees member', async () => {
+  const owner = await page();
+  await owner.goto(S.url + '/?e2e=1');
+  await waitScreen(owner, 'home');
+  await owner.evaluate(() => window.__mc.go('clubs'));
+  await owner.waitForSelector('#createClub');
+  await owner.fill('main input[maxlength="24"]', 'فصل التحدي');
+  await owner.click('#createClub');
+  await waitScreen(owner, 'club');
+  const code = (await owner.locator('#clubCode').innerText()).trim();
+  const m = await page();
+  await m.goto(S.url + `/?e2e=1&club=${code}`);
+  await waitScreen(m, 'clubJoin');
+  await m.click('#confirmJoin');
+  await waitScreen(m, 'club');
+  await owner.evaluate(() => window.__mc.refresh());
+  await owner.waitForFunction(() => document.querySelectorAll('.lb-row').length === 2, null, { timeout: 8000 });
+  assert.deepEqual(owner.errors, []);
+  assert.deepEqual(m.errors, []);
+});

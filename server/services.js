@@ -16,6 +16,9 @@ export const OCCASIONS = {
   back_to_school: { icon: '🎒', color: '#38D6F5', ar: 'العودة للمدارس', en: 'Back to School' },
   winter: { icon: '❄️', color: '#9FE7FF', ar: 'الشتاء', en: 'Winter' },
   new_year: { icon: '🎆', color: '#FF7BB0', ar: 'العام الجديد', en: 'New Year' },
+  math_day: { icon: '🔢', color: '#38D6F5', ar: 'اليوم الدولي للرياضيات', en: 'International Day of Mathematics' },
+  weekend_storm: { icon: '⛈️', color: '#7B8CFF', ar: 'عاصفة نهاية الأسبوع', en: 'Weekend Storm' },
+  nations_cup: { icon: '🌍', color: '#5AD1A0', ar: 'كأس الدول', en: 'Nations Cup' },
   custom: { icon: '🏆', color: '#FFC94A', ar: 'بطولة', en: 'Tournament' },
 };
 export const EMOTES = ['👏', '🔥', '😮', '😂', '💪', '🎉', '👋', '❤️'];
@@ -104,7 +107,8 @@ export function createServices(db, { now = () => Date.now() } = {}) {
   };
   /** حذف الحساب وكل بياناته (متطلب من Google Play) */
   S.deleteAccount = (pid) => db.tx(() => {
-    for (const sql of ['DELETE FROM runs WHERE player_id=?', 'DELETE FROM player_tokens WHERE player_id=?', 'DELETE FROM friends WHERE a=? OR b=?', 'DELETE FROM season_ratings WHERE player_id=?',
+    for (const c of db.all('SELECT id FROM clubs WHERE owner=?', pid)) { db.run('DELETE FROM club_members WHERE club_id=?', c.id); db.run('DELETE FROM clubs WHERE id=?', c.id); }
+    for (const sql of ['DELETE FROM runs WHERE player_id=?', 'DELETE FROM player_tokens WHERE player_id=?', 'DELETE FROM club_members WHERE player_id=?', 'DELETE FROM friends WHERE a=? OR b=?', 'DELETE FROM season_ratings WHERE player_id=?',
       'DELETE FROM rewards WHERE player_id=?', 'DELETE FROM challenges WHERE creator=?', 'DELETE FROM players WHERE id=?']) {
       const n = (sql.match(/\?/g) || []).length;
       db.run(sql, ...Array(n).fill(pid));
@@ -140,6 +144,74 @@ export function createServices(db, { now = () => Date.now() } = {}) {
   });
   S.publicPlayer = (p) => ({ id: p.id, name: p.name, code: p.code, skin: p.skin, country: p.country || null });
 
+  /* ---------------- النوادي (مجموعات: معلم وطلابه، مدرّب، أصدقاء، فريق عمل) ---------------- */
+  const CLUB_MAX = 200, CLUBS_OWNED = 10, CLUBS_JOINED = 20;
+  const clubCode = () => { for (let i = 0; i < 30; i++) { const c = randomBytes(4).toString('hex').slice(0, 6).toUpperCase(); if (!db.get('SELECT 1 FROM clubs WHERE code=?', c)) return c; } throw new Error('code'); };
+  const clubOf = (id) => { const c = db.get('SELECT * FROM clubs WHERE id=?', id); if (!c) throw new HttpError(404, 'not_found'); return c; };
+  const isMember = (cid, pid) => !!db.get('SELECT 1 FROM club_members WHERE club_id=? AND player_id=?', cid, pid);
+  S.createClub = (pid, name) => {
+    const nm = cleanName(name);
+    if (db.get('SELECT COUNT(*) AS n FROM clubs WHERE owner=?', pid).n >= CLUBS_OWNED) throw new HttpError(429, 'too_many_clubs');
+    const id = newId('c_'), code = clubCode();
+    db.tx(() => {
+      db.run('INSERT INTO clubs(id, code, name, owner, created) VALUES (?,?,?,?,?)', id, code, nm, pid, now());
+      db.run('INSERT INTO club_members(club_id, player_id, joined) VALUES (?,?,?)', id, pid, now());
+    });
+    return { id, code, name: nm };
+  };
+  S.joinClub = (pid, code) => {
+    const c = db.get('SELECT * FROM clubs WHERE code=?', String(code || '').trim().toUpperCase());
+    if (!c) throw new HttpError(404, 'club_not_found');
+    if (isMember(c.id, pid)) return { id: c.id, name: c.name };
+    if (db.get('SELECT COUNT(*) AS n FROM club_members WHERE club_id=?', c.id).n >= CLUB_MAX) throw new HttpError(409, 'club_full');
+    if (db.get('SELECT COUNT(*) AS n FROM club_members WHERE player_id=?', pid).n >= CLUBS_JOINED) throw new HttpError(429, 'too_many_clubs');
+    db.run('INSERT INTO club_members(club_id, player_id, joined) VALUES (?,?,?)', c.id, pid, now());
+    return { id: c.id, name: c.name };
+  };
+  S.myClubs = (pid) => db.all(`SELECT c.id, c.code, c.name, c.owner = ? AS mine, (SELECT COUNT(*) FROM club_members m2 WHERE m2.club_id=c.id) AS members
+    FROM clubs c JOIN club_members m ON m.club_id=c.id WHERE m.player_id=? ORDER BY c.created DESC`, pid, pid).map((c) => ({ ...c, mine: !!c.mine }));
+  /** صفحة النادي: الأعضاء مرتبين بنقاط الأسبوع. المالك يرى نشاط كل عضو (جولات، دقة، آخر ظهور) */
+  S.getClub = (pid, id) => {
+    const c = clubOf(id);
+    if (!isMember(c.id, pid)) throw new HttpError(403, 'not_member');
+    const per = weeklyPoints(isoWeek(now()));
+    const owner = c.owner === pid;
+    const weekStart = now() - 7 * 864e5;
+    const members = db.all(`SELECT p.id, p.name, p.skin, p.last_seen FROM club_members m JOIN players p ON p.id=m.player_id WHERE m.club_id=?`, c.id).map((m) => {
+      const out = { id: m.id, name: m.name, skin: m.skin, points: per.get(m.id)?.pts || 0, days: per.get(m.id)?.days || 0, me: m.id === pid, owner: m.id === c.owner };
+      if (owner) {
+        const a = db.get('SELECT COUNT(*) AS n, AVG(accuracy) AS acc FROM runs WHERE player_id=? AND valid=1 AND started>=?', m.id, weekStart);
+        Object.assign(out, { runs: a.n, accuracy: a.acc == null ? null : Math.round(a.acc * 100), lastSeen: m.last_seen });
+      }
+      return out;
+    }).sort((a, b) => b.points - a.points).map((m, i) => ({ ...m, rank: i + 1 }));
+    return { id: c.id, name: c.name, code: c.code, owner, members, points: clubPoints(members) };
+  };
+  const clubPoints = (members) => members.map((m) => m.points).sort((a, b) => b - a).slice(0, 30).reduce((s2, x) => s2 + x, 0);
+  S.leaveClub = (pid, id, target = null) => {
+    const c = clubOf(id);
+    const who = target || pid;
+    if (who !== pid && c.owner !== pid) throw new HttpError(403, 'owner_only');
+    if (who === c.owner) throw new HttpError(400, 'owner_cannot_leave');
+    db.run('DELETE FROM club_members WHERE club_id=? AND player_id=?', c.id, who);
+  };
+  S.deleteClub = (pid, id) => {
+    const c = clubOf(id);
+    if (c.owner !== pid) throw new HttpError(403, 'owner_only');
+    db.tx(() => { db.run('DELETE FROM club_members WHERE club_id=?', c.id); db.run('DELETE FROM clubs WHERE id=?', c.id); });
+  };
+  /** دوري النوادي الأسبوعي: نقاط النادي = مجموع أفضل ٣٠ عضوًا (نوادٍ بثلاثة أعضاء على الأقل) */
+  S.clubLeague = (pid = null) => {
+    const per = weeklyPoints(isoWeek(now()));
+    const rows = db.all('SELECT club_id, player_id FROM club_members');
+    const by = new Map();
+    for (const r of rows) { const a = by.get(r.club_id) || []; a.push(per.get(r.player_id)?.pts || 0); by.set(r.club_id, a); }
+    const mine = new Set(pid ? db.all('SELECT club_id FROM club_members WHERE player_id=?', pid).map((r) => r.club_id) : []);
+    const names = new Map(db.all('SELECT id, name FROM clubs').map((c) => [c.id, c.name]));
+    return [...by.entries()].filter(([, a]) => a.length >= 3).map(([id, a]) => ({ id, name: names.get(id), members: a.length, points: a.sort((x, y) => y - x).slice(0, 30).reduce((s2, x) => s2 + x, 0), mine: mine.has(id) }))
+      .filter((x) => x.points > 0).sort((a, b) => b.points - a.points).slice(0, 50).map((x, i) => ({ ...x, rank: i + 1 }));
+  };
+
   /* ---------------- دوري الدول ---------------- */
   /** يقبل رمز دولة ISO صالحًا فقط. التغيير مسموح مرة كل ٧ أيام (منعًا للتنقل بين الدول لرفع النقاط) */
   S.setCountry = (p, code) => {
@@ -154,13 +226,19 @@ export function createServices(db, { now = () => Date.now() } = {}) {
    * نقاط الدولة هذا الأسبوع: لكل لاعب مجموع أفضل نتيجة له في كل يوم (يكافئ الانتظام لا جولة واحدة)،
    * ثم مجموع أفضل ١٠٠ لاعب من كل دولة (حتى لا تفوز الدول الكبيرة بالعدد وحده).
    */
-  S.nations = (pid = null) => {
-    const week = isoWeek(now());
+  /** نقاط كل لاعب هذا الأسبوع = مجموع أفضل نتيجة له في كل يوم */
+  const weeklyPoints = (week) => {
     const rows = db.all(`SELECT r.player_id AS pid, p.country, date(r.started/1000, 'unixepoch') AS d, MAX(r.score) AS best
       FROM runs r JOIN players p ON p.id=r.player_id
-      WHERE r.valid=1 AND r.week=? AND p.banned=0 AND p.country IS NOT NULL GROUP BY r.player_id, d`, week);
+      WHERE r.valid=1 AND r.week=? AND p.banned=0 GROUP BY r.player_id, d`, week);
     const per = new Map();
-    for (const r of rows) { const x = per.get(r.pid) || { country: r.country, pts: 0 }; x.pts += r.best || 0; per.set(r.pid, x); }
+    for (const r of rows) { const x = per.get(r.pid) || { country: r.country, pts: 0, days: 0 }; x.pts += r.best || 0; x.days++; per.set(r.pid, x); }
+    return per;
+  };
+  S.nations = (pid = null) => {
+    const week = isoWeek(now());
+    const per = weeklyPoints(week);
+    for (const [k, x] of per) if (!x.country) per.delete(k);
     const byC = new Map();
     for (const [id, x] of per) { const a = byC.get(x.country) || []; a.push({ id, pts: x.pts }); byC.set(x.country, a); }
     const list = [...byC.entries()].map(([country, ps]) => {

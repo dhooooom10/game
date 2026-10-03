@@ -703,3 +703,9 @@ details.how ul { margin: 6px 0 0; padding-inline-start: 20px; color: var(--muted
   background: color-mix(in srgb, #5AD1A0 12%, var(--surface)); color: var(--text); font: inherit; text-align: start; cursor: pointer; }
 .nat-chip small { color: var(--muted); }
 details.card summary { cursor: pointer; font-weight: 800; }
+/* النوادي */
+.row-btn { width: 100%; background: none; border: 0; color: inherit; font: inherit; text-align: start; cursor: pointer; padding: 8px 0; }
+.club-head { text-align: center; display: grid; gap: 6px; justify-items: center; }
+.club-head h1 { margin: 0; }
+.lb-row .nm { display: flex; flex-direction: column; min-width: 0; }
+.lb-row .nm .d { font-size: .78rem; color: var(--muted); font-weight: 600; }

@@ -25,6 +25,12 @@ boot().then(() => {
     history.replaceState(null, '', location.pathname + (location.search.includes('e2e=1') ? '?e2e=1' : ''));
     if (app.current?.name === 'home') app.go('challenge', { id: c });
   }
+  // رابط انضمام لنادٍ: ?club=الرمز
+  const club = new URLSearchParams(location.search).get('club');
+  if (club && /^[0-9A-Za-z]{6}$/.test(club)) {
+    history.replaceState(null, '', location.pathname + (location.search.includes('e2e=1') ? '?e2e=1' : ''));
+    if (app.current?.name === 'home') app.go('clubJoin', { code: club.toUpperCase() });
+  }
 }).catch((e) => {
   console.error(e);
   const el = document.getElementById('app');

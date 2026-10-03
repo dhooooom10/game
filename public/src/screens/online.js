@@ -109,7 +109,8 @@ registerScreen('online', (app) => {
       bigBtn('weeklyBtn', '🌧️', '#3DDC97', t('net.weekly'), t('net.weeklySub'), () => startWeekly()),
       bigBtn('lbBtn', '📊', '#FF9F5A', t('net.leaderboards'), t('net.leaderboardsSub'), () => app.go('leaderboards')),
       bigBtn('friendsBtn', '🤝', '#FF7BB0', t('net.friends'), t('net.friendsSub'), () => app.go('friends')),
-      bigBtn('nationsBtn', '🌍', '#5AD1A0', t('nat.title'), t('nat.sub'), () => app.go('nations'))));
+      bigBtn('nationsBtn', '🌍', '#5AD1A0', t('nat.title'), t('nat.sub'), () => app.go('nations')),
+      bigBtn('clubsBtn', '🏫', '#38D6F5', t('club.title'), t('club.sub'), () => app.go('clubs'))));
     if (pgs.available() && pgs.signedIn()) {
       const row = h('div.row-btns.section');
       if (pgs.hasAchievements()) row.append(h('button.btn.ghost', { type: 'button', on: { click: () => pgs.showAchievements() } }, '🏅 ' + t('net.pgsAch')));
@@ -386,6 +387,84 @@ registerScreen('nations', (app) => {
 });
 
 /* =========================================================================
+   النوادي: مجموعة لها رمز انضمام (معلم وطلابه، مدرّب، أصدقاء، فريق عمل)
+   ========================================================================= */
+const clubLink = (code) => shareUrl({ club: code, ref: 'club' });
+registerScreen('clubs', (app) => {
+  const el = h('main', topbar(t('club.title'), t('club.sub')));
+  const box = h('div'); el.append(box);
+  const load = () => guard(box, async () => {
+    const [{ clubs }, { league }] = await Promise.all([net.api('GET', '/api/clubs'), net.api('GET', '/api/clubs/league')]);
+    clear(box);
+    const mine = h('section.card.section', h('h2.section-title', t('club.mine'), h('small', num(clubs.length))));
+    if (!clubs.length) mine.append(h('p.note', t('club.none')));
+    for (const c of clubs) mine.append(h('button.row.row-btn', { on: { click: () => { sfx.tap(); app.go('club', { id: c.id }); } } },
+      h('span', { style: { fontSize: '1.5rem' } }, c.mine ? '👑' : '🏫'), h('div.grow', h('div.t', c.name), h('div.d', t('club.members', { n: num(c.members) }))), h('span.faint', '›')));
+    const name = h('input.input', { maxlength: 24, placeholder: t('club.namePh'), aria: { label: t('club.name') } });
+    const code = h('input.input.codein', { maxlength: 6, dir: 'ltr', placeholder: 'ABC123', aria: { label: t('club.code') } });
+    const err = h('p.note', { style: { color: 'var(--bad)' } });
+    box.append(mine,
+      h('section.card', field(t('club.create'), name, t('club.createHint')), h('button.btn.primary.block', { id: 'createClub', on: { click: async () => {
+        try { const r = await net.api('POST', '/api/clubs', { name: name.value }); sfx.correct(); app.go('club', { id: r.id }); } catch (e) { err.textContent = errText(e); }
+      } } }, icon('plus'), t('club.createBtn'))),
+      h('section.card', field(t('club.join'), code, t('club.privacy')), h('button.btn.block', { id: 'joinClub', on: { click: async () => {
+        try { const r = await net.api('POST', '/api/clubs/join', { code: code.value }); sfx.correct(); app.go('club', { id: r.id }); } catch (e) { err.textContent = errText(e); }
+      } } }, t('club.joinBtn'))), err);
+    const lg = h('section.card.section', h('h2.section-title', '🏆 ' + t('club.league')), h('p.note', t('club.leagueHow')));
+    if (!league.length) lg.append(h('p.note', t('club.leagueEmpty')));
+    const medal = (r) => r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '🥉' : num(r);
+    for (const c of league) lg.append(h('div.lb-row' + (c.mine ? '.me' : ''), h('span.rk', medal(c.rank)), h('span.nm', c.name, h('small', ' · ' + t('club.members', { n: num(c.members) }))), h('b', num(c.points))));
+    box.append(lg);
+  });
+  load();
+  return { el, nav: 'online' };
+});
+
+registerScreen('club', (app, { id }) => {
+  const el = h('main', topbar(t('club.title')));
+  const box = h('div'); el.append(box);
+  const load = () => guard(box, async () => {
+    const { club: c } = await net.api('GET', `/api/clubs/${id}`);
+    clear(box);
+    box.append(h('section.card.club-head', h('h1', c.name), h('div.faint', t('club.members', { n: num(c.members.length) }) + ' · ' + t('club.weekPts', { n: num(c.points) })),
+      h('div.faint', t('club.code'), ' ', h('b.code', { dir: 'ltr', id: 'clubCode' }, c.code)),
+      h('button.btn.sm.primary', { on: { click: () => shareText(t('club.invite', { name: c.name, code: c.code }), clubLink(c.code)) } }, icon('upload'), t('club.inviteBtn'))));
+    if (c.owner) box.append(h('p.note', t('club.ownerNote')));
+    const list = h('section.card.section', h('h2.section-title', t('club.week')));
+    const medal = (r) => r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '🥉' : num(r);
+    const ago = (ms) => { const d = Math.floor((Date.now() - ms) / 864e5); return d <= 0 ? t('club.today') : t('club.daysAgo', { n: num(d) }); };
+    for (const m of c.members) {
+      const extra = c.owner && !m.me ? h('div.d', t('club.stats', { runs: num(m.runs), acc: m.accuracy == null ? '—' : num(m.accuracy), days: num(m.days) }) + ' · ' + ago(m.lastSeen)) : null;
+      const rm = c.owner && !m.owner ? h('button.icon-btn', { aria: { label: t('club.remove') + ' ' + m.name }, on: { click: async () => {
+        if (await app.confirm({ title: t('club.remove'), body: m.name, danger: true })) { await net.api('DELETE', `/api/clubs/${c.id}/members/${m.id}`); load(); }
+      } } }, icon('close')) : null;
+      list.append(h('div.lb-row' + (m.me ? '.me' : ''), h('span.rk', medal(m.rank)), drop(m.skin), h('span.nm', h('span', (m.owner ? '👑 ' : '') + m.name), extra), h('b', num(m.points)), rm));
+    }
+    box.append(list, h('button.btn.block.primary', { on: { click: () => { sfx.tap(); app.go('home', {}, { root: true }); } } }, '💧 ', t('club.play')));
+    if (c.owner) box.append(h('button.btn.block.ghost.danger', { on: { click: async () => {
+      if (await app.confirm({ title: t('club.delete'), body: c.name, danger: true })) { await net.api('DELETE', `/api/clubs/${c.id}`); app.go('clubs', {}, { replace: true }); }
+    } } }, t('club.delete')));
+    else box.append(h('button.btn.block.ghost', { on: { click: async () => {
+      if (await app.confirm({ title: t('club.leave'), body: c.name })) { await net.api('DELETE', `/api/clubs/${c.id}/members/me`); app.go('clubs', {}, { replace: true }); }
+    } } }, t('club.leave')));
+  });
+  load();
+  return { el, nav: 'online' };
+});
+
+/** رابط انضمام ?club=CODE */
+registerScreen('clubJoin', (app, { code }) => {
+  const el = h('main', topbar(t('club.title')));
+  const box = h('div'); el.append(box);
+  box.append(h('section.event-hero', { style: { '--ec': '#38D6F5' } }, h('div.ei', '🏫'), h('h2', t('club.joinTitle')), h('p', h('b.code', { dir: 'ltr' }, code))),
+    h('p.note', t('club.privacy')),
+    h('button.btn.gold.block.lg', { id: 'confirmJoin', on: { click: () => guard(box, async () => {
+      const r = await net.api('POST', '/api/clubs/join', { code }); sfx.correct(); app.go('club', { id: r.id }, { replace: true });
+    }) } }, t('club.joinBtn')));
+  return { el };
+});
+
+/* =========================================================================
    الأصدقاء
    ========================================================================= */
 registerScreen('friends', (app) => {
@@ -427,6 +506,7 @@ registerScreen('challenge', (app, { id }) => {
         try { const r = await net.api('POST', `/api/challenges/${id}/run`); playOnline({ cfg: r.cfg, seed: r.seed, runId: r.runId, kind: 'challenge', label: t('net.challenge'), extra: { target: c.score, creator: c.creator } }); }
         catch (e) { toast(errText(e)); }
       } } }, icon('play'), t('net.acceptChallenge')),
+      h('button.btn.block', { id: 'reshareChallenge', on: { click: () => shareText(t('share.challengeText', { n: num(c.score) }), shareUrl({ c: id })) } }, icon('upload'), t('share.reshare')),
       c.takers.length ? lbList({ list: c.takers.map((x, i) => ({ ...x, rank: i + 1 })) }, t('net.takers')) : null);
   });
   return { el };

@@ -31,6 +31,9 @@ CREATE TABLE IF NOT EXISTS season_ratings (
 CREATE TABLE IF NOT EXISTS announcements (
   id TEXT PRIMARY KEY, text_ar TEXT NOT NULL, text_en TEXT, active INTEGER NOT NULL DEFAULT 1, starts INTEGER, ends INTEGER, created INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS clubs (id TEXT PRIMARY KEY, code TEXT UNIQUE NOT NULL, name TEXT NOT NULL, owner TEXT NOT NULL, created INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS club_members (club_id TEXT NOT NULL, player_id TEXT NOT NULL, joined INTEGER NOT NULL, PRIMARY KEY (club_id, player_id));
+CREATE INDEX IF NOT EXISTS club_members_p ON club_members(player_id);
 CREATE TABLE IF NOT EXISTS player_tokens (token_hash TEXT PRIMARY KEY, player_id TEXT NOT NULL, created INTEGER NOT NULL);
 CREATE INDEX IF NOT EXISTS player_tokens_p ON player_tokens(player_id);
 CREATE TABLE IF NOT EXISTS friends (a TEXT NOT NULL, b TEXT NOT NULL, created INTEGER NOT NULL, PRIMARY KEY (a, b));

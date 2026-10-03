@@ -74,6 +74,13 @@ export function startServer({ port = 0, dbPath = ':memory:', adminToken = '', no
   route('DELETE', '/api/me', (req) => { const p = player(req); svc.deleteAccount(p.id); return { ok: true }; });
   route('POST', '/api/me/name', async (req, _p, body) => { const p = player(req); return { name: svc.rename(p, body.name) }; });
   route('POST', '/api/me/country', async (req, _p, body) => { const p = player(req); return { country: svc.setCountry(p, body.country) }; });
+  route('GET', '/api/clubs', (req) => { const p = player(req); return { clubs: svc.myClubs(p.id) }; });
+  route('POST', '/api/clubs', async (req, _p, body, ip) => { const p = player(req); limit(ip, 'club', 20, 3600000); return svc.createClub(p.id, body.name); });
+  route('POST', '/api/clubs/join', async (req, _p, body, ip) => { const p = player(req); limit(ip, 'cjoin', 30, 600000); return svc.joinClub(p.id, body.code); });
+  route('GET', '/api/clubs/league', (req) => { let pid = null; try { pid = svc.auth(bearer(req))?.id; } catch { /* ignore */ } return { league: svc.clubLeague(pid) }; });
+  route('GET', '/api/clubs/:id', (req, p) => { const pl = player(req); return { club: svc.getClub(pl.id, p.id) }; });
+  route('DELETE', '/api/clubs/:id', (req, p) => { const pl = player(req); svc.deleteClub(pl.id, p.id); return { ok: true }; });
+  route('DELETE', '/api/clubs/:id/members/:pid', (req, p) => { const pl = player(req); svc.leaveClub(pl.id, p.id, p.pid === 'me' ? null : p.pid); return { ok: true }; });
   route('GET', '/api/nations', (req) => { let pid = null; try { pid = svc.auth(bearer(req))?.id; } catch { /* ignore */ } return svc.nations(pid); });
   route('POST', '/api/me/skin', async (req, _p, body) => { const p = player(req); svc.setSkin(p, String(body.skin || '')); return { ok: true }; });
   route('GET', '/api/config', (req) => { let pid = null; try { pid = svc.auth(bearer(req))?.id; } catch { /* ignore */ } return { ...svc.config(pid), playGames: pgs.enabled }; });
