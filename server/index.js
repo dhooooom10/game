@@ -61,7 +61,7 @@ export function startServer({ port = 0, dbPath = ':memory:', adminToken = '', no
   const route = (method, pattern, fn) => routes.push({ method, re: new RegExp('^' + pattern.replace(/:(\w+)/g, '(?<$1>[^/]+)') + '$'), fn });
 
   route('GET', '/api/health', () => ({ ok: true, time: now() }));
-  route('POST', '/api/register', async (req, _p, body, ip) => { limit(ip, 'register', registerLimit, 3600000); /* المدارس قد تشترك في عنوان واحد */ return svc.register(body.name); });
+  route('POST', '/api/register', async (req, _p, body, ip) => { limit(ip, 'register', registerLimit, 3600000); /* المدارس قد تشترك في عنوان واحد */ return svc.register(body.name, body.country); });
   /* تسجيل الدخول/الربط عبر Google Play Games (تطبيق Android فقط) */
   route('POST', '/api/auth/playgames', async (req, _p, body, ip) => {
     limit(ip, 'pgs', 30, 600000);
@@ -73,6 +73,8 @@ export function startServer({ port = 0, dbPath = ':memory:', adminToken = '', no
   route('GET', '/api/me', (req) => { const p = player(req); return { player: svc.publicPlayer(p), rating: svc.rating(p.id), rewards: svc.rewards(p.id) }; });
   route('DELETE', '/api/me', (req) => { const p = player(req); svc.deleteAccount(p.id); return { ok: true }; });
   route('POST', '/api/me/name', async (req, _p, body) => { const p = player(req); return { name: svc.rename(p, body.name) }; });
+  route('POST', '/api/me/country', async (req, _p, body) => { const p = player(req); return { country: svc.setCountry(p, body.country) }; });
+  route('GET', '/api/nations', (req) => { let pid = null; try { pid = svc.auth(bearer(req))?.id; } catch { /* ignore */ } return svc.nations(pid); });
   route('POST', '/api/me/skin', async (req, _p, body) => { const p = player(req); svc.setSkin(p, String(body.skin || '')); return { ok: true }; });
   route('GET', '/api/config', (req) => { let pid = null; try { pid = svc.auth(bearer(req))?.id; } catch { /* ignore */ } return { ...svc.config(pid), playGames: pgs.enabled }; });
   route('GET', '/api/leaderboard/:board', (req, p, _b, _ip, url) => {

@@ -48,7 +48,8 @@ export async function ensureIdentity(app) {
     if (pg.available() && (await pg.signIn({ interactive: true })) && (await pg.linkAccount(app))) { identity = d.online; return identity; }
   } catch { /* نكمل بالتسجيل العادي */ }
   const name = (app.playerName || '').trim();
-  const r = await api('POST', '/api/register', { name }, { auth: false });
+  const { detectCountry } = await import('../core/country.js');
+  const r = await api('POST', '/api/register', { name, country: detectCountry() }, { auth: false });
   d.online = { id: r.id, token: r.token, name: r.name, code: r.code };
   app.save();
   identity = d.online;

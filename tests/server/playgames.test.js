@@ -99,3 +99,32 @@ test('local challenge: server replays the run, rejects tampered config, friend p
     assert.equal((await s.api('POST', '/api/challenges/local', { cfg, seed, log: bot.log, endTick: bot.endTick })).status, 401);
   } finally { await s.close(); }
 });
+
+test('nations league: country validation, weekly points from daily bests, top players, change lock', async () => {
+  const s = await boot();
+  try {
+    const a = await s.api('POST', '/api/register', { name: 'A', country: 'SA' });
+    const b = await s.api('POST', '/api/register', { name: 'B', country: 'eg' });
+    const c = await s.api('POST', '/api/register', { name: 'C', country: 'QQ' });
+    assert.equal((await s.api('GET', '/api/me', null, a.token)).player.country, 'SA');
+    assert.equal((await s.api('GET', '/api/me', null, b.token)).player.country, 'EG');
+    assert.equal((await s.api('GET', '/api/me', null, c.token)).player.country, null, 'invalid code ignored');
+    assert.equal((await s.api('POST', '/api/me/country', { country: 'ZZ' }, c.token)).status, 400);
+    assert.equal((await s.api('POST', '/api/me/country', { country: 'MA' }, c.token)).country, 'MA');
+    assert.equal((await s.api('POST', '/api/me/country', { country: 'TN' }, c.token)).status, 429, 'locked for a week');
+    // نتائج صالحة مباشرة في القاعدة: يومان لـ A، يوم لـ B
+    const t0 = s.clock.t; // السبت 2026-10-03 ظهرًا
+    const { isoWeek } = await import('../../server/services.js');
+    const ins2 = (pid, score, t) => s.db.run("INSERT INTO runs(id, player_id, kind, seed, cfg, started, submitted, score, valid, week) VALUES (?,?,?,?,?,?,?,?,1,?)", 'r' + Math.random(), pid, 'weekly', 's', '{}', t, t, score, isoWeek(t));
+    ins2(a.id, 100, t0); ins2(a.id, 300, t0 + 1000); ins2(a.id, 50, t0 - 3600e3 * 13); // يوم سابق في الأسبوع نفسه
+    ins2(b.id, 250, t0);
+    const n = await s.api('GET', '/api/nations', null, a.token);
+    const sa = n.list.find((x) => x.country === 'SA');
+    assert.equal(sa.points, 350, 'best of each day summed (300 + 50)');
+    assert.equal(n.list[0].country, 'SA');
+    assert.equal(n.mine.country, 'SA');
+    assert.equal(n.mine.rank, 1);
+    assert.equal(n.mine.myRank, 1);
+    assert.equal(n.list.find((x) => x.country === 'EG').points, 250);
+  } finally { await s.close(); }
+});

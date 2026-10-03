@@ -9,9 +9,10 @@ import { levelFromXp, dailyStatus, todayStr } from '../core/progression.js';
 import { WORLDS, worldOf, DAILY_COUNT, timeRecordKey } from '../core/modes.js';
 import { createSession } from '../core/session.js';
 import { isNativeApp, PLAY_URL } from '../config.js';
+import { flag, countryName } from '../core/country.js';
 import { nextJourneyLevel, buildRun, finishRun, PERSISTED, RAIN_PERSISTED, buildRainRun, finishRainRun } from '../runs.js';
 import { replayRain } from '../core/rain.js';
-import { loadConfig } from '../net/online.js';
+import { loadConfig, api } from '../net/online.js';
 import { eventCard } from './online.js';
 
 registerScreen('home', (app) => {
@@ -138,6 +139,13 @@ registerScreen('home', (app) => {
         loadConfig().then((c) => {
           for (const a of c.announcements.slice(0, 1)) eventsSlot.appendChild(h('div.announce', '📢 ', app.settings.lang === 'ar' ? a.text_ar : (a.text_en || a.text_ar)));
           for (const ev of c.events.slice(0, 2)) eventsSlot.appendChild(eventCard(ev));
+        }).catch(() => {});
+        // ترتيب دولتك هذا الأسبوع (للاعبين الذين دخلوا الأونلاين)
+        if (data.online?.token) api('GET', '/api/nations').then((n) => {
+          if (!n.mine?.country) return;
+          eventsSlot.appendChild(h('button.nat-chip', { id: 'natChip', on: { click: () => { sfx.tap(); app.go('nations'); } } },
+            h('span.nat-f', flag(n.mine.country)), h('span.grow', h('b', countryName(n.mine.country, app.settings.lang)), ' · ',
+              n.mine.rank ? t('nat.rank', { n: num(n.mine.rank) }) : t('nat.noRank')), h('small', t('nat.myPoints', { n: num(n.mine.myPoints) }))));
         }).catch(() => {});
       }
       const active = app.store.loadActive(app.pid);

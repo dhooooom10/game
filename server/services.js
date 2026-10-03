@@ -45,6 +45,12 @@ export function cleanName(name) {
   return n;
 }
 
+const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+export function validCountry(c) {
+  if (!/^[A-Z]{2}$/.test(c) || ['EU', 'UN', 'XX', 'ZZ', 'AQ'].includes(c)) return false;
+  try { return regionNames.of(c) !== c; } catch { return false; }
+}
+
 /** يقبل إعدادات مطر من العميل بحدود آمنة فقط (لا جولات لا نهائية ولا أرقام غريبة) */
 export function sanitizeCfg(cfg) {
   if (!cfg || typeof cfg !== 'object') throw new HttpError(400, 'bad_cfg');
@@ -75,14 +81,15 @@ export function createServices(db, { now = () => Date.now() } = {}) {
   const S = {};
 
   /* ---------------- اللاعبون ---------------- */
-  S.register = (name) => {
+  S.register = (name, country = null) => {
     const id = newId('p_');
     const token = randomBytes(24).toString('base64url');
     let nm;
     try { nm = cleanName(name); } catch { nm = 'قطرة' + (1000 + Math.floor(Math.random() * 9000)); }
     let code;
     for (let i = 0; i < 20; i++) { code = randomBytes(4).toString('hex').slice(0, 6).toUpperCase(); if (!db.get('SELECT 1 FROM players WHERE code=?', code)) break; }
-    db.run('INSERT INTO players(id, token_hash, name, code, created, last_seen) VALUES (?,?,?,?,?,?)', id, hashToken(token), nm, code, now(), now());
+    const cc = country && validCountry(String(country).toUpperCase()) ? String(country).toUpperCase() : null;
+    db.run('INSERT INTO players(id, token_hash, name, code, created, last_seen, country) VALUES (?,?,?,?,?,?,?)', id, hashToken(token), nm, code, now(), now(), cc);
     return { id, token, name: nm, code };
   };
   S.auth = (token) => {
@@ -131,7 +138,47 @@ export function createServices(db, { now = () => Date.now() } = {}) {
     db.run('DELETE FROM player_tokens WHERE player_id=? AND token_hash NOT IN (SELECT token_hash FROM player_tokens WHERE player_id=? ORDER BY created DESC LIMIT 10)', p.id, p.id);
     return { id: p.id, token, name: p.name, code: p.code, created: false, linked };
   });
-  S.publicPlayer = (p) => ({ id: p.id, name: p.name, code: p.code, skin: p.skin });
+  S.publicPlayer = (p) => ({ id: p.id, name: p.name, code: p.code, skin: p.skin, country: p.country || null });
+
+  /* ---------------- دوري الدول ---------------- */
+  /** يقبل رمز دولة ISO صالحًا فقط. التغيير مسموح مرة كل ٧ أيام (منعًا للتنقل بين الدول لرفع النقاط) */
+  S.setCountry = (p, code) => {
+    const c = String(code || '').toUpperCase();
+    if (!validCountry(c)) throw new HttpError(400, 'bad_country');
+    if (p.country === c) return c;
+    if (p.country && p.country_set && now() - p.country_set < 7 * 864e5) throw new HttpError(429, 'country_locked');
+    db.run('UPDATE players SET country=?, country_set=? WHERE id=?', c, now(), p.id);
+    return c;
+  };
+  /**
+   * نقاط الدولة هذا الأسبوع: لكل لاعب مجموع أفضل نتيجة له في كل يوم (يكافئ الانتظام لا جولة واحدة)،
+   * ثم مجموع أفضل ١٠٠ لاعب من كل دولة (حتى لا تفوز الدول الكبيرة بالعدد وحده).
+   */
+  S.nations = (pid = null) => {
+    const week = isoWeek(now());
+    const rows = db.all(`SELECT r.player_id AS pid, p.country, date(r.started/1000, 'unixepoch') AS d, MAX(r.score) AS best
+      FROM runs r JOIN players p ON p.id=r.player_id
+      WHERE r.valid=1 AND r.week=? AND p.banned=0 AND p.country IS NOT NULL GROUP BY r.player_id, d`, week);
+    const per = new Map();
+    for (const r of rows) { const x = per.get(r.pid) || { country: r.country, pts: 0 }; x.pts += r.best || 0; per.set(r.pid, x); }
+    const byC = new Map();
+    for (const [id, x] of per) { const a = byC.get(x.country) || []; a.push({ id, pts: x.pts }); byC.set(x.country, a); }
+    const list = [...byC.entries()].map(([country, ps]) => {
+      ps.sort((a, b) => b.pts - a.pts);
+      return { country, points: ps.slice(0, 100).reduce((s, x) => s + x.pts, 0), players: ps.length };
+    }).sort((a, b) => b.points - a.points).map((x, i) => ({ ...x, rank: i + 1 }));
+    let mine = null;
+    if (pid) {
+      const me = db.get('SELECT country FROM players WHERE id=?', pid);
+      if (me?.country) {
+        const row = list.find((x) => x.country === me.country);
+        const ps = (byC.get(me.country) || []).sort((a, b) => b.pts - a.pts);
+        const idx = ps.findIndex((x) => x.id === pid);
+        mine = { country: me.country, rank: row?.rank || null, points: row?.points || 0, myPoints: per.get(pid)?.pts || 0, myRank: idx >= 0 ? idx + 1 : null, players: row?.players || 0 };
+      }
+    }
+    return { week, list: list.slice(0, 60), mine };
+  };
   S.rename = (p, name) => { const n = cleanName(name); db.run('UPDATE players SET name=? WHERE id=?', n, p.id); return n; };
   S.setSkin = (p, skin) => { if (/^[a-z]{2,10}$/.test(skin)) db.run('UPDATE players SET skin=? WHERE id=?', skin, p.id); };
 

@@ -12,6 +12,8 @@ import { t, locale } from '../i18n.js';
 import { commitRound } from '../core/progression.js';
 import * as pgs from '../net/playgames.js';
 import * as net from '../net/online.js';
+import { shareText, shareUrl } from '../ui/share.js';
+import { COUNTRIES, flag, countryName, detectCountry } from '../core/country.js';
 import { topbar, seg, field } from './setup.js';
 
 const EMOTES = ['👏', '🔥', '😮', '😂', '💪', '🎉', '👋', '❤️'];
@@ -106,7 +108,8 @@ registerScreen('online', (app) => {
       bigBtn('tourBtn', '🏆', '#FFC94A', t('net.tournaments'), t('net.tournamentsSub'), () => app.go('tournaments')),
       bigBtn('weeklyBtn', '🌧️', '#3DDC97', t('net.weekly'), t('net.weeklySub'), () => startWeekly()),
       bigBtn('lbBtn', '📊', '#FF9F5A', t('net.leaderboards'), t('net.leaderboardsSub'), () => app.go('leaderboards')),
-      bigBtn('friendsBtn', '🤝', '#FF7BB0', t('net.friends'), t('net.friendsSub'), () => app.go('friends'))));
+      bigBtn('friendsBtn', '🤝', '#FF7BB0', t('net.friends'), t('net.friendsSub'), () => app.go('friends')),
+      bigBtn('nationsBtn', '🌍', '#5AD1A0', t('nat.title'), t('nat.sub'), () => app.go('nations'))));
     if (pgs.available() && pgs.signedIn()) {
       const row = h('div.row-btns.section');
       if (pgs.hasAchievements()) row.append(h('button.btn.ghost', { type: 'button', on: { click: () => pgs.showAchievements() } }, '🏅 ' + t('net.pgsAch')));
@@ -216,7 +219,7 @@ registerScreen('room', (app, params) => {
     const host = room.host === myId;
     const s = room.settings;
     box.append(h('section.card.room-code', h('div.faint', t('net.shareCode')), h('div.pin', { dir: 'ltr', id: 'roomPin' }, room.code),
-      h('button.btn.sm', { on: { click: () => share(t('net.roomInvite', { code: room.code }), location.origin + '/') } }, icon('upload'), t('net.share'))));
+      h('button.btn.sm', { on: { click: () => share(t('net.roomInvite', { code: room.code }), shareUrl()) } }, icon('upload'), t('net.share'))));
     const list = h('section.card.section', h('h2.section-title', t('net.players'), h('small', `${num(room.members.length)}/${num(8)}`)));
     for (const m of room.members) {
       list.append(h('div.row', drop('sky', 24),
@@ -261,10 +264,7 @@ registerScreen('room', (app, params) => {
   };
 });
 
-async function share(text, url) {
-  try { if (navigator.share) { await navigator.share({ text, url }); return; } } catch { return; }
-  try { await navigator.clipboard.writeText(`${text} ${url}`); toast(t('net.copied')); } catch { toast(text); }
-}
+const share = (text, url) => shareText(text, url);
 
 /* =========================================================================
    البطولات
@@ -335,6 +335,57 @@ registerScreen('leaderboards', (app, params) => {
 });
 
 /* =========================================================================
+   دوري الدول
+   ========================================================================= */
+function countrySelect(value) {
+  const lang = locale().lang;
+  const opts = COUNTRIES.map((c) => [c, countryName(c, lang)]).sort((a, b) => a[1].localeCompare(b[1], lang));
+  return h('select.input', { aria: { label: t('nat.myCountry') } }, ...opts.map(([c, n]) => h('option', { value: c, selected: c === value }, `${flag(c)} ${n}`)));
+}
+registerScreen('nations', (app) => {
+  const el = h('main', topbar(t('nat.title'), t('nat.sub')));
+  const box = h('div'); el.append(box);
+  const load = () => guard(box, async () => {
+    const [me, nat] = await Promise.all([net.api('GET', '/api/me'), net.api('GET', '/api/nations')]);
+    const lang = locale().lang;
+    clear(box);
+    const cur = me.player.country;
+    if (!cur) {
+      // أول مرة: اختيار الدولة (مقترحة من إعدادات الجهاز)
+      const sel = countrySelect(detectCountry() || 'SA');
+      box.append(h('section.card', h('h2', t('nat.pick')), h('p.note', t('nat.pickNote')), sel,
+        h('button.btn.primary.block', { id: 'saveCountry', style: { marginTop: '10px' }, on: { click: async () => {
+          try { await net.api('POST', '/api/me/country', { country: sel.value }); sfx.correct(); load(); } catch (e) { toast(errText(e)); }
+        } } }, t('nat.join'))));
+    } else {
+      const m = nat.mine || { country: cur, rank: null, points: 0, myPoints: 0 };
+      box.append(h('section.card.nat-me', h('div.nat-flag', flag(cur)),
+        h('div.grow', h('div.t', countryName(cur, lang)),
+          h('div.d', m.rank ? t('nat.rank', { n: num(m.rank) }) : t('nat.noRank')),
+          h('div.d', t('nat.myPoints', { n: num(m.myPoints) }) + (m.myRank ? ' · ' + t('nat.myRank', { n: num(m.myRank) }) : ''))),
+        h('b.nat-pts', num(m.points))));
+      box.append(h('p.note', t('nat.how')));
+      box.append(h('button.btn.block.primary', { on: { click: () => { sfx.tap(); app.go('home', {}, { root: true }); } } }, '💧 ', t('nat.play')));
+    }
+    const list = h('section.card.section', h('h2.section-title', t('nat.board'), h('small', nat.week)));
+    if (!nat.list.length) list.append(h('p.note', t('nat.empty')));
+    const medal = (r) => r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '🥉' : num(r);
+    for (const r of nat.list) list.append(h('div.lb-row' + (r.country === cur ? '.me' : ''), h('span.rk', medal(r.rank)), h('span.nat-f', flag(r.country)),
+      h('span.nm', countryName(r.country, lang), h('small', ' · ' + t('nat.players', { n: num(r.players) }))), h('b', num(r.points))));
+    box.append(list);
+    if (cur) {
+      const sel = countrySelect(cur);
+      box.append(h('details.card', h('summary', t('nat.change')), h('p.note', t('nat.changeNote')), sel,
+        h('button.btn.block', { style: { marginTop: '8px' }, on: { click: async () => {
+          try { await net.api('POST', '/api/me/country', { country: sel.value }); load(); } catch (e) { toast(e.code === 'country_locked' ? t('nat.locked') : errText(e)); }
+        } } }, t('common.save'))));
+    }
+  });
+  load();
+  return { el, nav: 'online' };
+});
+
+/* =========================================================================
    الأصدقاء
    ========================================================================= */
 registerScreen('friends', (app) => {
@@ -345,7 +396,7 @@ registerScreen('friends', (app) => {
     const code = h('input.input.codein', { maxlength: 6, dir: 'ltr', placeholder: 'ABC123', aria: { label: t('net.friendCode') } });
     const err = h('p.note', { style: { color: 'var(--bad)' } });
     box.append(h('section.card', h('div.faint', t('net.myCode')), h('div.pin', { dir: 'ltr' }, net.me().code),
-      h('button.btn.sm', { on: { click: () => share(t('net.addMe', { code: net.me().code }), location.origin + '/') } }, icon('upload'), t('net.share'))),
+      h('button.btn.sm', { on: { click: () => share(t('net.addMe', { code: net.me().code }), shareUrl()) } }, icon('upload'), t('net.share'))),
     h('section.card', field(t('net.addFriend'), code), err, h('button.btn.primary.block', { id: 'addFriend', on: { click: async () => {
       try { const r = await net.api('POST', '/api/friends', { code: code.value.trim() }); sfx.correct(); paint(r.friends); }
       catch (e) { err.textContent = errText(e); }
@@ -403,7 +454,7 @@ registerScreen('onlineResult', (app, params) => {
     params.kind === 'tournament' ? h('button.btn.primary.block.lg', { on: { click: () => app.go('tournament', { id: params.extra.tid }, { replace: true }) } }, '🏆 ', t('net.tournament')) : null,
     params.kind === 'weekly' ? h('button.btn.primary.block.lg', { on: { click: () => { app.back(); setTimeout(() => document.getElementById('weeklyBtn')?.click(), 60); } } }, icon('refresh'), t('net.playAgain')) : null,
     runId && ['weekly', 'duel', 'ghost', 'tournament'].includes(params.kind) ? h('button.btn.block', { id: 'challengeBtn', on: { click: async () => {
-      try { const r = await net.api('POST', '/api/challenges', { runId }); share(t('net.challengeShare', { n: num(local.score) }), `${location.origin}/?c=${r.id}`); }
+      try { const r = await net.api('POST', '/api/challenges', { runId }); share(t('net.challengeShare', { n: num(local.score) }), shareUrl({ c: r.id })); }
       catch (e) { toast(errText(e)); }
     } } }, '⚔️ ', t('net.makeChallenge')) : null,
     h('button.btn.ghost.block', { on: { click: () => app.go('online', {}, { root: true }) } }, t('online.title')));

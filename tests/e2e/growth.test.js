@@ -64,3 +64,17 @@ test('challenge a friend from an offline round; the link opens the same drops fo
   assert.deepEqual(p.errors, []);
   assert.deepEqual(f.errors, []);
 });
+
+test('nations league: country auto-detected, ranking shown, home chip', async () => {
+  const p = await page();
+  await p.goto(S.url + '/?e2e=1');
+  await waitScreen(p, 'home');
+  await p.evaluate(() => window.__mc.go('nations'));
+  await waitScreen(p, 'nations');
+  // البلد يُقترح تلقائيًا من لغة الجهاز (ar-SA) عند إنشاء الهوية
+  await p.waitForSelector('.nat-me');
+  assert.match(await p.locator('.nat-me').innerText(), /السعودية/);
+  await p.evaluate(() => window.__mc.go('home', {}, { root: true }));
+  await p.waitForSelector('#natChip', { timeout: 8000 });
+  assert.deepEqual(p.errors, []);
+});

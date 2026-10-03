@@ -54,6 +54,8 @@ export function openDb(path = ':memory:') {
   // ترقية: ربط حساب Google Play Games (عمود اختياري لقواعد بيانات قديمة)
   const cols = db.prepare('PRAGMA table_info(players)').all().map((c) => c.name);
   if (!cols.includes('pgs_id')) db.exec('ALTER TABLE players ADD COLUMN pgs_id TEXT');
+  if (!cols.includes('country')) db.exec('ALTER TABLE players ADD COLUMN country TEXT');
+  if (!cols.includes('country_set')) db.exec('ALTER TABLE players ADD COLUMN country_set INTEGER');
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS players_pgs ON players(pgs_id) WHERE pgs_id IS NOT NULL');
   const cache = new Map();
   const q = (sql) => { let s = cache.get(sql); if (!s) { s = db.prepare(sql); cache.set(sql, s); } return s; };
