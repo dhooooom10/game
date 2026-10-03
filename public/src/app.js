@@ -7,6 +7,7 @@ import { setLocale, t, LANGS, detectLang, isRtl } from './i18n.js';
 import { h, clear, icon } from './ui/dom.js';
 import { setLevels, setHaptics, sfx, unlockAudio, startMusic, pauseAll, resumeAll } from './ui/audio.js';
 import { setMotion } from './ui/fx.js';
+import { useIdentity } from './net/online.js';
 
 export const VERSION = '2.0.0';
 
@@ -38,6 +39,7 @@ export const app = {
   loadProfile(id) {
     this.pid = id;
     this.data = this.store.load(id);
+    useIdentity(this.data);
     if (ensureMissions(this.data, todayStr(), id)) this.save();
     this.applyLook();
   },
@@ -105,7 +107,7 @@ export const app = {
     clear(this.nav);
     if (!active) { this.nav.hidden = true; return; }
     this.nav.hidden = false;
-    const items = [['home', 'home', 'nav.home'], ['journey', 'map', 'nav.journey'], ['progress', 'chart', 'nav.progress'], ['locker', 'trophy', 'nav.locker']];
+    const items = [['home', 'home', 'nav.home'], ['journey', 'map', 'nav.journey'], ['online', 'users', 'nav.online'], ['progress', 'chart', 'nav.progress'], ['locker', 'trophy', 'nav.locker']];
     const inner = h('div.inner');
     for (const [name, ic, key] of items) {
       inner.appendChild(h('button', {

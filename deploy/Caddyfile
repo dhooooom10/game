@@ -1,0 +1,5 @@
+# Caddy يصدر شهادة HTTPS تلقائيًا (مطلوبة لـ Google Play) ويمرّر WebSocket
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy game:8080
+}

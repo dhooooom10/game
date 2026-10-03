@@ -8,12 +8,12 @@ import { findPath, lessonKey } from './core/curriculum.js';
 import { parTime } from './core/questions.js';
 import { accuracyBonus } from './core/scoring.js';
 import { randomSeed } from './core/rng.js';
-import { rainConfig, classicConfig } from './core/rain.js';
+import { rainConfig } from './core/rain.js';
 import { journeyRain, evaluateRainJourney, dailyRain, stormConfig, survivalConfig } from './core/modes.js';
 import { t } from './i18n.js';
 
 export const PERSISTED = new Set(['practice', 'lesson']);
-export const RAIN_PERSISTED = new Set(['journey', 'time', 'survival', 'daily', 'classic']);
+export const RAIN_PERSISTED = new Set(['journey', 'time', 'survival', 'daily']);
 
 /* ---------- أسئلة الشرح التفاعلي (ثابتة وسهلة) ---------- */
 const N = (n) => ({ n });
@@ -192,7 +192,6 @@ export function buildRainRun(kind, args, data, seed = randomSeed()) {
     }
     case 'time': cfg = stormConfig(args.diff, args.dur, true); meta.label = `${t('mode.time')} · ${t('diff.' + args.diff)}`; break;
     case 'survival': cfg = survivalConfig(args.diff); meta.label = `${t('mode.survival')} · ${t('diff.' + args.diff)}`; break;
-    case 'classic': cfg = classicConfig(args.diff); meta.label = `${t('mode.rain')} · ${t('diff.' + args.diff)}`; break;
     case 'daily': {
       const d = dailyRain(args.date); cfg = d.cfg; seed = d.seed;
       meta.realtime = true;
@@ -210,7 +209,7 @@ export function buildRainRun(kind, args, data, seed = randomSeed()) {
 }
 
 export function finishRainRun(kind, args, run, sum, data, date = todayStr()) {
-  const base = { id: run.id, mode: kind === 'classic' ? 'rain' : kind, score: sum.score, correct: sum.correct, answered: sum.answered, bestStreak: sum.bestStreak, perOp: sum.perOp, activeMs: sum.activeMs };
+  const base = { id: run.id, mode: kind, score: sum.score, correct: sum.correct, answered: sum.answered, bestStreak: sum.bestStreak, perOp: sum.perOp, activeMs: sum.activeMs };
   const view = { engine: 'rain', kind, args, sum, stars: null, score: sum.score, record: null, notes: [], mood: 'happy', tip: tipFor({ ...sum, answers: sum.answers.filter((a) => a.ms != null || !a.correct) }, true) };
   let round = base;
   if (kind === 'journey') {
@@ -235,9 +234,6 @@ export function finishRainRun(kind, args, run, sum, data, date = todayStr()) {
     const key = kind === 'time' ? timeRecordKey(args.dur, args.diff) : survivalRecordKey(args.diff);
     round = { ...base, recordKey: key, recordValue: sum.popped, duration: args.dur, diff: args.diff };
     Object.assign(view, { title: kind === 'time' ? t('res.timeUp') : t('res.survivalEnd', { n: sum.popped }), mood: sum.popped >= 15 ? 'cheer' : 'happy' });
-  } else if (kind === 'classic') {
-    round = { ...base, passed: sum.won, diff: args.diff, recordKey: 'rain:' + args.diff, recordValue: sum.score };
-    Object.assign(view, { title: sum.won ? t('res.rainWin') : t('res.rainLose'), mood: sum.won ? 'cheer' : 'sad', passed: sum.won });
   } else if (kind === 'daily') {
     const bonus = accuracyBonus(sum.correct, sum.answered);
     const finalScore = sum.score + bonus;

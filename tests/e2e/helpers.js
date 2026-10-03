@@ -36,7 +36,8 @@ export async function newPage(browser, { width = 390, height = 844, locale = 'ar
   const page = await ctx.newPage();
   page.errors = [];
   page.on('pageerror', (e) => page.errors.push(e.message));
-  page.on('console', (m) => { if (m.type() === 'error') page.errors.push(m.text()); });
+  // نتجاهل فشل طلبات /api في خادم الملفات الثابتة (لا يوجد خادم لعب في هذه الاختبارات)
+  page.on('console', (m) => { if (m.type() === 'error' && !(/\/api\//.test(m.location()?.url || '') && /404/.test(m.text()))) page.errors.push(m.text()); });
   return page;
 }
 
@@ -103,3 +104,17 @@ export async function playRound(page, pattern = () => true, max = 80) {
 export async function noHorizontalOverflow(page) {
   return page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 }
+
+/** يلعب شاشة المطر: يكتب ناتج أدنى قطرة. skill: نسبة الإجابات المكتوبة. */
+export async function rainPlay(page, { every = 300, skill = 1, maxMs = 90000, until = null } = {}) {
+  const t0 = Date.now(); let n = 0;
+  while (Date.now() - t0 < maxMs) {
+    const st = await page.evaluate(() => { const c = window.__mc.current; if (!c || c.name !== 'rainPlay') return { name: c?.name }; const R = c.rain(); const d = R.state.drops.filter((x) => !x.dead).sort((a, b) => b.y - a.y)[0]; return { name: 'rainPlay', ans: d ? d.q.answer : null, over: R.state.over }; });
+    if (st.name !== 'rainPlay') return st.name;
+    if (until && await until()) return 'until';
+    if (st.ans != null && (n++ % 10) < skill * 10) { for (const ch of String(st.ans)) await page.keyboard.press(ch === '-' ? 'Minus' : ch); await page.keyboard.press('Enter'); }
+    await page.waitForTimeout(every);
+  }
+  return 'timeout';
+}
+export const rainState = (page) => page.evaluate(() => { const R = window.__mc.current.rain(); return { popped: R.state.popped, missed: R.state.missed, tick: R.state.tick, over: R.state.over, lives: R.state.lives }; });

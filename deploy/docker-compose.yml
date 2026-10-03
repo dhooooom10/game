@@ -1,0 +1,29 @@
+# تشغيل الإنتاج على أي خادم Linux (مثل Google Compute Engine):
+#   1) وجّه نطاقك (A record) إلى عنوان الخادم
+#   2) انسخ .env.example إلى .env واملأ القيم
+#   3) docker compose up -d --build
+services:
+  game:
+    build: ..
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - gamedata:/data
+    expose:
+      - "8080"
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+    depends_on:
+      - game
+volumes:
+  gamedata:
+  caddydata:

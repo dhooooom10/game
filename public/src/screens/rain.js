@@ -10,31 +10,12 @@ import { mascotSVG } from '../ui/mascot.js';
 import { sfx, buzz } from '../ui/audio.js';
 import { floatText, replay, reducedMotion, confetti } from '../ui/fx.js';
 import { t } from '../i18n.js';
-import { createRain, TICK_MS, TPS, RAIN_DIFFS, classicConfig } from '../core/rain.js';
+import { createRain, TICK_MS, TPS, RAIN_DIFFS } from '../core/rain.js';
 import { recordAnswer } from '../core/progression.js';
 import { randomSeed } from '../core/rng.js';
 import { normalizeDigits } from '../core/numbers.js';
 import { streakMultiplier } from '../core/scoring.js';
 import { buildRainRun, finishRainRun } from '../runs.js';
-import { topbar, seg, field } from './setup.js';
-
-/* ---------------- إعداد المطر الكلاسيكي ---------------- */
-registerScreen('rainSetup', (app) => {
-  const pref = app.data.prefs.rain;
-  const rules = h('p.note');
-  const recBox = h('div.chip.gold');
-  const paint = () => {
-    rules.textContent = t('rain.rules', { n: classicConfig(pref.diff).target });
-    const r = app.data.records['rain:' + pref.diff];
-    recBox.textContent = r ? '🏆 ' + t('setup.record', { n: num(r.value) }) : t('setup.noRecord');
-  };
-  const el = h('main', topbar(t('mode.rain'), t('mode.rainSub')),
-    h('section.card', field(t('setup.difficulty'), seg(['easy', 'medium', 'hard', 'expert'].map((d) => [d, t('diff.' + d)]), pref.diff, (v) => { pref.diff = v; app.save(); paint(); }, t('setup.difficulty'))), recBox),
-    h('div', { style: { marginTop: '12px' } }, rules), h('p.note', t('rain.hint')),
-    h('button.btn.primary.block.lg', { id: 'startRain', on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'classic', args: { diff: pref.diff } }); } } }, icon('play'), t('common.start')));
-  paint();
-  return { el };
-});
 
 const KIND_ICON = { gold: '⭐', ice: '❄️', storm: '⚡' };
 
@@ -85,7 +66,9 @@ registerScreen('rainPlay', (app, params) => {
   fastKey(h('span', { style: { display: 'inline-flex', gap: '8px', alignItems: 'center' } }, icon('check'), t('game.check')), () => press('ok'), 'go', t('game.check'));
 
   const quitBtn = h('button.icon-btn', { aria: { label: t('game.quit') }, on: { click: () => askQuit() } }, icon('close'));
-  const pauseBtn = realtime ? null : h('button.icon-btn', { aria: { label: t('game.pause') }, on: { click: () => pause() } }, icon('pause'));
+  const pauseBtn = meta.tutorial
+    ? h('button.btn.sm.ghost', { id: 'skipTutorial', on: { click: () => { ended = true; cleanup(); data.settings.tutorialDone = true; app.save(); app.go('rainPlay', { kind: 'journey', args: { level: 1 } }, { replace: true }); } } }, t('tut.skip'))
+    : realtime ? null : h('button.icon-btn', { aria: { label: t('game.pause') }, on: { click: () => pause() } }, icon('pause'));
   const center = h('div.grow');
   if (R.limitTicks) center.append(h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, h('div', { style: { flex: '1' } }, timerEl), timerText));
   const el = h('main.game-view.rain-view',
@@ -306,6 +289,7 @@ registerScreen('rainPlay', (app, params) => {
       return app.go('rainPlay', { kind: 'journey', args: { level: 1 } }, { replace: true });
     }
     const { view } = finishRainRun(kind, params.args || {}, { id: built.id, seed }, sum, data);
+    if (kind === 'daily' && view.official) import('./online.js').then((m) => m.uploadDaily(app, params.args.date, R.state.log, R.state.tick)).catch(() => {});
     app.save();
     app.go('results', { view }, { replace: true });
   }

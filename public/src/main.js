@@ -10,8 +10,16 @@ import './screens/locker.js';
 import './screens/settings.js';
 import './screens/friend.js';
 import './screens/rain.js';
+import './screens/online.js';
 
-boot().catch((e) => {
+boot().then(() => {
+  // رابط تحدٍّ: ?c=المعرّف
+  const c = new URLSearchParams(location.search).get('c');
+  if (c && /^[\w-]{4,20}$/.test(c)) {
+    history.replaceState(null, '', location.pathname + (location.search.includes('e2e=1') ? '?e2e=1' : ''));
+    if (app.current?.name === 'home') app.go('challenge', { id: c });
+  }
+}).catch((e) => {
   console.error(e);
   const el = document.getElementById('app');
   if (el) el.innerHTML = '<p style="padding:24px;text-align:center">حدث خطأ أثناء التشغيل. حدّث الصفحة.<br>Something went wrong — please reload.</p>';

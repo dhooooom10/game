@@ -61,6 +61,7 @@ export function startServer({ port = 0, dbPath = ':memory:', adminToken = '', no
   route('GET', '/api/health', () => ({ ok: true, time: now() }));
   route('POST', '/api/register', async (req, _p, body, ip) => { limit(ip, 'register', registerLimit, 3600000); /* المدارس قد تشترك في عنوان واحد */ return svc.register(body.name); });
   route('GET', '/api/me', (req) => { const p = player(req); return { player: svc.publicPlayer(p), rating: svc.rating(p.id), rewards: svc.rewards(p.id) }; });
+  route('DELETE', '/api/me', (req) => { const p = player(req); svc.deleteAccount(p.id); return { ok: true }; });
   route('POST', '/api/me/name', async (req, _p, body) => { const p = player(req); return { name: svc.rename(p, body.name) }; });
   route('POST', '/api/me/skin', async (req, _p, body) => { const p = player(req); svc.setSkin(p, String(body.skin || '')); return { ok: true }; });
   route('GET', '/api/config', (req) => { let pid = null; try { pid = svc.auth(bearer(req))?.id; } catch { /* ignore */ } return svc.config(pid); });

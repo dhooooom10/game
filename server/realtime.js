@@ -9,7 +9,7 @@ import { newId, DUEL, EMOTES, HttpError } from './services.js';
 
 const COLORS = ['#FF7BB0', '#FFC94A', '#3DDC97', '#9B8CFF', '#FF9F5A', '#7CF0D0', '#5FD3F5', '#E06FA8'];
 
-export function createRealtime(httpServer, svc, db, { now = () => Date.now(), queueWaitMs = 12000, startDelayMs = 4000, graceMs = 15000 } = {}) {
+export function createRealtime(httpServer, svc, db, { now = () => Date.now(), queueWaitMs = 12000, startDelayMs = 4000, graceMs = 15000, forceSeconds = null } = {}) {
   const wss = new WebSocketServer({ server: httpServer, path: '/ws', maxPayload: 512 * 1024 });
   const clients = new Map();       // playerId -> Set<ws>
   const queue = [];                // [{ws, pid, at, rating}]
@@ -22,6 +22,7 @@ export function createRealtime(httpServer, svc, db, { now = () => Date.now(), qu
 
   /* ---------------- المباريات ---------------- */
   function createMatch(kind, players, { cfg = stormConfig(DUEL.diff, DUEL.seconds, true), seed = 'M:' + randomBytes(6).toString('hex'), room = null, ghosts = [] } = {}) {
+    if (forceSeconds && kind !== 'ghost') cfg = { ...cfg, timeLimit: forceSeconds }; // للاختبارات فقط
     const id = newId('m_');
     const startAt = now() + startDelayMs;
     db.run('INSERT INTO matches(id, kind, seed, cfg, created, start_at) VALUES (?,?,?,?,?,?)', id, kind, seed, JSON.stringify(cfg), now(), startAt);

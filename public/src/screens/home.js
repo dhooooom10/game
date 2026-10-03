@@ -10,6 +10,8 @@ import { WORLDS, worldOf, DAILY_COUNT, timeRecordKey } from '../core/modes.js';
 import { createSession } from '../core/session.js';
 import { nextJourneyLevel, buildRun, finishRun, PERSISTED, RAIN_PERSISTED, buildRainRun, finishRainRun } from '../runs.js';
 import { replayRain } from '../core/rain.js';
+import { loadConfig } from '../net/online.js';
+import { eventCard } from './online.js';
 
 registerScreen('home', (app) => {
   const data = app.data;
@@ -53,6 +55,10 @@ registerScreen('home', (app) => {
       h('div.hs', h('div.v', '★ ' + num(totalStars)), h('div.l', t('home.stars'))),
       h('div.hs', h('div.v', bestMin != null ? num(bestMin) : '—'), h('div.l', t('home.bestTime'))),
       h('div.hs', h('div.v', '🔥 ' + num(ds.streak)), h('div.l', t('home.streak'))))));
+
+  // بطاقات المناسبات والبطولات الجارية (تظهر عند توفر الاتصال فقط)
+  const eventsSlot = h('div.events-slot');
+  el.appendChild(eventsSlot);
 
   function playNow() {
     sfx.tap();
@@ -120,6 +126,12 @@ registerScreen('home', (app) => {
     el, nav: 'home',
     afterMount: () => {
       // استئناف جولة انقطعت (تحديث الصفحة أو إغلاق التطبيق)
+      if (navigator.onLine !== false) {
+        loadConfig().then((c) => {
+          for (const a of c.announcements.slice(0, 1)) eventsSlot.appendChild(h('div.announce', '📢 ', app.settings.lang === 'ar' ? a.text_ar : (a.text_en || a.text_ar)));
+          for (const ev of c.events.slice(0, 2)) eventsSlot.appendChild(eventCard(ev));
+        }).catch(() => {});
+      }
       const active = app.store.loadActive(app.pid);
       if (active && active.engine === 'rain' && RAIN_PERSISTED.has(active.kind)) offerResume(active);
       else if (active && PERSISTED.has(active.kind) && active.snap) offerResume(active);

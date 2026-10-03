@@ -1,6 +1,6 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { startServer, launch, newPage, waitScreen, playRound, answer, waitNextOrEnd, noHorizontalOverflow } from './helpers.js';
+import { startServer, launch, newPage, waitScreen, playRound, noHorizontalOverflow, rainPlay } from './helpers.js';
 
 let srv, browser, URL_;
 before(async () => { srv = await startServer(); browser = await launch(); URL_ = srv.url + '?e2e=1'; });
@@ -14,7 +14,7 @@ test('every screen renders without errors and without horizontal overflow at 320
   await waitScreen(page, 'home');
   const screens = [['home'], ['journey'], ['world', { w: 0 }], ['world', { w: 9 }], ['progress'], ['locker'], ['locker', { tab: 'looks' }],
     ['settings'], ['profiles'], ['setupTime'], ['setupSurvival'], ['practice'], ['practice', { tab: 'lessons' }], ['lessonPath', { pid: 'mul' }],
-    ['friendSetup'], ['rainSetup']];
+    ['friendSetup']];
   for (const [name, params] of screens) {
     await go(page, name, params || {});
     await waitScreen(page, name);
@@ -23,7 +23,13 @@ test('every screen renders without errors and without horizontal overflow at 320
     const unnamed = await page.evaluate(() => [...document.querySelectorAll('#app button, #nav button')].filter((b) => b.offsetParent && !(b.innerText.trim() || b.getAttribute('aria-label'))).length);
     assert.equal(unnamed, 0, `unnamed buttons on ${name}`);
   }
-  for (const kind of [['journey', { level: 1 }], ['time', { dur: 60, diff: 'hard' }], ['survival', { diff: 'easy' }], ['practice', { opts: { topics: ['frac', 'percent', 'power', 'order'], level: 6, format: 'mixed', timer: true, length: 10 } }], ['lesson', { pid: 'count', li: 0 }]]) {
+  for (const kind of [['journey', { level: 57 }], ['time', { dur: 60, diff: 'hard' }], ['survival', { diff: 'expert' }]]) {
+    await go(page, 'rainPlay', { kind: kind[0], args: kind[1] });
+    await page.waitForTimeout(3500);
+    assert.ok(await noHorizontalOverflow(page), `overflow in rain ${kind[0]}`);
+    await page.evaluate(() => window.__mc.current.destroy());
+  }
+  for (const kind of [['practice', { opts: { topics: ['frac', 'percent', 'power', 'order'], level: 6, format: 'mixed', timer: true, length: 10 } }], ['lesson', { pid: 'count', li: 0 }]]) {
     await go(page, 'play', { kind: kind[0], args: kind[1] });
     await page.waitForFunction(() => window.__mc.current?.session?.phase === 'asking', null, { timeout: 6000 });
     assert.ok(await noHorizontalOverflow(page), `overflow in play ${kind[0]}`);
@@ -120,29 +126,6 @@ test('friend challenge (split screen) plays both panes simultaneously', async ()
   assert.deepEqual(page.errors, []);
 });
 
-test('equation rain: drops fall, typing the answer pops them, game ends and saves record', async () => {
-  const page = await newPage(browser);
-  await page.clock.install();
-  await page.goto(URL_);
-  await page.evaluate(() => { window.__mc.data.prefs.rain.diff = 'easy'; window.__mc.save(); });
-  await go(page, 'rainSetup');
-  await page.click('#startRain');
-  await waitScreen(page, 'rainPlay');
-  await page.clock.runFor(1500);
-  assert.ok((await page.locator('.drop').count()) >= 1);
-  const ans = await page.evaluate(() => window.__mc.current.rain.state.drops.find((d) => !d.dead).q.answer);
-  for (const ch of String(ans)) await page.keyboard.press(ch);
-  await page.keyboard.press('Enter');
-  assert.equal(await page.evaluate(() => window.__mc.current.rain.state.popped), 1);
-  // نترك القطرات تسقط حتى نهاية المحاولات
-  for (let i = 0; i < 40 && (await page.evaluate(() => window.__mc.current.name)) === 'rainPlay'; i++) await page.clock.runFor(2000);
-  await waitScreen(page, 'results');
-  const d = await page.evaluate(() => window.__mc.data);
-  assert.ok(d.records['rain:easy']);
-  assert.equal(d.stats.rounds, 1);
-  assert.deepEqual(page.errors, []);
-});
-
 test('profiles: data is separated per player; password-protected profile needs unlock', async () => {
   const page = await newPage(browser);
   await page.goto(URL_);
@@ -202,8 +185,8 @@ test('keyboard-only play works (Tab focus + keys)', async () => {
   await page.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.save(); });
   await page.focus('#playNow');
   await page.keyboard.press('Enter');
-  await waitScreen(page, 'play');
-  for (let i = 0; i < 3; i++) { const q = await answer(page, true); await waitNextOrEnd(page, q.index); }
-  assert.equal(await page.evaluate(() => window.__mc.current.session.state.correct), 3);
+  await waitScreen(page, 'rainPlay');
+  await rainPlay(page, { until: async () => (await page.evaluate(() => window.__mc.current.rain().state.popped)) >= 3 });
+  assert.ok(await page.evaluate(() => window.__mc.current.rain().state.popped) >= 3);
   assert.ok(await noHorizontalOverflow(page));
 });

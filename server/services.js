@@ -74,6 +74,14 @@ export function createServices(db, { now = () => Date.now() } = {}) {
     db.run('UPDATE players SET last_seen=? WHERE id=?', now(), p.id);
     return p;
   };
+  /** حذف الحساب وكل بياناته (متطلب من Google Play) */
+  S.deleteAccount = (pid) => db.tx(() => {
+    for (const sql of ['DELETE FROM runs WHERE player_id=?', 'DELETE FROM friends WHERE a=? OR b=?', 'DELETE FROM season_ratings WHERE player_id=?',
+      'DELETE FROM rewards WHERE player_id=?', 'DELETE FROM challenges WHERE creator=?', 'DELETE FROM players WHERE id=?']) {
+      const n = (sql.match(/\?/g) || []).length;
+      db.run(sql, ...Array(n).fill(pid));
+    }
+  });
   S.publicPlayer = (p) => ({ id: p.id, name: p.name, code: p.code, skin: p.skin });
   S.rename = (p, name) => { const n = cleanName(name); db.run('UPDATE players SET name=? WHERE id=?', n, p.id); return n; };
   S.setSkin = (p, skin) => { if (/^[a-z]{2,10}$/.test(skin)) db.run('UPDATE players SET skin=? WHERE id=?', skin, p.id); };

@@ -151,6 +151,17 @@ test('friends by code and friends leaderboard; challenge link with the same stor
   assert.equal((await S.api('GET', `/api/challenges/${ch.id}`)).challenge.takers[0].name, 'Lina');
 });
 
+test('account deletion removes the player and their data', async () => {
+  const a = await reg('Bye Bye');
+  const run = await S.api('POST', '/api/weekly/run', null, a.token);
+  const p = playBot(run.cfg, run.seed);
+  S.clock.t += p.endTick * TICK_MS + 100;
+  await S.api('POST', `/api/runs/${run.runId}/submit`, { log: p.log, endTick: p.endTick }, a.token);
+  assert.equal((await S.api('DELETE', '/api/me', null, a.token)).ok, true);
+  assert.equal((await S.api('GET', '/api/me', null, a.token)).status, 401);
+  assert.ok(!(await S.api('GET', '/api/leaderboard/weekly')).list.some((x) => x.name === 'Bye Bye'));
+});
+
 test('daily challenge result: validated once per day', async () => {
   const a = await reg('Daily Dan');
   const date = new Date(S.clock.t).toISOString().slice(0, 10);

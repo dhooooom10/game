@@ -2,9 +2,10 @@
    يخزّن اللعبة محليًا لتعمل بلا إنترنت بعد أول زيارة.
    قائمة الملفات ورقم الإصدار يولّدهما: node scripts/build-sw.mjs */
 
-const CACHE = 'math-clash-3dd91802d0';
+const CACHE = 'math-clash-e8d398b753';
 const ASSETS = [
   './',
+  './admin.html',
   './apple-touch-icon.png',
   './favicon-32.png',
   './fonts/baloobhaijaan2-500-800-arabic.woff2',
@@ -19,6 +20,8 @@ const ASSETS = [
   './icon-maskable.png',
   './index.html',
   './manifest.webmanifest',
+  './privacy.html',
+  './src/admin/admin.js',
   './src/app.js',
   './src/core/adaptive.js',
   './src/core/curriculum.js',
@@ -33,12 +36,14 @@ const ASSETS = [
   './src/core/storage.js',
   './src/i18n.js',
   './src/main.js',
+  './src/net/online.js',
   './src/runs.js',
   './src/screens/friend.js',
   './src/screens/game.js',
   './src/screens/home.js',
   './src/screens/journey.js',
   './src/screens/locker.js',
+  './src/screens/online.js',
   './src/screens/progress.js',
   './src/screens/rain.js',
   './src/screens/results.js',
@@ -48,6 +53,7 @@ const ASSETS = [
   './src/ui/dom.js',
   './src/ui/fx.js',
   './src/ui/mascot.js',
+  './styles/admin.css',
   './styles/main.css'
 ];
 
