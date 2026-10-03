@@ -5,7 +5,7 @@
    لا يُقبل أي رقم يرسله الجهاز مباشرة.
    ========================================================================= */
 import { randomBytes, createHash } from 'node:crypto';
-import { replayRain, plausible, stormConfig, survivalConfig, TICK_MS } from '../public/src/core/rain.js';
+import { replayRain, plausible, stormConfig, survivalConfig, rainConfig, TICK_MS } from '../public/src/core/rain.js';
 
 export const OCCASIONS = {
   ramadan: { icon: '🌙', color: '#9B8CFF', ar: 'رمضان', en: 'Ramadan' },
@@ -43,6 +43,25 @@ export function cleanName(name) {
   const low = n.toLowerCase();
   if (BAD_WORDS.some((w) => low.includes(w))) throw new HttpError(400, 'name_blocked');
   return n;
+}
+
+/** يقبل إعدادات مطر من العميل بحدود آمنة فقط (لا جولات لا نهائية ولا أرقام غريبة) */
+export function sanitizeCfg(cfg) {
+  if (!cfg || typeof cfg !== 'object') throw new HttpError(400, 'bad_cfg');
+  const base = rainConfig();
+  const out = {};
+  for (const k of Object.keys(base)) if (k in cfg) out[k] = cfg[k];
+  const c = { ...base, ...out };
+  const num = (v, lo, hi) => typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi;
+  const ok = num(c.travel, 2, 30) && num(c.spawn, 0.3, 10) && num(c.maxDrops, 1, 8)
+    && (c.lives == null || num(c.lives, 1, 9)) && (c.timeLimit == null || num(c.timeLimit, 10, 300)) && (c.target == null || num(c.target, 1, 200))
+    && (c.lives != null || c.timeLimit != null || c.target != null)
+    && (c.ramp == null || (typeof c.ramp === 'object' && num(c.ramp.every ?? 5, 1, 100) && num(c.ramp.mul ?? 0.94, 0.5, 1) && num(c.ramp.tierEvery ?? 8, 1, 100) && num(c.ramp.tierMax ?? 2, 0, 9)))
+    && typeof c.specials === 'boolean'
+    && c.tiers && typeof c.tiers === 'object' && Object.entries(c.tiers).every(([k, v]) => /^[a-z]{2,8}$/.test(k) && num(v, 0, 9))
+    && c.formats && typeof c.formats === 'object' && Object.entries(c.formats).every(([k, v]) => ['input', 'missing'].includes(k) && num(v, 0, 9));
+  if (!ok || JSON.stringify(c).length > 2000) throw new HttpError(400, 'bad_cfg');
+  return c;
 }
 
 export function rulesToCfg(rules) {
@@ -348,6 +367,22 @@ export function createServices(db, { now = () => Date.now() } = {}) {
     db.run('INSERT INTO challenges(id, creator, seed, cfg, score, created, expires) VALUES (?,?,?,?,?,?,?)', id, pid, run.seed, run.cfg, run.score, now(), now() + 14 * 864e5);
     return id;
   };
+  /**
+   * تحدٍّ من جولة فردية لُعبت على الجهاز (بدون اتصال وقتها): الخادم يعيد تشغيلها من سجل الإدخال
+   * ويعتمد النتيجة الناتجة فقط. لا تدخل لوحات الصدارة — هي تحدٍّ بين أصدقاء.
+   */
+  S.createLocalChallenge = (pid, { cfg, seed, log, endTick }) => {
+    const c = sanitizeCfg(cfg);
+    if (!(typeof seed === 'string' && seed.length <= 64) && !Number.isSafeInteger(seed)) throw new HttpError(400, 'bad_seed');
+    if (!Array.isArray(log) || log.length > 20000 || !log.every((e) => Array.isArray(e) && Number.isInteger(e[0]) && e[0] >= 0 && typeof e[1] === 'string' && e[1].length <= 4)) throw new HttpError(400, 'bad_log');
+    if (!Number.isInteger(endTick) || endTick < 0 || endTick > 60 * 60 * 15) throw new HttpError(400, 'bad_end');
+    const { summary } = replayRain(c, seed, log, { endTick });
+    if (summary.popped < 1 || !plausible(summary)) throw new HttpError(422, 'run_invalid');
+    const id = randomBytes(5).toString('base64url');
+    const enc = typeof seed === 'number' ? '#' + seed : seed;
+    db.run('INSERT INTO challenges(id, creator, seed, cfg, score, created, expires) VALUES (?,?,?,?,?,?,?)', id, pid, enc, JSON.stringify(c), summary.score, now(), now() + 14 * 864e5);
+    return { id, score: summary.score };
+  };
   S.getChallenge = (id) => {
     const c = db.get('SELECT c.*, p.name AS creator_name FROM challenges c JOIN players p ON p.id=c.creator WHERE c.id=?', id);
     if (!c || c.expires < now()) throw new HttpError(404, 'not_found');
@@ -357,7 +392,8 @@ export function createServices(db, { now = () => Date.now() } = {}) {
   S.startChallengeRun = (pid, id) => {
     const c = db.get('SELECT * FROM challenges WHERE id=?', id);
     if (!c || c.expires < now()) throw new HttpError(404, 'not_found');
-    return { runId: S.startRun(pid, { kind: 'challenge', ref: id, seed: c.seed, cfg: JSON.parse(c.cfg) }), seed: c.seed, cfg: JSON.parse(c.cfg), target: c.score };
+    const seed = c.seed.startsWith('#') ? Number(c.seed.slice(1)) : c.seed;
+    return { runId: S.startRun(pid, { kind: 'challenge', ref: id, seed, cfg: JSON.parse(c.cfg) }), seed, cfg: JSON.parse(c.cfg), target: c.score };
   };
 
   /* ---------------- الأشباح (جولات مسجّلة حقيقية) ---------------- */

@@ -8,6 +8,7 @@ import { t } from '../i18n.js';
 import { levelFromXp, dailyStatus, todayStr } from '../core/progression.js';
 import { WORLDS, worldOf, DAILY_COUNT, timeRecordKey } from '../core/modes.js';
 import { createSession } from '../core/session.js';
+import { isNativeApp, PLAY_URL } from '../config.js';
 import { nextJourneyLevel, buildRun, finishRun, PERSISTED, RAIN_PERSISTED, buildRainRun, finishRainRun } from '../runs.js';
 import { replayRain } from '../core/rain.js';
 import { loadConfig } from '../net/online.js';
@@ -30,6 +31,13 @@ registerScreen('home', (app) => {
     h('button.icon-btn', { aria: { label: t('nav.settings') }, 'data-go': 'settings', on: { click: () => { sfx.tap(); app.go('settings'); } } }, icon('gear'))));
 
   if (!app.store.persistent) el.appendChild(h('p.note.warn', { role: 'alert' }, '⚠️ ' + t('home.storageWarn')));
+  // زائر من رابط على جوال Android في المتصفح: دعوة هادئة لتحميل التطبيق (يمكن إخفاؤها)
+  if (!isNativeApp() && /Android/i.test(navigator.userAgent) && !localStorage.getItem('mc_hideApp') && data.stats.rounds >= 1) {
+    const bar = h('a.getapp', { href: PLAY_URL, target: '_blank', rel: 'noopener' },
+      h('span.ga-i', '▶'), h('span.ga-t', h('b', t('share.getApp')), h('small', t('share.getAppSub'))),
+      h('button.ga-x', { type: 'button', aria: { label: t('common.close') }, on: { click: (e) => { e.preventDefault(); e.stopPropagation(); try { localStorage.setItem('mc_hideApp', '1'); } catch { /* ignore */ } bar.remove(); } } }, '✕'));
+    el.appendChild(bar);
+  }
   if (app.migrated) { el.appendChild(h('p.note', { style: { color: 'var(--ok)' } }, t('prof.migrated', { n: app.migrated }))); app.migrated = 0; }
 
   // البطل: العب الآن

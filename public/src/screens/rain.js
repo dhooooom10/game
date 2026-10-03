@@ -303,6 +303,8 @@ registerScreen('rainPlay', (app, params) => {
       return app.go('rainPlay', { kind: 'journey', args: { level: 1 } }, { replace: true });
     }
     const { view } = finishRainRun(kind, params.args || {}, { id: built.id, seed }, sum, data);
+    // لتحويل الجولة إلى تحدٍّ لصديق (يعيد الخادم تشغيلها للتحقق)
+    view.replay = { cfg: built.cfg, seed, log: R.state.log.slice(), endTick: R.state.tick };
     if (kind === 'daily' && view.official) import('./online.js').then((m) => m.uploadDaily(app, params.args.date, R.state.log, R.state.tick)).catch(() => {});
     app.save();
     app.go('results', { view }, { replace: true });

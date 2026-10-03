@@ -72,3 +72,30 @@ test('play games: links device account, restores on a new device, new player oth
     assert.equal((await s.api('GET', '/api/me', null, restore.token)).status, 401);
   } finally { await s.close(); }
 });
+
+test('local challenge: server replays the run, rejects tampered config, friend plays same drops', async () => {
+  const { replayRain, stormConfig } = await import('../../public/src/core/rain.js');
+  const { playBot } = await import('./helpers.js');
+  const s = await boot();
+  try {
+    const a = await s.api('POST', '/api/register', { name: 'منى' });
+    const cfg = stormConfig('easy', 30);
+    const seed = 424242;
+    const bot = playBot(cfg, seed, { think: 50 });
+    const r = await s.api('POST', '/api/challenges/local', { cfg, seed, log: bot.log, endTick: bot.endTick }, a.token);
+    assert.equal(r.status, 200);
+    assert.equal(r.score, bot.summary.score);
+    assert.ok(bot.summary.score > 0);
+    // صديق يلعب: نفس الإعدادات والبذرة (رقمية) تعود كما هي
+    const b = await s.api('POST', '/api/register', { name: 'سعد' });
+    const run = await s.api('POST', `/api/challenges/${r.id}/run`, null, b.token);
+    assert.equal(run.seed, seed);
+    assert.equal(run.target, bot.summary.score);
+    assert.equal(replayRain(run.cfg, run.seed, bot.log, { endTick: bot.endTick }).summary.score, bot.summary.score, 'friend gets identical drops');
+    // إعدادات مستحيلة أو جولة بلا نهاية تُرفض
+    assert.equal((await s.api('POST', '/api/challenges/local', { cfg: { ...cfg, timeLimit: null, lives: null }, seed, log: bot.log, endTick: bot.endTick }, a.token)).status, 400);
+    assert.equal((await s.api('POST', '/api/challenges/local', { cfg: { ...cfg, travel: 9999 }, seed, log: bot.log, endTick: bot.endTick }, a.token)).status, 400);
+    assert.equal((await s.api('POST', '/api/challenges/local', { cfg, seed, log: [], endTick: 100 }, a.token)).status, 422);
+    assert.equal((await s.api('POST', '/api/challenges/local', { cfg, seed, log: bot.log, endTick: bot.endTick })).status, 401);
+  } finally { await s.close(); }
+});

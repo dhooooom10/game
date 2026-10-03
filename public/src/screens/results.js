@@ -8,6 +8,8 @@ import { t } from '../i18n.js';
 import { levelFromXp, xpForLevel, BADGES } from '../core/progression.js';
 import { TOTAL_LEVELS, WORLDS, worldOf } from '../core/modes.js';
 import { findPath } from '../core/curriculum.js';
+import { dailyShareText, shareText, shareUrl } from '../ui/share.js';
+import { toast } from '../ui/fx.js';
 
 registerScreen('results', (app, { view }) => {
   const data = app.data;
@@ -100,9 +102,27 @@ registerScreen('results', (app, { view }) => {
     else btns.append(replayBtn(t('res.retry')));
     btns.append(h('button.btn.block.ghost', { on: { click: () => { sfx.tap(); app.go('lessonPath', { pid: view.args.pid }, { replace: true }); } } }, t('common.back')));
   } else if (view.kind === 'daily') {
-    btns.append(replayBtn(t('daily.practice'), true));
+    btns.append(h('button.btn.block.lg.primary', { id: 'shareDaily', on: { click: () => {
+      sfx.tap();
+      shareText(dailyShareText({ date: view.args.date, score: view.score, sum }), shareUrl({ d: view.args.date }));
+    } } }, icon('upload'), t('share.daily')), replayBtn(t('daily.practice'), false));
   } else {
     btns.append(replayBtn(t('res.retry')));
+  }
+  // تحدَّ صديقًا: يحوّل هذه الجولة نفسها إلى رابط يلعبه صديقك بنفس القطرات
+  if (view.replay && view.score > 0) {
+    const good = view.celebrate || view.record || view.firstRecord || view.passed;
+    const chBtn = h('button.btn.block' + (good ? '.challenge-hot' : ''), { id: 'challengeFriend', on: { click: async () => {
+      sfx.tap(); chBtn.disabled = true;
+      try {
+        const net = await import('../net/online.js');
+        await net.ensureIdentity(app);
+        const r = await net.api('POST', '/api/challenges/local', view.replay);
+        await shareText(t('share.challengeText', { n: num(r.score) }), shareUrl({ c: r.id }));
+      } catch (e) { toast(e?.code === 'offline' ? t('net.offlineTitle') : t('share.failed')); }
+      chBtn.disabled = false;
+    } } }, '⚔️ ', good ? t('share.challengeHot', { n: num(view.score) }) : t('share.challenge'));
+    btns.insertBefore(chBtn, btns.children[1] || null);
   }
   btns.append(h('button.btn.block.ghost', { on: { click: () => { sfx.tap(); app.go('home', {}, { root: true }); } } }, icon('home'), t('res.home')));
   el.appendChild(btns);

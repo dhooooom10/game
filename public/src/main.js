@@ -12,6 +12,12 @@ import './screens/friend.js';
 import './screens/rain.js';
 import './screens/online.js';
 
+// مصدر أول زيارة (?ref=share/tiktok/teacher...) — يُرسل مجهولًا مع إحصاءات الاستخدام
+try {
+  const ref = new URLSearchParams(location.search).get('ref');
+  if (ref && /^[\w-]{2,32}$/.test(ref) && !localStorage.getItem('mc_ref')) localStorage.setItem('mc_ref', ref);
+} catch { /* ignore */ }
+
 boot().then(() => {
   // رابط تحدٍّ: ?c=المعرّف
   const c = new URLSearchParams(location.search).get('c');
