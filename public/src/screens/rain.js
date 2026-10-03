@@ -16,8 +16,8 @@ import { randomSeed } from '../core/rng.js';
 import { normalizeDigits } from '../core/numbers.js';
 import { streakMultiplier } from '../core/scoring.js';
 import { buildRainRun, finishRainRun } from '../runs.js';
+import { buildDrop, sizeDrop, dropDefsSVG, popBurst, groundSplash } from '../ui/drop.js';
 
-const KIND_ICON = { gold: '⭐', ice: '❄️', storm: '⚡' };
 
 /* ---------------- اللعب ---------------- */
 registerScreen('rainPlay', (app, params) => {
@@ -42,7 +42,9 @@ registerScreen('rainPlay', (app, params) => {
   const timerFill = h('i'); const timerEl = h('div.timer', timerFill); const timerText = h('span.timer-text');
   const iceEl = h('span.chip.ice-chip', { hidden: true }, '❄️');
   const oppBox = h('div.opp-box', { hidden: !online });
-  const sky = h('div.sky.rain-sky', { aria: { label: meta.label } }, h('div.sky-streaks', { aria: { hidden: 'true' } }), h('div.ground'));
+  const sky = h('div.sky.rain-sky', { aria: { label: meta.label } },
+    h('div', { html: dropDefsSVG() }), h('div.sky-streaks', { aria: { hidden: 'true' } }), h('div.sky-streaks.far', { aria: { hidden: 'true' } }),
+    h('div.ground', { aria: { hidden: 'true' } }, h('i.wave'), h('i.wave.w2')));
   if (meta.tint) sky.style.setProperty('--sky-tint', meta.tint);
   const coach = h('div.rain-coach', { hidden: true });
   const display = h('div.display.empty', { role: 'status', aria: { live: 'polite' } }, t('game.typeHere'));
@@ -122,22 +124,19 @@ registerScreen('rainPlay', (app, params) => {
     return mathText(parts);
   }
   function spawnEl(d) {
-    const de = h('div.drop.k-' + d.kind, { aria: { label: dropLabel(d.q) } },
-      KIND_ICON[d.kind] ? h('span.dk', { aria: { hidden: 'true' } }, KIND_ICON[d.kind]) : null,
-      mathEl(d.q.format === 'missing' ? d.q.parts : d.q.parts.filter((p) => !p.eq && !p.blank), { size: 'inline', cls: 'dq' }));
-    sky.appendChild(de); dropEls.set(d.id, de);
+    const expr = mathEl(d.q.format === 'missing' ? d.q.parts : d.q.parts.filter((p) => !p.eq && !p.blank), { size: 'inline', cls: 'dq' });
+    const de = buildDrop(d.kind, expr, dropLabel(d.q));
+    sky.appendChild(de);
+    sizeDrop(de);
+    de._w = de.offsetWidth; de._h = de.offsetHeight;
+    dropEls.set(d.id, de);
+    placeOne(d, de);
     live.textContent = dropLabel(d.q);
   }
   function burst(de, color) {
     if (reducedMotion()) return;
     const r = de.getBoundingClientRect(), s = sky.getBoundingClientRect();
-    const cx = r.left - s.left + r.width / 2, cy = r.top - s.top + r.height / 2;
-    sky.appendChild(Object.assign(h('i.ripple', { style: { left: cx + 'px', top: cy + 'px', '--c': color } })));
-    for (let i = 0; i < 10; i++) {
-      const a = (Math.PI * 2 * i) / 10 + Math.random() * 0.4, dist = 26 + Math.random() * 30;
-      sky.appendChild(h('i.spark', { style: { left: cx + 'px', top: cy + 'px', '--dx': Math.cos(a) * dist + 'px', '--dy': Math.sin(a) * dist + 'px', '--c': color } }));
-    }
-    setTimeout(() => sky.querySelectorAll('.spark, .ripple').forEach((x) => x.remove()), 650);
+    popBurst(sky, r.left - s.left + r.width / 2, r.top - s.top + r.height * 0.62, color);
   }
   function handle(events) {
     for (const ev of events) {
@@ -145,7 +144,7 @@ registerScreen('rainPlay', (app, params) => {
       else if (ev.type === 'pop') {
         const de = dropEls.get(ev.drop.id);
         if (de) {
-          burst(de, ev.drop.kind === 'gold' ? '#FFC94A' : ev.drop.kind === 'ice' ? '#BFF3FF' : 'var(--primary)');
+          burst(de, ev.drop.kind === 'gold' ? '#FFD86B' : ev.drop.kind === 'ice' ? '#DFF8FF' : ev.drop.kind === 'storm' ? '#B9A6FF' : '#7BE3FF');
           floatText(de, '+' + num(ev.points), ev.drop.kind === 'gold' ? 'gold' : '');
           de.classList.add('popped'); setTimeout(() => de.remove(), 260); dropEls.delete(ev.drop.id);
         }
@@ -157,7 +156,10 @@ registerScreen('rainPlay', (app, params) => {
         if (meta.tutorial) coachSay();
       } else if (ev.type === 'miss') {
         const de = dropEls.get(ev.drop.id);
-        if (de) { de.classList.add('splash'); setTimeout(() => de.remove(), 300); dropEls.delete(ev.drop.id); }
+        if (de) {
+          if (!reducedMotion()) groundSplash(sky, de._x + de._w / 2);
+          de.classList.add('splash'); setTimeout(() => de.remove(), 300); dropEls.delete(ev.drop.id);
+        }
         sfx.splash(); buzz(90);
         replay(sky.querySelector('.ground'), 'hit');
         if (!reducedMotion()) replay(sky, 'shake');
@@ -181,17 +183,29 @@ registerScreen('rainPlay', (app, params) => {
   }
 
   /* ---------- الحلقة (نبضات ثابتة) ---------- */
+  let skyW = 0, skyH = 0;
+  const measure = () => { skyW = sky.clientWidth; skyH = sky.clientHeight; };
+  window.addEventListener('resize', measure);
+  /** موضع قطرة واحدة (الأبعاد محفوظة مسبقًا لتجنّب إعادة حساب التخطيط في كل إطار) */
+  function placeOne(d, de) {
+    if (!skyW) measure();
+    const w = de._w || 90, hh = de._h || 96;
+    const x = 6 + d.x * Math.max(0, skyW - w - 12);
+    const y = -hh * 0.35 + d.y * (skyH - 20 - hh * 0.65);
+    de._x = x;
+    const tf = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+    de.style.transform = tf; de.style.setProperty('--tf', tf);
+    const near = d.y > 0.72;
+    if (de._near !== near) { de._near = near; de.classList.toggle('near', near); }
+    // الأقرب إلى الأرض فوق غيرها: أوضح للعين أيّها الأخطر
+    const z = 1 + Math.floor(d.y * 40);
+    if (de._z !== z) { de._z = z; de.style.zIndex = z; }
+  }
   function placeDrops() {
-    const H = sky.clientHeight, W = sky.clientWidth;
     for (const d of R.state.drops) {
       const de = dropEls.get(d.id);
       if (!de || d.dead) continue;
-      const w = de.offsetWidth || 80, hh = de.offsetHeight || 44;
-      const x = 6 + d.x * Math.max(0, W - w - 12);
-      const y = 8 + d.y * (H - 8 - hh - 8);
-      const tf = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
-      de.style.transform = tf; de.style.setProperty('--tf', tf);
-      de.classList.toggle('near', d.y > 0.72);
+      placeOne(d, de);
     }
     sky.classList.toggle('frozen', R.state.tick < R.state.iceUntil);
     iceEl.hidden = !(R.state.tick < R.state.iceUntil);
@@ -310,7 +324,7 @@ registerScreen('rainPlay', (app, params) => {
     else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); press('ok'); }
     else if (e.key === 'Escape') { if (realtime) askQuit(); else pause(); }
   }
-  function cleanup() { cancelAnimationFrame(raf); document.removeEventListener('keydown', onKey); overlay?.remove(); document.querySelectorAll('.countdown').forEach((x) => x.remove()); }
+  function cleanup() { window.removeEventListener('resize', measure); cancelAnimationFrame(raf); document.removeEventListener('keydown', onKey); overlay?.remove(); document.querySelectorAll('.countdown').forEach((x) => x.remove()); }
   document.addEventListener('keydown', onKey);
 
   /* ---------- البدء / الاستعادة ---------- */

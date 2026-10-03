@@ -26,8 +26,8 @@ export function mascotSVG({ skin = 'sky', acc = 'none', mood = 'happy', size = 9
   const id = 'm' + Math.random().toString(36).slice(2, 7);
   return `<svg class="mascot mood-${mood}" viewBox="0 -14 100 136" width="${size}" height="${Math.round(size * 1.36)}" role="img" aria-label="${label}">
   <defs>
-    <linearGradient id="${id}" x1="0.1" y1="0" x2="0.5" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset=".55" stop-color="${c2}"/><stop offset="1" stop-color="${c3}"/></linearGradient>
-    <radialGradient id="${id}g" cx=".35" cy=".7" r=".6"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="${id}" cx=".36" cy=".5" r=".78" fx=".3" fy=".38"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".22" stop-color="${c1}"/><stop offset=".66" stop-color="${c2}"/><stop offset="1" stop-color="${c3}"/></radialGradient>
+    <radialGradient id="${id}g" cx=".6" cy=".86" r=".42"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
   </defs>
   <ellipse cx="50" cy="116" rx="26" ry="4" fill="rgba(0,0,0,.2)" class="m-shadow"/>
   <g class="m-body">

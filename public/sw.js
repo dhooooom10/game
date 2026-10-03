@@ -2,7 +2,7 @@
    يخزّن اللعبة محليًا لتعمل بلا إنترنت بعد أول زيارة.
    قائمة الملفات ورقم الإصدار يولّدهما: node scripts/build-sw.mjs */
 
-const CACHE = 'math-clash-14022ac32d';
+const CACHE = 'math-clash-01c064364d';
 const ASSETS = [
   './',
   './admin.html',
@@ -51,6 +51,7 @@ const ASSETS = [
   './src/screens/setup.js',
   './src/ui/audio.js',
   './src/ui/dom.js',
+  './src/ui/drop.js',
   './src/ui/fx.js',
   './src/ui/mascot.js',
   './styles/admin.css',
