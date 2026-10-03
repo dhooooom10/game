@@ -3,7 +3,7 @@
    ========================================================================= */
 import { createBackend, createStore, verifyPass } from './core/storage.js';
 import { ensureMissions, todayStr, levelFromXp } from './core/progression.js';
-import { setLocale, t, LANGS, detectLang, isRtl } from './i18n.js';
+import { setLocale, t, LANGS, detectLang, isRtl, loadLang, isLoaded } from './i18n.js';
 import { h, clear, icon } from './ui/dom.js';
 import { setLevels, setHaptics, sfx, unlockAudio, startMusic, pauseAll, resumeAll } from './ui/audio.js';
 import { setMotion } from './ui/fx.js';
@@ -53,6 +53,8 @@ export const app = {
     if (!LANGS[s.lang]) s.lang = 'ar';
     if (s.lang !== 'ar' && s.digits === 'arabic') s.digits = 'western';
     setLocale(s.lang, s.digits);
+    // لغة لم يُحمَّل ملفها بعد (مثلًا بعد تبديل الملف الشخصي): نحمّله ثم نعيد الرسم
+    if (!isLoaded(s.lang)) loadLang(s.lang).then(() => { if (isLoaded(s.lang)) this.refresh?.(); });
     const de = document.documentElement;
     de.lang = s.lang;
     de.dir = isRtl() ? 'rtl' : 'ltr';
@@ -207,6 +209,7 @@ export async function boot() {
   const res = app.store.init();
   app.migrated = res.migrated;
   let id = app.store.currentId();
+  try { const pre = app.store.load(id)?.settings?.lang; if (pre) await loadLang(pre); } catch { /* ignore */ }
   if (app.store.needsUnlock(id)) {
     // ملف محمي: نعرض شاشة اختيار/فتح الملف
     app.loadProfile(id);

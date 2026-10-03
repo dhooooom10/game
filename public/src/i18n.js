@@ -954,6 +954,19 @@ const partial = {
 
 const DICT = { ar, en, ...partial };
 
+/** لغات مترجمة بالكامل في ملفات منفصلة تُحمَّل عند الحاجة فقط (لا تبطئ الإقلاع) */
+export const FULL_LANGS = ['es', 'pt', 'fr', 'tr', 'id', 'hi'];
+const loaded = new Set();
+export const isLoaded = (lang) => !FULL_LANGS.includes(lang) || loaded.has(lang);
+export async function loadLang(lang) {
+  if (isLoaded(lang)) return;
+  try {
+    const m = await import(`./i18n/${lang}.js`);
+    DICT[lang] = { ...(partial[lang] || {}), ...m.default };
+    loaded.add(lang);
+  } catch { /* بلا اتصال أول مرة: نكمل بالعناوين الأساسية والإنجليزية */ }
+}
+
 let cur = { lang: 'ar', digits: 'arabic' };
 export function setLocale(lang, digits) {
   cur = { lang: LANGS[lang] ? lang : 'ar', digits: lang === 'ar' ? digits : 'western' };

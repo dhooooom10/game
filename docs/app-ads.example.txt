@@ -1,0 +1,2 @@
+# انسخ هذا الملف إلى public/app-ads.txt وضع معرّف الناشر من AdMob (Account ← Settings ← Publisher ID)
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

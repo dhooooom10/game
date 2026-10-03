@@ -57,6 +57,8 @@ npm run dev            # http://localhost:8080 ، لوحة الإدارة: http:
 | `CORS_ORIGINS` | الأصول المسموح لها بالاتصال من نطاق آخر، مفصولة بفواصل. لتطبيق Android: `https://localhost` |
 | `GOOGLE_CLIENT_ID` | معرّف عميل OAuth (Web application) لـ Play Games — اختياري، بدونه يتعطل ربط Play Games فقط |
 | `GOOGLE_CLIENT_SECRET` | السر المقابل — لا تضعه أبدًا في التطبيق أو المستودع |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | مسار مفتاح حساب الخدمة للتحقق من مشتريات Google Play (مثل `/secrets/play-sa.json`) — اختياري |
+| `PLAY_PACKAGE` | اسم حزمة التطبيق (افتراضي `app.mathclash.game`) |
 
 إن استضفت ملفات `public/` على نطاق آخر (مثل Cloudflare Pages) والخادم على نطاق مختلف، ضع في `index.html`:
 `<meta name="mc-server" content="https://api.yourdomain.com">` وأضف `connect-src` للنطاق في سياسة المحتوى. **الأبسط: خادم واحد يخدم الاثنين.**

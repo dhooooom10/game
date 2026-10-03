@@ -9,6 +9,7 @@ services:
     env_file: .env
     volumes:
       - gamedata:/data
+      - ./secrets:/secrets:ro   # مفتاح حساب خدمة Google Play (اختياري) — لا تضعه في المستودع
     expose:
       - "8080"
   caddy:

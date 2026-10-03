@@ -3,3 +3,4 @@ node_modules/
 test-results/
 data/
 build/
+deploy/secrets/

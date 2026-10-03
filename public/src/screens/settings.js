@@ -6,7 +6,7 @@ import { h, icon, clear } from '../ui/dom.js';
 import { mascotSVG } from '../ui/mascot.js';
 import { sfx, setLevels, hapticsSupported, buzz, startMusic, stopMusic } from '../ui/audio.js';
 import { toast } from '../ui/fx.js';
-import { t, tRaw, LANGS } from '../i18n.js';
+import { t, tRaw, LANGS, loadLang } from '../i18n.js';
 import { hashPass } from '../core/storage.js';
 import { newProfileData, todayStr, levelFromXp } from '../core/progression.js';
 import { topbar, seg } from './setup.js';
@@ -29,7 +29,7 @@ registerScreen('settings', (app) => {
     h('h2.section-title', t('set.general')),
     h('div.field', h('label', t('set.name')), nameIn),
     h('div.field', h('div.label', t('set.language')),
-      h('select.input', { aria: { label: t('set.language') }, on: { change: (e) => { s.lang = e.target.value; if (s.lang === 'ar' && !s._digitsSet) s.digits = 'arabic'; app.save(); app.applyLook(); app.refresh(); } } },
+      h('select.input', { aria: { label: t('set.language') }, on: { change: async (e) => { s.lang = e.target.value; if (s.lang === 'ar' && !s._digitsSet) s.digits = 'arabic'; app.save(); await loadLang(s.lang); app.applyLook(); app.refresh(); } } },
         ...Object.entries(LANGS).map(([k, v]) => h('option', { value: k, selected: k === s.lang }, v.n)))),
     s.lang === 'ar' ? h('div.field', h('div.label', t('set.digits')), seg([['arabic', '٠١٢٣'], ['western', '0123']], s.digits, (v) => { s.digits = v; s._digitsSet = true; app.save(); app.applyLook(); app.refresh(); }, t('set.digits'))) : null,
   ));
