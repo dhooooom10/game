@@ -80,7 +80,15 @@ export function createRain(cfgIn, seed = 1) {
       const r = rng.next();
       kind = r < 0.07 ? 'gold' : r < 0.11 ? 'ice' : r < 0.14 ? 'storm' : 'normal';
     }
-    const d = { id: S.nextId++, q, kind, born: S.tick, y: 0, speed: 1 / (travel * TPS), x: rng.next(), dead: false };
+    // موضع أفقي بعيد عن القطرات القريبة من الأعلى حتى لا تتراكب (حتمي: من البذرة)
+    let x = rng.next(), bestGap = -1;
+    const near = live().filter((o) => o.y < 0.45);
+    for (let k = 0; k < 6; k++) {
+      const cx = k === 0 ? x : rng.next();
+      const gap = near.length ? Math.min(...near.map((o) => Math.abs(o.x - cx) + o.y * 0.8)) : 1;
+      if (gap > bestGap) { bestGap = gap; x = cx; }
+    }
+    const d = { id: S.nextId++, q, kind, born: S.tick, y: 0, speed: 1 / (travel * TPS), x, dead: false };
     S.drops.push(d);
     return d;
   }

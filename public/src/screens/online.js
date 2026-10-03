@@ -22,7 +22,7 @@ const arCount = (n, one, two, few, many) => n === 1 ? one : n === 2 ? two : `${n
 const fmtDur = (ms) => {
   const s = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(s / 86400), hh = Math.floor((s % 86400) / 3600), m = Math.max(1, Math.floor((s % 3600) / 60));
   if (locale().lang === 'ar') {
-    const txt = d ? arCount(d, 'يوم واحد', 'يومان', 'أيام', 'يومًا') + (hh ? ' و' + arCount(hh, 'ساعة', 'ساعتان', 'ساعات', 'ساعة') : '')
+    const txt = d ? arCount(d, 'يوم واحد', 'يومان', 'أيام', 'يومًا') + (hh ? '، ' + arCount(hh, 'ساعة', 'ساعتان', 'ساعات', 'ساعة') : '')
       : hh ? arCount(hh, 'ساعة', 'ساعتان', 'ساعات', 'ساعة') : arCount(m, 'دقيقة', 'دقيقتان', 'دقائق', 'دقيقة');
     return num(txt);
   }
