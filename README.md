@@ -6,6 +6,7 @@
 - تعمل **بلا إنترنت** للعب الفردي والتعلّم (PWA)، والأونلاين عند توفر الاتصال.
 - العربية والإنجليزية كاملتان، و11 لغة أخرى للعناوين الأساسية.
 - جاهزة للنشر كتطبيق **Google Play** (Android عبر Capacitor مع **Google Play Games**: دخول، إنجازات، لوحات صدارة) — انظر [docs/DEPLOY_AND_GOOGLE_PLAY.md](docs/DEPLOY_AND_GOOGLE_PLAY.md).
+- **ما تحتاج تجهيزه أنت** (التكاليف، المعرّفات، الخطوات): [docs/WHAT_YOU_NEED.md](docs/WHAT_YOU_NEED.md)
 
 ## التشغيل
 
