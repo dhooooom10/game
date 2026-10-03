@@ -34,6 +34,10 @@ CREATE TABLE IF NOT EXISTS announcements (
 CREATE TABLE IF NOT EXISTS clubs (id TEXT PRIMARY KEY, code TEXT UNIQUE NOT NULL, name TEXT NOT NULL, owner TEXT NOT NULL, created INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS club_members (club_id TEXT NOT NULL, player_id TEXT NOT NULL, joined INTEGER NOT NULL, PRIMARY KEY (club_id, player_id));
 CREATE INDEX IF NOT EXISTS club_members_p ON club_members(player_id);
+CREATE TABLE IF NOT EXISTS a_installs (iid TEXT PRIMARY KEY, first_day TEXT NOT NULL, ref TEXT, platform TEXT, lang TEXT, country TEXT);
+CREATE TABLE IF NOT EXISTS a_active (iid TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY (iid, day));
+CREATE INDEX IF NOT EXISTS a_active_day ON a_active(day);
+CREATE TABLE IF NOT EXISTS a_events (day TEXT NOT NULL, name TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, name));
 CREATE TABLE IF NOT EXISTS player_tokens (token_hash TEXT PRIMARY KEY, player_id TEXT NOT NULL, created INTEGER NOT NULL);
 CREATE INDEX IF NOT EXISTS player_tokens_p ON player_tokens(player_id);
 CREATE TABLE IF NOT EXISTS friends (a TEXT NOT NULL, b TEXT NOT NULL, created INTEGER NOT NULL, PRIMARY KEY (a, b));

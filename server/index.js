@@ -113,6 +113,8 @@ export function startServer({ port = 0, dbPath = ':memory:', adminToken = '', no
   route('POST', '/api/challenges/:id/run', (req, p, _b, ip) => { const pl = player(req); limit(ip, 'run', 60, 600000); return svc.startChallengeRun(pl.id, p.id); });
 
   /* ---------- الإدارة ---------- */
+  route('POST', '/api/a', async (req, _p, body, ip) => { limit(ip, 'a', 60, 3600000); return svc.track(body); });
+  route('GET', '/api/admin/analytics', (req, _p, _b, _ip, url) => { admin(req); return svc.analytics(Math.min(60, Math.max(7, +url.searchParams.get('days') || 14))); });
   route('GET', '/api/admin/stats', (req) => { admin(req); return svc.adminStats(rt.clientsCount()); });
   route('GET', '/api/admin/occasions', (req) => { admin(req); return { occasions: OCCASIONS }; });
   route('GET', '/api/admin/tournaments', (req) => { admin(req); return { tournaments: svc.listTournaments(null, { all: true }) }; });

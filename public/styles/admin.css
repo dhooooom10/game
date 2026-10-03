@@ -20,3 +20,8 @@
 .occ-pick button[aria-pressed="true"] { border-color: var(--oc); background: color-mix(in srgb, var(--oc) 22%, transparent); }
 .occ-pick .oi { font-size: 1.5rem; }
 .quick-dates { display: flex; gap: 6px; flex-wrap: wrap; }
+.adm-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.adm-table th, .adm-table td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: start; white-space: nowrap; }
+.adm-bar { display: inline-block; min-width: 2em; padding: 0 6px; border-radius: 6px; background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 45%, transparent) var(--w), transparent var(--w)); }
+.adm-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.section .adm-table { display: block; overflow-x: auto; }

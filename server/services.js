@@ -542,6 +542,46 @@ export function createServices(db, { now = () => Date.now() } = {}) {
   };
 
   /* ---------------- الإدارة ---------------- */
+  /* ---------------- إحصاءات مجهولة ---------------- */
+  // معرّف تثبيت عشوائي غير مرتبط بالحساب، يوم النشاط فقط، وعدّادات أحداث مجمّعة — لا تتبع فردي.
+  const EVENTS = new Set(['round', 'share_daily', 'share_challenge', 'challenge_play', 'club_create', 'club_join', 'online_match', 'ad_rewarded', 'ad_interstitial', 'purchase', 'shop_open', 'app_banner']);
+  const day = (ms = now()) => new Date(ms).toISOString().slice(0, 10);
+  S.track = ({ iid, ref, platform, lang, country, events } = {}) => {
+    if (typeof iid !== 'string' || !/^[\w-]{8,40}$/.test(iid)) throw new HttpError(400, 'bad_iid');
+    const d = day();
+    const clean = (v, re) => (typeof v === 'string' && re.test(v) ? v : null);
+    db.tx(() => {
+      db.run('INSERT OR IGNORE INTO a_installs(iid, first_day, ref, platform, lang, country) VALUES (?,?,?,?,?,?)', iid, d,
+        clean(ref, /^[\w-]{2,32}$/), clean(platform, /^(app|web)$/), clean(lang, /^[a-z]{2}$/), clean(country, /^[A-Z]{2}$/));
+      db.run('INSERT OR IGNORE INTO a_active(iid, day) VALUES (?,?)', iid, d);
+      if (events && typeof events === 'object') {
+        for (const [name, n] of Object.entries(events).slice(0, 20)) {
+          if (!EVENTS.has(name) || !Number.isInteger(n) || n < 1 || n > 500) continue;
+          db.run('INSERT INTO a_events(day, name, n) VALUES (?,?,?) ON CONFLICT(day, name) DO UPDATE SET n = n + excluded.n', d, name, n);
+        }
+      }
+    });
+    return { ok: true };
+  };
+  /** لوحة الإحصاءات: نشط يوميًا، تثبيتات جديدة، العودة بعد يوم/٧ أيام، المصادر، الأحداث */
+  S.analytics = (days = 14) => {
+    const out = { days: [], sources: [], platforms: [], langs: [], events: [] };
+    for (let i = days - 1; i >= 0; i--) {
+      const d = day(now() - i * 864e5), d1 = day(now() - (i - 1) * 864e5), d7 = day(now() - (i - 7) * 864e5);
+      const dau = db.get('SELECT COUNT(*) AS n FROM a_active WHERE day=?', d).n;
+      const fresh = db.get('SELECT COUNT(*) AS n FROM a_installs WHERE first_day=?', d).n;
+      const r1 = i >= 1 ? db.get('SELECT COUNT(*) AS n FROM a_installs i JOIN a_active a ON a.iid=i.iid AND a.day=? WHERE i.first_day=?', d1, d).n : null;
+      const r7 = i >= 7 ? db.get('SELECT COUNT(*) AS n FROM a_installs i JOIN a_active a ON a.iid=i.iid AND a.day=? WHERE i.first_day=?', d7, d).n : null;
+      out.days.push({ day: d, dau, fresh, d1: r1 == null || !fresh ? null : Math.round((r1 / fresh) * 100), d7: r7 == null || !fresh ? null : Math.round((r7 / fresh) * 100) });
+    }
+    const since = day(now() - days * 864e5);
+    out.sources = db.all(`SELECT COALESCE(ref, 'direct') AS k, COUNT(*) AS n FROM a_installs WHERE first_day>=? GROUP BY k ORDER BY n DESC LIMIT 20`, since);
+    out.platforms = db.all(`SELECT COALESCE(platform, '?') AS k, COUNT(*) AS n FROM a_installs WHERE first_day>=? GROUP BY k ORDER BY n DESC`, since);
+    out.langs = db.all(`SELECT COALESCE(lang, '?') AS k, COUNT(*) AS n FROM a_installs WHERE first_day>=? GROUP BY k ORDER BY n DESC LIMIT 15`, since);
+    out.countries = db.all(`SELECT COALESCE(country, '?') AS k, COUNT(*) AS n FROM a_installs WHERE first_day>=? GROUP BY k ORDER BY n DESC LIMIT 15`, since);
+    out.events = db.all('SELECT name AS k, SUM(n) AS n FROM a_events WHERE day>=? GROUP BY name ORDER BY n DESC', since);
+    return out;
+  };
   S.adminStats = (onlineCount = 0) => ({
     players: db.get('SELECT COUNT(*) AS n FROM players').n,
     active24h: db.get('SELECT COUNT(*) AS n FROM players WHERE last_seen>?', now() - 864e5).n,

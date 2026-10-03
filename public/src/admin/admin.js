@@ -50,11 +50,11 @@ function login(err = '') {
 async function main() {
   try { OCC = (await api('GET', '/api/admin/occasions')).occasions; } catch (e) { return login(msg(e)); }
   clear(root);
-  const tabs = [['dash', '📊 نظرة عامة'], ['tour', '🏆 البطولات'], ['season', '🗓️ المواسم'], ['ann', '📢 الإعلانات'], ['players', '👥 اللاعبون']];
+  const tabs = [['dash', '📊 نظرة عامة'], ['stats', '📈 الإحصاءات'], ['tour', '🏆 البطولات'], ['season', '🗓️ المواسم'], ['ann', '📢 الإعلانات'], ['players', '👥 اللاعبون']];
   const nav = h('nav.adm-tabs');
   const body = h('div');
   const paintNav = () => { clear(nav); for (const [k, l] of tabs) nav.append(h('button', { aria: { current: tab === k ? 'page' : null }, on: { click: () => { tab = k; paintNav(); show(); } } }, l)); };
-  const show = () => ({ dash, tour, season, ann, players })[tab](body);
+  const show = () => ({ dash, stats, tour, season, ann, players })[tab](body);
   root.append(h('header.adm-head', h('h1', '🛠️ إدارة Math Clash'), h('a.btn.sm', { href: './' }, 'فتح اللعبة'),
     h('button.btn.sm.ghost', { on: { click: () => { sessionStorage.removeItem('mc_admin'); token = ''; login(); } } }, 'خروج')), nav, body);
   paintNav(); show();
@@ -71,6 +71,24 @@ async function dash(box) {
       h('li', 'أنشئ بطولة لأي مناسبة واختر وقت البداية والنهاية — تظهر تلقائيًا للاعبين في الرئيسية والأونلاين عند موعدها.'),
       h('li', 'كل نتيجة يعيد الخادم حسابها من سجل اللعب، والجولات ذات السرعة غير البشرية تُستبعد.'),
       h('li', 'عند انتهاء البطولة تُمنح الجائزة تلقائيًا لأفضل اللاعبين وتظهر في «جوائزي».'))));
+}
+
+/* ---------------- الإحصاءات المجهولة ---------------- */
+async function stats(box) {
+  clear(box).append(h('p.note', 'جارٍ التحميل…'));
+  const a = await api('GET', '/api/admin/analytics?days=14');
+  const pct = (v) => (v == null ? '—' : v + '%');
+  const max = Math.max(1, ...a.days.map((d) => d.dau));
+  const table = h('table.adm-table', h('thead', h('tr', h('th', 'اليوم'), h('th', 'نشطون'), h('th', 'جدد'), h('th', 'عادوا اليوم التالي'), h('th', 'عادوا بعد ٧ أيام'))),
+    h('tbody', ...a.days.slice().reverse().map((d) => h('tr', h('td', d.day), h('td', h('span.adm-bar', { style: { '--w': (d.dau / max) * 100 + '%' } }, String(d.dau))), h('td', String(d.fresh)), h('td', pct(d.d1)), h('td', pct(d.d7))))));
+  const list = (title, rows, label = (k) => k) => h('section.card.section', h('h2.section-title', title),
+    rows.length ? h('table.adm-table', h('tbody', ...rows.map((r) => h('tr', h('td', label(r.k)), h('td', String(r.n)))))) : h('p.note', 'لا بيانات بعد'));
+  const EV = { round: 'جولات منتهية', share_daily: 'مشاركة التحدي اليومي', share_challenge: 'تحدي صديق', challenge_play: 'لعب تحدٍّ من رابط', club_create: 'إنشاء نادٍ', club_join: 'انضمام لنادٍ', online_match: 'مباراة أونلاين', ad_rewarded: 'إعلان بمكافأة', ad_interstitial: 'إعلان بيني', purchase: 'عملية شراء', shop_open: 'فتح المتجر', app_banner: 'ضغط «حمّل التطبيق»' };
+  clear(box).append(
+    h('p.note', 'إحصاءات مجهولة: معرّف تثبيت عشوائي ويوم النشاط فقط. «عادوا اليوم التالي» = نسبة من ثبّتوا في ذلك اليوم ثم فتحوا اللعبة في اليوم التالي — أهم مؤشر لنجاح اللعبة (٣٥٪+ ممتاز للألعاب الخفيفة).'),
+    h('section.card.section', h('h2.section-title', 'آخر ١٤ يومًا'), table),
+    h('div.adm-cols', list('مصادر اللاعبين الجدد (ref)', a.sources), list('المنصة', a.platforms, (k) => ({ app: 'تطبيق Android', web: 'متصفح' })[k] || k),
+      list('اللغات', a.langs), list('الأحداث', a.events, (k) => EV[k] || k)));
 }
 
 /* ---------------- البطولات ---------------- */

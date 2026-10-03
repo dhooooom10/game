@@ -167,3 +167,23 @@ test('clubs: create, join by code, owner dashboard, members see no private stats
     assert.equal((await s.api('GET', '/api/clubs', null, st[0].token)).clubs.length, 0);
   } finally { await s.close(); }
 });
+
+test('analytics: anonymous daily activity, retention, sources, events whitelist, admin only', async () => {
+  const s = await boot();
+  try {
+    const iid = (n) => 'install-' + String(n).padStart(4, '0');
+    for (let i = 0; i < 4; i++) await s.api('POST', '/api/a', { iid: iid(i), ref: i < 2 ? 'tiktok' : null, platform: 'app', lang: 'ar', events: { round: 3, hack: 5, share_daily: 1 } });
+    assert.equal((await s.api('POST', '/api/a', { iid: 'x' })).status, 400);
+    s.clock.t += 864e5; // اليوم التالي: يعود اثنان
+    await s.api('POST', '/api/a', { iid: iid(0) }); await s.api('POST', '/api/a', { iid: iid(2) });
+    assert.equal((await s.api('GET', '/api/admin/analytics')).status, 401);
+    const r = await fetch(s.url + '/api/admin/analytics', { headers: { Authorization: 'Bearer test-admin-token-123456' } }).then((x) => x.json());
+    const yesterday = r.days[r.days.length - 2];
+    assert.equal(yesterday.fresh, 4);
+    assert.equal(yesterday.d1, 50);
+    assert.equal(r.days[r.days.length - 1].dau, 2);
+    assert.deepEqual(r.sources.find((x) => x.k === 'tiktok'), { k: 'tiktok', n: 2 });
+    assert.equal(r.events.find((x) => x.k === 'round').n, 12);
+    assert.equal(r.events.find((x) => x.k === 'hack'), undefined);
+  } finally { await s.close(); }
+});

@@ -130,7 +130,7 @@ test('admin panel → tournament appears for players → play → verified score
   await A.evaluate(() => { navigator.share = undefined; navigator.clipboard.writeText = (t) => { window.__copied = t; return Promise.resolve(); }; });
   await A.click('#challengeBtn');
   await A.waitForFunction(() => window.__copied);
-  const link = await A.evaluate(() => window.__copied.match(/\?c=([\w-]+)/)[1]);
+  const link = await A.evaluate(() => window.__copied.match(/[?&]c=([\w-]+)/)[1]);
   await B.goto(S.url + '/?e2e=1&c=' + link);
   await waitScreen(B, 'challenge');
   assert.match(await B.locator('main').innerText(), /تحدٍّ من Eid Player/);

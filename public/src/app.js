@@ -9,6 +9,7 @@ import { setLevels, setHaptics, sfx, unlockAudio, startMusic, pauseAll, resumeAl
 import { setMotion } from './ui/fx.js';
 import { useIdentity } from './net/online.js';
 import * as pgs from './net/playgames.js';
+import * as analytics from './net/analytics.js';
 
 export const VERSION = '2.0.0';
 
@@ -214,6 +215,10 @@ export async function boot() {
     app.loadProfile(id);
     app.go('home', {}, { root: true });
   }
+  // إحصاءات مجهولة: يوم نشاط + مصدر الزيارة (يمكن إيقافها من الإعدادات)
+  analytics.configure(app);
+  if (navigator.onLine !== false) analytics.flush();
+  document.addEventListener('visibilitychange', () => { if (document.hidden) analytics.flush(); });
   // تطبيق Android: Google Play Games (دخول صامت، ربط الحساب، الإنجازات ولوحات الصدارة)
   pgs.init(app).catch(() => {});
 

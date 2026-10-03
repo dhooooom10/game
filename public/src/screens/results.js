@@ -10,6 +10,7 @@ import { TOTAL_LEVELS, WORLDS, worldOf } from '../core/modes.js';
 import { findPath } from '../core/curriculum.js';
 import { dailyShareText, shareText, shareUrl } from '../ui/share.js';
 import { toast } from '../ui/fx.js';
+import { track } from '../net/analytics.js';
 
 registerScreen('results', (app, { view }) => {
   const data = app.data;
@@ -104,6 +105,7 @@ registerScreen('results', (app, { view }) => {
   } else if (view.kind === 'daily') {
     btns.append(h('button.btn.block.lg.primary', { id: 'shareDaily', on: { click: () => {
       sfx.tap();
+      track('share_daily');
       shareText(dailyShareText({ date: view.args.date, score: view.score, sum }), shareUrl({ d: view.args.date }));
     } } }, icon('upload'), t('share.daily')), replayBtn(t('daily.practice'), false));
   } else {
@@ -118,6 +120,7 @@ registerScreen('results', (app, { view }) => {
         const net = await import('../net/online.js');
         await net.ensureIdentity(app);
         const r = await net.api('POST', '/api/challenges/local', view.replay);
+        track('share_challenge');
         await shareText(t('share.challengeText', { n: num(r.score) }), shareUrl({ c: r.id }));
       } catch (e) { toast(e?.code === 'offline' ? t('net.offlineTitle') : t('share.failed')); }
       chBtn.disabled = false;
@@ -130,6 +133,7 @@ registerScreen('results', (app, { view }) => {
   return {
     el,
     afterMount: () => {
+      track('round');
       countUp(scoreEl, view.score, { fmt: num, ms: 1000 });
       if (view.celebrate || (rw && (rw.levelAfter > rw.levelBefore || rw.badges.length))) {
         setTimeout(() => { sfx.fanfare(); buzz([20, 60, 20]); confetti(); }, reducedMotion() ? 0 : 300);

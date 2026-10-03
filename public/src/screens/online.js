@@ -13,6 +13,7 @@ import { commitRound } from '../core/progression.js';
 import * as pgs from '../net/playgames.js';
 import * as net from '../net/online.js';
 import { shareText, shareUrl } from '../ui/share.js';
+import { track } from '../net/analytics.js';
 import { COUNTRIES, flag, countryName, detectCountry } from '../core/country.js';
 import { topbar, seg, field } from './setup.js';
 
@@ -405,10 +406,10 @@ registerScreen('clubs', (app) => {
     const err = h('p.note', { style: { color: 'var(--bad)' } });
     box.append(mine,
       h('section.card', field(t('club.create'), name, t('club.createHint')), h('button.btn.primary.block', { id: 'createClub', on: { click: async () => {
-        try { const r = await net.api('POST', '/api/clubs', { name: name.value }); sfx.correct(); app.go('club', { id: r.id }); } catch (e) { err.textContent = errText(e); }
+        try { const r = await net.api('POST', '/api/clubs', { name: name.value }); sfx.correct(); track('club_create'); app.go('club', { id: r.id }); } catch (e) { err.textContent = errText(e); }
       } } }, icon('plus'), t('club.createBtn'))),
       h('section.card', field(t('club.join'), code, t('club.privacy')), h('button.btn.block', { id: 'joinClub', on: { click: async () => {
-        try { const r = await net.api('POST', '/api/clubs/join', { code: code.value }); sfx.correct(); app.go('club', { id: r.id }); } catch (e) { err.textContent = errText(e); }
+        try { const r = await net.api('POST', '/api/clubs/join', { code: code.value }); sfx.correct(); track('club_join'); app.go('club', { id: r.id }); } catch (e) { err.textContent = errText(e); }
       } } }, t('club.joinBtn'))), err);
     const lg = h('section.card.section', h('h2.section-title', '🏆 ' + t('club.league')), h('p.note', t('club.leagueHow')));
     if (!league.length) lg.append(h('p.note', t('club.leagueEmpty')));
@@ -459,7 +460,7 @@ registerScreen('clubJoin', (app, { code }) => {
   box.append(h('section.event-hero', { style: { '--ec': '#38D6F5' } }, h('div.ei', '🏫'), h('h2', t('club.joinTitle')), h('p', h('b.code', { dir: 'ltr' }, code))),
     h('p.note', t('club.privacy')),
     h('button.btn.gold.block.lg', { id: 'confirmJoin', on: { click: () => guard(box, async () => {
-      const r = await net.api('POST', '/api/clubs/join', { code }); sfx.correct(); app.go('club', { id: r.id }, { replace: true });
+      const r = await net.api('POST', '/api/clubs/join', { code }); sfx.correct(); track('club_join'); app.go('club', { id: r.id }, { replace: true });
     }) } }, t('club.joinBtn')));
   return { el };
 });
@@ -503,7 +504,7 @@ registerScreen('challenge', (app, { id }) => {
     clear(box).append(h('section.event-hero', { style: { '--ec': '#FF7BB0' } }, h('div.ei', '⚔️'), h('h2', t('net.challengeFrom', { name: c.creator })), h('p', t('net.challengeBeat', { n: num(c.score) }))),
       h('p.note', t('net.challengeNote')),
       h('button.btn.gold.block.lg', { id: 'playChallenge', on: { click: async () => {
-        try { const r = await net.api('POST', `/api/challenges/${id}/run`); playOnline({ cfg: r.cfg, seed: r.seed, runId: r.runId, kind: 'challenge', label: t('net.challenge'), extra: { target: c.score, creator: c.creator } }); }
+        try { track('challenge_play'); const r = await net.api('POST', `/api/challenges/${id}/run`); playOnline({ cfg: r.cfg, seed: r.seed, runId: r.runId, kind: 'challenge', label: t('net.challenge'), extra: { target: c.score, creator: c.creator } }); }
         catch (e) { toast(errText(e)); }
       } } }, icon('play'), t('net.acceptChallenge')),
       h('button.btn.block', { id: 'reshareChallenge', on: { click: () => shareText(t('share.challengeText', { n: num(c.score) }), shareUrl({ c: id })) } }, icon('upload'), t('share.reshare')),

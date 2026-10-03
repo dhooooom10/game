@@ -1,4 +1,5 @@
 /* الإعدادات والملفات الشخصية. */
+import * as analytics from '../net/analytics.js';
 import { app, registerScreen, VERSION } from '../app.js';
 import { h, icon, clear } from '../ui/dom.js';
 import { mascotSVG } from '../ui/mascot.js';
@@ -48,6 +49,7 @@ registerScreen('settings', (app) => {
     row(t('set.contrast'), null, sw(s.contrast, t('set.contrast'), (v) => { s.contrast = v; app.save(); app.applyLook(); })),
     row(t('set.bigText'), null, sw(s.bigText, t('set.bigText'), (v) => { s.bigText = v; app.save(); app.applyLook(); })),
     row(t('set.autoSubmit'), t('set.autoSubmitSub'), sw(s.autoSubmit !== false, t('set.autoSubmit'), (v) => { s.autoSubmit = v; app.save(); })),
+    row(t('set.analytics'), t('set.analyticsSub'), sw(s.analytics !== false, t('set.analytics'), (v) => { analytics.setEnabled(app, v); })),
     h('button.btn.block', { style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'tutorial', args: {} }); } } }, icon('book'), t('set.tutorial'))));
 
   // الملفات الشخصية
