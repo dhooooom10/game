@@ -1,0 +1,29 @@
+# رؤوس الأمان لكل الصفحات
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+  Content-Security-Policy: default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'
+
+# الصفحة الرئيسية وعامل الخدمة: بلا تخزين مؤقت ليصل التحديث فورًا
+/index.html
+  Cache-Control: no-cache
+/
+  Cache-Control: no-cache
+/sw.js
+  Cache-Control: no-cache
+
+# الشيفرة والأنماط: تُعاد مراجعتها (عامل الخدمة يتولى العمل بلا إنترنت)
+/src/*
+  Cache-Control: no-cache
+/styles/*
+  Cache-Control: no-cache
+
+# الخطوط والأيقونات: تخزين طويل (لا تتغير)
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+/manifest.webmanifest
+  Cache-Control: public, max-age=86400
