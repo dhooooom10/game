@@ -1,0 +1,38 @@
+{
+  "name": "Math Clash — Equation Rain",
+  "short_name": "Math Clash",
+  "description": "Solve the equation before the drop falls. 100 levels, learning mode, online challenges. 13 languages.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#070D22",
+  "theme_color": "#0E1A3A",
+  "categories": [
+    "education",
+    "games",
+    "kids"
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
