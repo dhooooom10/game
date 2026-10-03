@@ -133,7 +133,7 @@ const ar = {
 
   'theme.rain': 'ليل المطر', 'theme.dawn': 'الفجر (فاتح)', 'theme.oasis': 'الواحة', 'theme.sunset': 'الغروب', 'theme.aurora': 'الشفق', 'theme.gold': 'الذهبي',
   'skin.sky': 'سماوي', 'skin.mint': 'نعناعي', 'skin.rose': 'وردي', 'skin.violet': 'بنفسجي', 'skin.sun': 'شمسي', 'skin.night': 'ليلي',
-  'acc.none': 'بلا', 'acc.cap': 'قبعة', 'acc.glasses': 'نظارة', 'acc.phones': 'سماعات', 'acc.crown': 'تاج', 'acc.scarf': 'وشاح',
+  'acc.none': 'بلا', 'acc.cap': 'قبعة', 'acc.sparkle': 'لمعة', 'acc.phones': 'سماعات', 'acc.crown': 'تاج', 'acc.scarf': 'وشاح',
 
   'set.title': 'الإعدادات', 'set.language': 'اللغة', 'set.digits': 'شكل الأرقام', 'set.sfx': 'المؤثرات الصوتية', 'set.music': 'الموسيقى',
   'set.haptics': 'الاهتزاز', 'set.hapticsNA': 'غير مدعوم على هذا الجهاز', 'set.motion': 'الحركة والمؤثرات',
@@ -207,6 +207,15 @@ const ar = {
 
   'a11y.correctAnswer': 'إجابة صحيحة', 'a11y.wrongAnswer': 'إجابة خاطئة', 'a11y.menu': 'القائمة', 'a11y.stars': '{n} من 3 نجوم',
   'a11y.lives': '{n} محاولات متبقية', 'a11y.timer': 'متبقٍّ {n} ثانية', 'a11y.expr': 'المسألة',
+  'rtut.1': 'هذه قطرة تحمل مسألة. اكتب ناتجها قبل أن تصل إلى الأرض!', 'rtut.2': 'رائع! القطرة تنفجر وحدها لحظة كتابة الرقم الصحيح.',
+  'rtut.3': 'كلما فجّرتها أعلى زادت نقاطك، والإجابات المتتالية تضاعفها.', 'rtut.4': 'أحسنت! في المراحل لا تدع القطرات تسقط — لديك 3 قلوب.',
+  'rain.pausedNote': 'القطرات مخفية أثناء الإيقاف.', 'rain.ruleClassic': 'فجّر {n} قطرة قبل أن تفقد قلوبك الثلاثة.', 'rain.ruleSprint': 'فجّر {n} قطرة قبل نفاد الوقت.',
+  'rain.timeRules': 'فجّر أكبر عدد من القطرات قبل نفاد الوقت. المطر يشتد تدريجيًا، والقطرة الساقطة تكسر السلسلة فقط.',
+  'rain.survRules': 'لديك 3 قلوب، وكل قطرة تصل الأرض تكلّفك قلبًا. المطر يزداد سرعة وصعوبة بلا نهاية — كم ستصمد؟',
+  'rain.specials': 'قطرات خاصة: ⭐ ضعف النقاط · ❄️ تبطئ المطر 5 ثوانٍ · ⚡ تفجّر كل القطرات الظاهرة.',
+  'jrr.classic': 'فجّر {n} قطرة دون أن تفقد قلوبك الثلاثة', 'jrr.sprint': 'فجّر {n} قطرة خلال {s} ثانية', 'jrr.boss': 'الزعيم: {n} قطرة مع قطرات خاصة',
+  'jrr.rule.hearts': 'النجوم = القلوب المتبقية (★★★ بلا أي قطرة ساقطة)', 'jrr.rule.sprint': 'النجوم حسب الوقت المتبقي: ★★★ 35% · ★★ 15%',
+  'online.title': 'أونلاين', 'online.sub': 'مباريات مباشرة · غرف · بطولات · لوحة الصدارة', 'online.quitBody': 'ستُحتسب نتيجتك الحالية وتنتهي مباراتك.',
 };
 
 const en = {
@@ -329,7 +338,7 @@ const en = {
 
   'theme.rain': 'Rain night', 'theme.dawn': 'Dawn (light)', 'theme.oasis': 'Oasis', 'theme.sunset': 'Sunset', 'theme.aurora': 'Aurora', 'theme.gold': 'Golden',
   'skin.sky': 'Sky', 'skin.mint': 'Mint', 'skin.rose': 'Rose', 'skin.violet': 'Violet', 'skin.sun': 'Sunny', 'skin.night': 'Night',
-  'acc.none': 'None', 'acc.cap': 'Cap', 'acc.glasses': 'Glasses', 'acc.phones': 'Headphones', 'acc.crown': 'Crown', 'acc.scarf': 'Scarf',
+  'acc.none': 'None', 'acc.cap': 'Cap', 'acc.sparkle': 'Sparkles', 'acc.phones': 'Headphones', 'acc.crown': 'Crown', 'acc.scarf': 'Scarf',
 
   'set.title': 'Settings', 'set.language': 'Language', 'set.digits': 'Numerals', 'set.sfx': 'Sound effects', 'set.music': 'Music',
   'set.haptics': 'Vibration', 'set.hapticsNA': 'Not supported on this device', 'set.motion': 'Motion & effects',
@@ -403,6 +412,15 @@ const en = {
 
   'a11y.correctAnswer': 'Correct answer', 'a11y.wrongAnswer': 'Wrong answer', 'a11y.menu': 'Menu', 'a11y.stars': '{n} of 3 stars',
   'a11y.lives': '{n} tries left', 'a11y.timer': '{n} seconds left', 'a11y.expr': 'Problem',
+  'rtut.1': 'This drop carries a problem. Type its answer before it hits the ground!', 'rtut.2': 'Great! The drop pops the moment you type the right number.',
+  'rtut.3': 'Pop drops higher for more points; answers in a row multiply them.', 'rtut.4': "Well done! In levels don't let drops land — you have 3 hearts.",
+  'rain.pausedNote': 'Drops are hidden while paused.', 'rain.ruleClassic': 'Pop {n} drops before you lose your 3 hearts.', 'rain.ruleSprint': 'Pop {n} drops before time runs out.',
+  'rain.timeRules': 'Pop as many drops as you can before time runs out. The rain gets heavier; a landed drop only breaks your streak.',
+  'rain.survRules': 'You have 3 hearts; every drop that lands costs one. The rain speeds up endlessly — how long can you last?',
+  'rain.specials': 'Special drops: ⭐ double points · ❄️ slows the rain for 5s · ⚡ pops every drop on screen.',
+  'jrr.classic': 'Pop {n} drops without losing your 3 hearts', 'jrr.sprint': 'Pop {n} drops within {s} seconds', 'jrr.boss': 'Boss: {n} drops with special drops',
+  'jrr.rule.hearts': 'Stars = hearts left (★★★ with no drop landing)', 'jrr.rule.sprint': 'Stars by time left: ★★★ 35% · ★★ 15%',
+  'online.title': 'Online', 'online.sub': 'Live matches · rooms · tournaments · leaderboards', 'online.quitBody': 'Your current score counts and your match ends.',
 };
 
 /* لغات النسخة السابقة: العناوين الأساسية فقط (والباقي بالإنجليزية) */

@@ -70,7 +70,8 @@ function tokenText(p, prevIsOp) {
 /** نص مقروء للمعادلة (لقارئ الشاشة) */
 export function mathText(parts) {
   let prevOp = false;
-  return parts.map((p) => { const s = tokenText(p, prevOp); prevOp = !!(p.op || p.eq || p.lp); return s; }).join(' ');
+  // علامة LRM بين الرموز تمنع انعكاس «٦ − ٥» عند عرضها كنص عادي داخل سياق عربي
+  return '\u2066' + parts.map((p) => { const s = tokenText(p, prevOp); prevOp = !!(p.op || p.eq || p.lp); return s; }).join(' \u200E') + '\u2069';
 }
 
 /**

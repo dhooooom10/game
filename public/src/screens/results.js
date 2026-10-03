@@ -84,13 +84,13 @@ registerScreen('results', (app, { view }) => {
   const btns = h('div.stack', { style: { marginTop: '18px' } });
   const replayBtn = (label, primary = true) => h('button.btn.block.lg' + (primary ? '.primary' : ''), { id: 'replayBtn', on: { click: () => {
     sfx.tap();
-    if (view.kind === 'rain') return app.go('rainPlay', view.args, { replace: true });
+    if (view.engine === 'rain') return app.go('rainPlay', { kind: view.kind, args: view.kind === 'daily' ? { ...view.args, official: false } : view.args }, { replace: true });
     app.go('play', { kind: view.kind, args: view.kind === 'daily' ? { ...view.args, official: false } : view.args }, { replace: true });
   } } }, icon('refresh'), label);
   if (view.kind === 'journey') {
     const L = view.args.level;
     if (view.passed && L < TOTAL_LEVELS) {
-      btns.append(h('button.btn.block.lg.primary', { on: { click: () => { sfx.tap(); app.go('play', { kind: 'journey', args: { level: L + 1 } }, { replace: true }); } } }, icon('play'), t('res.next')), replayBtn(t('res.retry'), false));
+      btns.append(h('button.btn.block.lg.primary', { on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'journey', args: { level: L + 1 } }, { replace: true }); } } }, icon('play'), t('res.next')), replayBtn(t('res.retry'), false));
     } else btns.append(replayBtn(t('res.retry')));
     btns.append(h('button.btn.block.ghost', { on: { click: () => { sfx.tap(); app.go('world', { w: worldOf(L) }, { replace: true }); } } }, icon('map'), t('jr.worldN', { n: worldOf(L) + 1 }) + ' · ' + t('world.' + WORLDS[worldOf(L)].key)));
   } else if (view.kind === 'lesson') {

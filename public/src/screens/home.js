@@ -8,7 +8,8 @@ import { t } from '../i18n.js';
 import { levelFromXp, dailyStatus, todayStr } from '../core/progression.js';
 import { WORLDS, worldOf, DAILY_COUNT, timeRecordKey } from '../core/modes.js';
 import { createSession } from '../core/session.js';
-import { nextJourneyLevel, buildRun, finishRun, PERSISTED } from '../runs.js';
+import { nextJourneyLevel, buildRun, finishRun, PERSISTED, RAIN_PERSISTED, buildRainRun, finishRainRun } from '../runs.js';
+import { replayRain } from '../core/rain.js';
 
 registerScreen('home', (app) => {
   const data = app.data;
@@ -55,8 +56,8 @@ registerScreen('home', (app) => {
 
   function playNow() {
     sfx.tap();
-    if (!data.settings.tutorialDone) return app.go('play', { kind: 'tutorial', args: {} });
-    app.go('play', { kind: 'journey', args: { level: L } });
+    if (!data.settings.tutorialDone) return app.go('rainPlay', { kind: 'tutorial', args: {} });
+    app.go('rainPlay', { kind: 'journey', args: { level: L } });
   }
 
   // التحدي اليومي
@@ -81,8 +82,8 @@ registerScreen('home', (app) => {
         st.done ? h('p.note', { style: { color: 'var(--ok)', fontWeight: 800 } }, t('daily.done', { score: num(st.result.score) })) : null,
         h('div.stack',
           st.done
-            ? h('button.btn.primary.block.lg', { 'data-autofocus': true, on: { click: () => { close(); app.go('play', { kind: 'daily', args: { date: today, official: false } }); } } }, icon('refresh'), t('daily.practice'))
-            : h('button.btn.gold.block.lg', { 'data-autofocus': true, on: { click: () => { close(); app.go('play', { kind: 'daily', args: { date: today, official: true } }); } } }, icon('play', 'fill'), t('daily.start')),
+            ? h('button.btn.primary.block.lg', { 'data-autofocus': true, on: { click: () => { close(); app.go('rainPlay', { kind: 'daily', args: { date: today, official: false } }); } } }, icon('refresh'), t('daily.practice'))
+            : h('button.btn.gold.block.lg', { 'data-autofocus': true, on: { click: () => { close(); app.go('rainPlay', { kind: 'daily', args: { date: today, official: true } }); } } }, icon('play', 'fill'), t('daily.start')),
           h('button.btn.ghost.block', { on: { click: () => close() } }, t('common.close'))));
     });
   }
@@ -113,14 +114,15 @@ registerScreen('home', (app) => {
       card('modeSurvival', 'shield', '#FF7BB0', t('mode.survival'), t('mode.survivalSub'), sRec >= 0 ? t('setup.record', { n: num(sRec) }) : null, () => app.go('setupSurvival')),
       card('modePractice', 'target', '#3DDC97', t('mode.practice'), t('mode.practiceSub'), null, () => app.go('practice')),
       card('modeFriend', 'users', '#9B8CFF', t('mode.friend'), t('mode.friendSub'), null, () => app.go('friendSetup')),
-      card('modeRain', 'drop', '#5FD3F5', t('mode.rain'), t('mode.rainSub'), null, () => app.go('rainSetup'), true))));
+      card('modeOnline', 'users', '#FF7BB0', t('online.title'), t('online.sub'), null, () => app.go('online'), true))));
 
   return {
     el, nav: 'home',
     afterMount: () => {
       // استئناف جولة انقطعت (تحديث الصفحة أو إغلاق التطبيق)
       const active = app.store.loadActive(app.pid);
-      if (active && PERSISTED.has(active.kind) && active.snap) offerResume(active);
+      if (active && active.engine === 'rain' && RAIN_PERSISTED.has(active.kind)) offerResume(active);
+      else if (active && PERSISTED.has(active.kind) && active.snap) offerResume(active);
     },
   };
 });
@@ -132,7 +134,11 @@ function offerResume(active) {
     box.append(h('h2', t('game.resumeTitle')), h('p.note', t('game.resumeBody', { mode: modeName })),
       official ? h('p.note', t('game.quitDaily')) : null,
       h('div.stack',
-        h('button.btn.primary.block.lg', { 'data-autofocus': true, on: { click: () => { close('resume'); app.go('play', { kind: active.kind, args: active.args, restore: { seed: active.seed, snap: active.snap } }); } } }, icon('play'), t('game.resumeBtn')),
+        h('button.btn.primary.block.lg', { 'data-autofocus': true, on: { click: () => {
+          close('resume');
+          if (active.engine === 'rain') app.go('rainPlay', { kind: active.kind, args: active.args, restore: active });
+          else app.go('play', { kind: active.kind, args: active.args, restore: { seed: active.seed, snap: active.snap } });
+        } } }, icon('play'), t('game.resumeBtn')),
         h('button.btn.ghost.block', { on: { click: () => { close('discard'); discard(active); } } }, official ? t('game.endNow') : t('game.discard'))));
   }, { dismissible: false });
 }
@@ -142,6 +148,13 @@ function discard(active) {
   app.store.clearActive(app.pid);
   if (!official) return;
   // التحدي اليومي الرسمي لا يُلغى: تُعتمد النتيجة الحالية
+  if (active.engine === 'rain') {
+    const run = buildRainRun('daily', active.args, app.data);
+    const { summary } = replayRain(run.cfg, run.seed, active.log, { endTick: active.tick });
+    const { view } = finishRainRun('daily', active.args, { id: active.id, seed: run.seed }, summary, app.data);
+    app.save();
+    return app.go('results', { view });
+  }
   try {
     const { spec } = buildRun('daily', active.args, app.data, active.seed);
     const s = createSession(spec, active.snap);

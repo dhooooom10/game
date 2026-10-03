@@ -68,6 +68,7 @@ export function normalizeData(d, lang = 'ar') {
   out.daily = { ...base.daily, ...(d.daily || {}) };
   out.missions = { ...base.missions, ...(d.missions || {}) };
   out.cosmetics = { ...base.cosmetics, ...(d.cosmetics || {}) };
+  if (out.cosmetics.acc === 'glasses') out.cosmetics.acc = 'sparkle'; // أُزيلت النظارة مع إزالة الوجه
   out.prefs = { ...base.prefs, ...(d.prefs || {}) };
   for (const k of Object.keys(base.prefs)) out.prefs[k] = { ...base.prefs[k], ...((d.prefs || {})[k] || {}) };
   out.committed = Array.isArray(d.committed) ? d.committed : [];
@@ -220,7 +221,7 @@ export const COSMETICS = {
     { id: 'violet', need: { level: 6 } }, { id: 'sun', need: { badge: 'world5' } }, { id: 'night', need: { badge: 'daily7' } },
   ],
   acc: [
-    { id: 'none', need: { level: 1 } }, { id: 'cap', need: { level: 3 } }, { id: 'glasses', need: { level: 5 } },
+    { id: 'none', need: { level: 1 } }, { id: 'cap', need: { level: 3 } }, { id: 'sparkle', need: { level: 5 } },
     { id: 'phones', need: { level: 7 } }, { id: 'crown', need: { badge: 'world1' } }, { id: 'scarf', need: { badge: 'daily3' } },
   ],
 };

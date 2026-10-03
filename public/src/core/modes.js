@@ -7,6 +7,7 @@ import { createQuestionFactory, generateQuestion, formatsFor, clampTier, OPS, pa
 import { tierFromSkill } from './adaptive.js';
 import { accuracyBonus } from './scoring.js';
 import { findPath, lessonStars } from './curriculum.js';
+import { rainConfig, stormConfig, survivalConfig } from './rain.js';
 
 /* ---------------- أدوات ---------------- */
 function pickFormat(rng, topic, weights) {
@@ -256,3 +257,44 @@ export function friendWinner(a, b) {
   if (a.activeMs !== b.activeMs) return a.activeMs < b.activeMs ? 0 : 1;
   return -1;
 }
+
+/* =========================================================================
+   الرحلة بالمطر — كل مرحلة «عاصفة» لها هدف قطرات.
+   • مرحلة عادية: فجّر الهدف قبل أن تفقد ٣ قلوب. النجوم = القلوب المتبقية.
+   • مرحلة سرعة ⚡: فجّر الهدف قبل نفاد الوقت. النجوم بالوقت المتبقي.
+   • الزعيم 👑: هدف أكبر وقطرات خاصة. النجوم = القلوب المتبقية.
+   ========================================================================= */
+export function journeyRain(level) {
+  const info = levelInfo(level);
+  const w = info.world, i = info.index;
+  const tiers = {};
+  // ترتيب العمليات (order) لا يناسب قطرة صغيرة؛ نستبدله بمستوى أعلى في الجمع
+  for (const [op, t] of Object.entries(info.tiers)) if (op !== 'order') tiers[op] = t;
+  const formats = w >= 4 ? { input: 4, missing: 1 } : { input: 1 };
+  const target = info.kind === 'boss' ? 16 + w : 10 + Math.floor(w * 0.8) + (i > 5 ? 1 : 0);
+  const travel = Math.max(6.5, 10.5 - w * 0.35 - i * 0.06);
+  const spawn = Math.max(1.5, 3.3 - w * 0.15 - i * 0.03);
+  const maxDrops = Math.min(4, 2 + Math.floor((w + (i > 6 ? 1 : 0)) / 3));
+  let timeLimit = null;
+  if (info.kind === 'sprint') timeLimit = Math.ceil((target * spawn * 1.25 + travel) / 5) * 5;
+  const cfg = rainConfig({ tiers, formats, travel, spawn, maxDrops, target, lives: 3, timeLimit, specials: info.kind === 'boss' || w >= 6 });
+  return { info: { ...info, target, timeLimitMs: timeLimit ? timeLimit * 1000 : null, goal: target }, cfg };
+}
+
+export function evaluateRainJourney(info, sum) {
+  const passed = sum.won && sum.endReason === 'target';
+  let stars = 0;
+  if (passed) {
+    if (info.kind === 'sprint') {
+      const f = info.timeLimitMs ? (sum.timeLeftMs || 0) / info.timeLimitMs : 0;
+      stars = f >= 0.35 ? 3 : f >= 0.15 ? 2 : 1;
+      if (sum.lives != null) stars = Math.min(stars, Math.max(1, sum.lives));
+    } else stars = Math.max(1, Math.min(3, sum.lives ?? 3));
+  }
+  const bonus = passed ? accuracyBonus(sum.correct, sum.answered) : 0;
+  return { passed, stars, bonus, finalScore: sum.score + bonus };
+}
+
+export const DAILY_STORM = { diff: 'medium', seconds: 90 };
+export const dailyRain = (date) => ({ cfg: stormConfig(DAILY_STORM.diff, DAILY_STORM.seconds, true), seed: 'daily:' + date });
+export { stormConfig, survivalConfig };

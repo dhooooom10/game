@@ -48,7 +48,7 @@ registerScreen('settings', (app) => {
     row(t('set.contrast'), null, sw(s.contrast, t('set.contrast'), (v) => { s.contrast = v; app.save(); app.applyLook(); })),
     row(t('set.bigText'), null, sw(s.bigText, t('set.bigText'), (v) => { s.bigText = v; app.save(); app.applyLook(); })),
     row(t('set.autoSubmit'), t('set.autoSubmitSub'), sw(s.autoSubmit !== false, t('set.autoSubmit'), (v) => { s.autoSubmit = v; app.save(); })),
-    h('button.btn.block', { style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('play', { kind: 'tutorial', args: {} }); } } }, icon('book'), t('set.tutorial'))));
+    h('button.btn.block', { style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'tutorial', args: {} }); } } }, icon('book'), t('set.tutorial'))));
 
   // الملفات الشخصية
   el.append(h('section.card',

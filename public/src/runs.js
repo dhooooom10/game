@@ -6,10 +6,14 @@ import { journeySpec, evaluateJourney, levelInfo, timeSpec, survivalSpec, practi
 import { commitRound, recordDaily, todayStr } from './core/progression.js';
 import { findPath, lessonKey } from './core/curriculum.js';
 import { parTime } from './core/questions.js';
+import { accuracyBonus } from './core/scoring.js';
 import { randomSeed } from './core/rng.js';
+import { rainConfig, classicConfig } from './core/rain.js';
+import { journeyRain, evaluateRainJourney, dailyRain, stormConfig, survivalConfig } from './core/modes.js';
 import { t } from './i18n.js';
 
-export const PERSISTED = new Set(['journey', 'time', 'survival', 'practice', 'lesson', 'daily']);
+export const PERSISTED = new Set(['practice', 'lesson']);
+export const RAIN_PERSISTED = new Set(['journey', 'time', 'survival', 'daily', 'classic']);
 
 /* ---------- أسئلة الشرح التفاعلي (ثابتة وسهلة) ---------- */
 const N = (n) => ({ n });
@@ -170,3 +174,84 @@ export function nextJourneyLevel(data) {
   return TOTAL_LEVELS;
 }
 export { worldOf };
+
+/* =========================================================================
+   جولات المطر (اللعبة الأساسية)
+   ========================================================================= */
+export function buildRainRun(kind, args, data, seed = randomSeed()) {
+  const meta = { label: '', realtime: false, persist: RAIN_PERSISTED.has(kind), stats: true, tutorial: false, tint: null };
+  let cfg;
+  switch (kind) {
+    case 'journey': {
+      const j = journeyRain(args.level);
+      cfg = j.cfg;
+      const w = WORLDS[j.info.world];
+      meta.label = `${t('jr.levelN', { n: args.level })} · ${t('world.' + w.key)}`;
+      meta.tint = w.color; meta.info = j.info;
+      break;
+    }
+    case 'time': cfg = stormConfig(args.diff, args.dur, true); meta.label = `${t('mode.time')} · ${t('diff.' + args.diff)}`; break;
+    case 'survival': cfg = survivalConfig(args.diff); meta.label = `${t('mode.survival')} · ${t('diff.' + args.diff)}`; break;
+    case 'classic': cfg = classicConfig(args.diff); meta.label = `${t('mode.rain')} · ${t('diff.' + args.diff)}`; break;
+    case 'daily': {
+      const d = dailyRain(args.date); cfg = d.cfg; seed = d.seed;
+      meta.realtime = true;
+      meta.label = `${t('daily.title')}${args.official ? '' : ' · ' + t('daily.practice')}`;
+      meta.tint = '#FFC94A';
+      break;
+    }
+    case 'tutorial':
+      cfg = rainConfig({ tiers: { add: 1 }, travel: 16, spawn: 1.2, maxDrops: 1, target: 4, lives: null, specials: false });
+      seed = 'tutorial'; meta.tutorial = true; meta.stats = false; meta.persist = false; meta.label = t('mode.tutorial');
+      break;
+    default: throw new Error('rain kind ' + kind);
+  }
+  return { cfg, seed, meta, id: `${kind}-${typeof seed === 'string' ? seed : seed.toString(36)}-${Date.now().toString(36)}` };
+}
+
+export function finishRainRun(kind, args, run, sum, data, date = todayStr()) {
+  const base = { id: run.id, mode: kind === 'classic' ? 'rain' : kind, score: sum.score, correct: sum.correct, answered: sum.answered, bestStreak: sum.bestStreak, perOp: sum.perOp, activeMs: sum.activeMs };
+  const view = { engine: 'rain', kind, args, sum, stars: null, score: sum.score, record: null, notes: [], mood: 'happy', tip: tipFor({ ...sum, answers: sum.answers.filter((a) => a.ms != null || !a.correct) }, true) };
+  let round = base;
+  if (kind === 'journey') {
+    const { info } = journeyRain(args.level);
+    const ev = evaluateRainJourney(info, sum);
+    const old = data.journey.stars[args.level] || 0;
+    if (ev.passed) {
+      data.journey.stars[args.level] = Math.max(old, ev.stars);
+      if (args.level >= data.journey.unlocked && args.level < TOTAL_LEVELS) data.journey.unlocked = args.level + 1;
+    }
+    const prevBest = data.journey.best[args.level] || 0;
+    if (ev.finalScore > prevBest) data.journey.best[args.level] = ev.finalScore;
+    round = { ...base, score: ev.finalScore, passed: ev.passed, stars: ev.stars, starsGained: Math.max(0, ev.stars - old), level: args.level };
+    Object.assign(view, {
+      title: ev.passed ? (info.kind === 'boss' ? t('res.bossPassed') : t('res.levelPassed', { n: args.level })) : t('res.levelFailed'),
+      stars: ev.stars, score: ev.finalScore, passed: ev.passed, mood: ev.passed ? (ev.stars === 3 ? 'cheer' : 'happy') : 'sad', bonus: ev.bonus, info,
+      record: prevBest && ev.finalScore > prevBest ? { prev: prevBest } : null,
+      celebrate: ev.passed && (ev.stars === 3 || info.kind === 'boss'),
+    });
+    if (!ev.passed) view.notes.push(info.kind === 'sprint' ? t('rain.ruleSprint', { n: info.target }) : t('rain.ruleClassic', { n: info.target }));
+  } else if (kind === 'time' || kind === 'survival') {
+    const key = kind === 'time' ? timeRecordKey(args.dur, args.diff) : survivalRecordKey(args.diff);
+    round = { ...base, recordKey: key, recordValue: sum.popped, duration: args.dur, diff: args.diff };
+    Object.assign(view, { title: kind === 'time' ? t('res.timeUp') : t('res.survivalEnd', { n: sum.popped }), mood: sum.popped >= 15 ? 'cheer' : 'happy' });
+  } else if (kind === 'classic') {
+    round = { ...base, passed: sum.won, diff: args.diff, recordKey: 'rain:' + args.diff, recordValue: sum.score };
+    Object.assign(view, { title: sum.won ? t('res.rainWin') : t('res.rainLose'), mood: sum.won ? 'cheer' : 'sad', passed: sum.won });
+  } else if (kind === 'daily') {
+    const bonus = accuracyBonus(sum.correct, sum.answered);
+    const finalScore = sum.score + bonus;
+    let official = false;
+    if (args.official) official = recordDaily(data, args.date, { score: finalScore, correct: sum.correct, total: sum.answered, ms: sum.activeMs });
+    round = { ...base, score: finalScore, official, recordKey: official ? 'daily' : null, recordValue: finalScore };
+    if (!official) round.id = run.id + '-p';
+    Object.assign(view, { title: t('res.dailyEnd'), score: finalScore, bonus, mood: 'cheer', official });
+    view.notes.push(official ? t('res.official') : t('res.practiceRun'));
+  }
+  const rewards = commitRound(data, round, date);
+  if (rewards.records?.length && rewards.records[0].prev != null) view.record = { prev: rewards.records[0].prev };
+  else if (rewards.records?.length && kind !== 'journey') view.firstRecord = true;
+  if (view.record) view.celebrate = true;
+  view.rewards = rewards;
+  return { view, rewards };
+}

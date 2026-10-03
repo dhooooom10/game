@@ -39,9 +39,9 @@ registerScreen('setupTime', (app) => {
     field(t('setup.duration'), seg(TIME_DURATIONS.map((d) => [d, t('common.sec', { n: d })]), pref.dur, (v) => { pref.dur = +v; app.save(); paintRec(); }, t('setup.duration'))),
     field(t('setup.difficulty'), seg(DIFFICULTIES.map((d) => [d, t('diff.' + d)]), pref.diff, (v) => { pref.diff = v; app.save(); paintRec(); }, t('setup.difficulty'))),
     recBox),
-  h('p.note', { style: { marginTop: '12px' } }, t('setup.timeRules')),
-  h('p.note', t('setup.pauseRule')),
-  h('button.btn.primary.block.lg', { id: 'startTime', style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('play', { kind: 'time', args: { dur: pref.dur, diff: pref.diff } }); } } }, icon('play'), t('common.start')));
+  h('p.note', { style: { marginTop: '12px' } }, t('rain.timeRules')),
+  h('p.note', t('rain.specials')),
+  h('button.btn.primary.block.lg', { id: 'startTime', style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'time', args: { dur: pref.dur, diff: pref.diff } }); } } }, icon('play'), t('common.start')));
   paintRec();
   return { el };
 });
@@ -55,14 +55,14 @@ registerScreen('setupSurvival', (app) => {
   const paint = () => {
     const r = app.data.records[survivalRecordKey(pref.diff)];
     recBox.textContent = r ? '🏆 ' + t('setup.record', { n: num(r.value) }) : t('setup.noRecord');
-    rules.textContent = t('setup.survRules', { s: survivalPerQuestionMs(pref.diff, 0) / 1000 });
+    rules.textContent = t('rain.survRules');
   };
   el.append(h('section.card',
     field(t('setup.difficulty'), seg(DIFFICULTIES.map((d) => [d, t('diff.' + d)]), pref.diff, (v) => { pref.diff = v; app.save(); paint(); }, t('setup.difficulty'))),
     recBox),
   h('div', { style: { marginTop: '12px' } }, rules),
-  h('p.note', t('setup.pauseRule')),
-  h('button.btn.primary.block.lg', { id: 'startSurvival', style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('play', { kind: 'survival', args: { diff: pref.diff } }); } } }, icon('play'), t('common.start')));
+  h('p.note', t('rain.specials')),
+  h('button.btn.primary.block.lg', { id: 'startSurvival', style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'survival', args: { diff: pref.diff } }); } } }, icon('play'), t('common.start')));
   paint();
   return { el };
 });

@@ -515,18 +515,68 @@ details.how ul { margin: 6px 0 0; padding-inline-start: 20px; color: var(--muted
 .split-pane .cmp-btn { min-height: 64px; }
 .split-mid { display: flex; justify-content: center; gap: 10px; align-items: center; }
 
-/* ---------------- مطر المعادلات ---------------- */
-.sky { position: relative; flex: 1; min-height: 260px; border-radius: 24px; overflow: hidden; border: 1px solid var(--line); background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 10%, transparent), transparent 70%), var(--surface); }
-.sky .ground { position: absolute; inset: auto 0 0 0; height: 6px; background: linear-gradient(90deg, var(--primary), var(--violet)); opacity: .7; }
+/* ---------------- المطر (اللعبة الأساسية) ---------------- */
+.rain-view { gap: 0; }
+.sky-wrap { position: relative; flex: 1; display: flex; min-height: 0; margin: 6px 0 8px; }
+.sky { position: relative; flex: 1; min-height: 280px; border-radius: 26px; overflow: hidden; border: 1px solid var(--line);
+  background: radial-gradient(120% 70% at 50% -10%, color-mix(in srgb, var(--sky-tint, var(--primary)) 26%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-solid) 70%, transparent), var(--surface)); contain: layout paint; }
+.sky .sky-streaks { position: absolute; inset: 0; pointer-events: none; opacity: .35;
+  background-image: repeating-linear-gradient(100deg, transparent 0 22px, color-mix(in srgb, var(--primary) 30%, transparent) 22px 23px, transparent 23px 47px);
+  background-size: 200% 200%; animation: streaks 3s linear infinite; }
+@keyframes streaks { to { background-position: -60px 240px; } }
+[data-motion="reduce"] .sky .sky-streaks { animation: none; }
+.sky .ground { position: absolute; inset: auto 0 0 0; height: 8px; background: linear-gradient(90deg, var(--primary), var(--violet)); opacity: .75; box-shadow: 0 -6px 18px color-mix(in srgb, var(--primary) 40%, transparent); }
 .sky .ground.hit { animation: groundHit .45s; }
-@keyframes groundHit { 30% { background: var(--bad); opacity: 1; height: 12px; } }
-.drop { position: absolute; top: 0; left: 0; will-change: transform; padding: 8px 14px; border-radius: 22px 22px 22px 22px; background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 85%, #fff), var(--primary-2)); color: var(--on-primary); font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; white-space: nowrap; box-shadow: 0 6px 16px rgba(0, 0, 0, .3); direction: ltr; }
-.drop::before { content: ''; position: absolute; top: -9px; left: 50%; width: 16px; height: 16px; background: inherit; transform: translateX(-50%) rotate(45deg); border-radius: 3px 0 0 0; z-index: -1; }
-.drop.near { background: linear-gradient(180deg, #FFD07A, var(--accent-2)); color: var(--on-accent); }
-.drop.popped { animation: dropPop .3s both; }
+@keyframes groundHit { 30% { background: var(--bad); opacity: 1; height: 14px; } }
+.sky.shake { animation: skyShake .32s; }
+@keyframes skyShake { 25% { transform: translateX(-6px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-3px); } }
+.sky.flash::after { content: ''; position: absolute; inset: 0; background: #fff; animation: flashOut .45s both; pointer-events: none; }
+@keyframes flashOut { from { opacity: .8; } to { opacity: 0; } }
+.sky.frozen { box-shadow: inset 0 0 0 3px #BFF3FF, inset 0 0 40px rgba(191, 243, 255, .35); }
+.sky.frozen .drop { filter: saturate(.6) brightness(1.15); }
+.sky.veiled .drop { filter: blur(12px); opacity: .4; }
+.drop { position: absolute; top: 0; left: 0; will-change: transform; display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px 9px;
+  border-radius: 50% 50% 46% 46% / 62% 62% 40% 40%; min-width: 64px; justify-content: center;
+  background: radial-gradient(70% 60% at 35% 30%, rgba(255,255,255,.55), transparent 60%), linear-gradient(180deg, color-mix(in srgb, var(--primary) 80%, #fff), var(--primary-2));
+  color: var(--on-primary); font-family: var(--font-display); font-weight: 800; font-size: 1.28rem; white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .28), inset 0 -4px 0 rgba(0, 0, 0, .12); }
+.drop::before { content: ''; position: absolute; top: -10px; left: 50%; width: 18px; height: 18px; background: color-mix(in srgb, var(--primary) 80%, #fff); transform: translateX(-50%) rotate(45deg); border-radius: 4px 0 50% 0; z-index: -1; }
+.drop .dq { direction: ltr; unicode-bidi: isolate; margin: 0; gap: .2em; }
+.drop .dq .op { color: inherit; opacity: .8; }
+.drop .dq .blank { border-width: 2px; min-width: 1.2em; color: inherit; }
+.drop .dk { font-size: .9em; }
+.drop.near { background: radial-gradient(70% 60% at 35% 30%, rgba(255,255,255,.5), transparent 60%), linear-gradient(180deg, #FFD07A, var(--accent-2)); color: var(--on-accent); animation: nearPulse .5s ease-in-out infinite alternate; }
+.drop.near::before { background: #FFD07A; }
+@keyframes nearPulse { to { box-shadow: 0 0 0 6px rgba(255, 159, 28, .25), 0 8px 18px rgba(0,0,0,.28); } }
+.drop.k-gold { background: radial-gradient(70% 60% at 35% 30%, rgba(255,255,255,.6), transparent 60%), linear-gradient(180deg, #FFE38A, #F2A900); color: #3A2600; box-shadow: 0 0 18px rgba(255, 201, 74, .6); }
+.drop.k-gold::before { background: #FFE38A; }
+.drop.k-ice { background: radial-gradient(70% 60% at 35% 30%, rgba(255,255,255,.8), transparent 60%), linear-gradient(180deg, #E6FBFF, #7FD8F0); color: #04313D; }
+.drop.k-ice::before { background: #E6FBFF; }
+.drop.k-storm { background: radial-gradient(70% 60% at 35% 30%, rgba(255,255,255,.5), transparent 60%), linear-gradient(180deg, #C9B8FF, #6C4FF0); color: #fff; box-shadow: 0 0 18px rgba(155, 140, 255, .7); }
+.drop.k-storm::before { background: #C9B8FF; }
+.drop.popped { animation: dropPop .26s ease-out both; }
 .drop.splash { animation: dropSplash .3s both; }
-@keyframes dropPop { to { transform: var(--tf) scale(1.6); opacity: 0; } }
-@keyframes dropSplash { to { transform: var(--tf) scaleY(.2); opacity: 0; } }
+@keyframes dropPop { to { transform: var(--tf) scale(1.7); opacity: 0; } }
+@keyframes dropSplash { to { transform: var(--tf) scale(1.4, .2); opacity: 0; } }
+.sky .spark { position: absolute; width: 8px; height: 8px; margin: -4px; border-radius: 50%; background: var(--c); pointer-events: none; animation: spark .55s ease-out both; }
+@keyframes spark { to { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+.sky .ripple { position: absolute; width: 20px; height: 20px; margin: -10px; border-radius: 50%; border: 3px solid var(--c); pointer-events: none; animation: ripple .5s ease-out both; }
+@keyframes ripple { to { transform: scale(4.5); opacity: 0; } }
+.float-text.bad { color: var(--bad); }
+.rain-keypad .key { min-height: 56px; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.rain-keypad .key.press { transform: translateY(2px) scale(.97); background: color-mix(in srgb, var(--primary) 22%, var(--surface-2)); }
+.rain-view .display { min-height: 56px; margin-bottom: 8px; }
+.rain-coach { position: absolute; inset: auto 10px 18px 10px; z-index: 3; pointer-events: none; }
+.ice-chip { color: #BFF3FF; }
+.opp-box { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+.opp { display: grid; grid-template-columns: minmax(4em, 7em) 1fr auto; gap: 8px; align-items: center; font-size: .82rem; font-weight: 800; }
+.opp .on { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--oc); }
+.opp .bar { height: 8px; }
+.opp .bar > i { background: var(--oc); }
+.opp b { font-family: var(--font-display); min-width: 3.2em; text-align: end; }
+.opp.me .on { color: var(--primary); }
+.opp.done { opacity: .6; }
 
 /* ---------------- الشرح التفاعلي ---------------- */
 .coach { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 8px; animation: qIn .35s var(--spring) both; }
@@ -556,3 +606,15 @@ details.how ul { margin: 6px 0 0; padding-inline-start: 20px; color: var(--muted
 @media (hover: hover) {
   .mode-card:hover, .world-card:hover, .list-btn:hover, .key:hover, .choice:hover:not([disabled]), .cmp-btn:hover:not([disabled]) { filter: brightness(1.08); }
 }
+
+/* حركات مزاج القطرة (بلا ملامح) */
+.mascot .m-body { transform-origin: 50% 100%; }
+.mascot.mood-cheer .m-body { animation: dropCheer 1.1s var(--spring) 2; }
+.mascot.mood-sad .m-body { animation: dropSad 1.4s ease-in-out 1; transform: scaleY(.92); }
+.mascot.mood-think .m-body { animation: dropThink 2.4s ease-in-out infinite; }
+.mascot.mood-wow .m-body { animation: dropCheer .8s var(--spring) 1; }
+.mascot .m-sparkle { animation: twinkle 1.6s ease-in-out infinite; }
+@keyframes dropCheer { 30% { transform: translateY(-14px) scale(.94, 1.06); } 55% { transform: translateY(0) scale(1.08, .92); } 75% { transform: scale(.97, 1.03); } }
+@keyframes dropSad { 30% { transform: scale(1.05, .9); } 100% { transform: scaleY(.92); } }
+@keyframes dropThink { 50% { transform: rotate(-4deg); } }
+@keyframes twinkle { 50% { opacity: .35; } }

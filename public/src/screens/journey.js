@@ -4,7 +4,7 @@ import { h, icon, num } from '../ui/dom.js';
 import { sfx } from '../ui/audio.js';
 import { toast } from '../ui/fx.js';
 import { t } from '../i18n.js';
-import { WORLDS, LEVELS_PER_WORLD, levelInfo } from '../core/modes.js';
+import { WORLDS, LEVELS_PER_WORLD, levelInfo, journeyRain } from '../core/modes.js';
 
 const topbar = (title, sub, backable = true) => h('header.topbar',
   backable ? h('button.icon-btn.back', { aria: { label: t('common.back') }, on: { click: () => { sfx.tap(); app.back(); } } }, icon('back')) : null,
@@ -59,22 +59,21 @@ registerScreen('world', (app, { w }) => {
 
 export function openLevel(L) {
   const data = app.data;
-  const info = levelInfo(L);
+  const { info, cfg } = journeyRain(L);
   const st = data.journey.stars[L] || 0;
   const best = data.journey.best[L];
-  const goal = info.kind === 'classic' ? t('jr.kind.classic', { n: info.questions })
-    : info.kind === 'sprint' ? t('jr.kind.sprint', { g: info.goal, s: info.timeLimitMs / 1000 })
-      : t('jr.kind.boss', { n: info.questions });
-  const ops = Object.keys(info.tiers).map((o) => t('op.' + o)).join(' · ');
+  const goal = info.kind === 'sprint' ? t('jrr.sprint', { n: info.target, s: info.timeLimitMs / 1000 })
+    : info.kind === 'boss' ? t('jrr.boss', { n: info.target }) : t('jrr.classic', { n: info.target });
+  const ops = Object.keys(cfg.tiers).map((o) => t('op.' + o)).join(' · ') + (cfg.specials ? ' · ⭐❄️⚡' : '');
   app.modal((box, close) => {
     box.append(
       h('h2', `${t('jr.levelN', { n: L })} ${info.kind === 'boss' ? '👑' : info.kind === 'sprint' ? '⚡' : ''}`),
       h('p.note', { style: { fontWeight: 800, color: 'var(--ink)', fontSize: '1.05rem' } }, goal),
       h('div.pill-row', { style: { marginBottom: '12px' } }, h('span.chip', ops), h('span.chip.gold', '★'.repeat(st) + '☆'.repeat(3 - st))),
-      h('p.note', t('jr.rule.' + info.kind)),
+      h('p.note', t('jrr.rule.' + (info.kind === 'sprint' ? 'sprint' : 'hearts'))),
       best ? h('p.note', t('jr.best', { n: num(best) })) : null,
       h('div.stack',
-        h('button.btn.primary.block.lg', { 'data-autofocus': true, id: 'startLevel', on: { click: () => { sfx.tap(); close(); app.go('play', { kind: 'journey', args: { level: L } }); } } }, icon('play'), t('jr.play')),
+        h('button.btn.primary.block.lg', { 'data-autofocus': true, id: 'startLevel', on: { click: () => { sfx.tap(); close(); app.go('rainPlay', { kind: 'journey', args: { level: L } }); } } }, icon('play'), t('jr.play')),
         h('button.btn.ghost.block', { on: { click: () => close() } }, t('common.close'))));
   });
 }
