@@ -2,7 +2,7 @@
    يخزّن اللعبة محليًا لتعمل بلا إنترنت بعد أول زيارة.
    قائمة الملفات ورقم الإصدار يولّدهما: node scripts/build-sw.mjs */
 
-const CACHE = 'math-clash-7ec62d3e72';
+const CACHE = 'math-clash-2efcd07690';
 const ASSETS = [
   './',
   './admin.html',
@@ -23,10 +23,13 @@ const ASSETS = [
   './privacy.html',
   './src/admin/admin.js',
   './src/app.js',
+  './src/config.js',
   './src/core/adaptive.js',
+  './src/core/country.js',
   './src/core/curriculum.js',
   './src/core/modes.js',
   './src/core/numbers.js',
+  './src/core/products.js',
   './src/core/progression.js',
   './src/core/questions.js',
   './src/core/rain.js',
@@ -36,6 +39,10 @@ const ASSETS = [
   './src/core/storage.js',
   './src/i18n.js',
   './src/main.js',
+  './src/net/ads.js',
+  './src/net/analytics.js',
+  './src/net/billing.js',
+  './src/net/monetization-config.js',
   './src/net/online.js',
   './src/net/playgames-config.js',
   './src/net/playgames.js',
@@ -51,11 +58,13 @@ const ASSETS = [
   './src/screens/results.js',
   './src/screens/settings.js',
   './src/screens/setup.js',
+  './src/screens/shop.js',
   './src/ui/audio.js',
   './src/ui/dom.js',
   './src/ui/drop.js',
   './src/ui/fx.js',
   './src/ui/mascot.js',
+  './src/ui/share.js',
   './styles/admin.css',
   './styles/main.css'
 ];

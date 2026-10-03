@@ -534,7 +534,7 @@ details.how ul { margin: 6px 0 0; padding-inline-start: 20px; color: var(--muted
 .sky.frozen .drop { --tint: #DFF8FF; }
 .sky.veiled .drop { filter: blur(12px); opacity: .4; }
 /* ---- القطرة: شفافة وبسيطة ---- */
-.drop { --tint: #8FE3FF; position: absolute; top: 0; left: 0; width: 92px; height: 98px; will-change: transform; contain: layout style; pointer-events: none; }
+.drop { --tint: var(--drop-tint, #8FE3FF); position: absolute; top: 0; left: 0; width: 92px; height: 98px; will-change: transform; contain: layout style; pointer-events: none; }
 .drop.k-gold { --tint: #FFD45E; }
 .drop.k-ice { --tint: #D4F7FF; }
 .drop.k-storm { --tint: #B9A6FF; }
@@ -709,3 +709,15 @@ details.card summary { cursor: pointer; font-weight: 800; }
 .club-head h1 { margin: 0; }
 .lb-row .nm { display: flex; flex-direction: column; min-width: 0; }
 .lb-row .nm .d { font-size: .78rem; color: var(--muted); font-weight: 600; }
+/* المتجر */
+.shop-preview { text-align: center; }
+.shop-skins { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.shop-item { position: relative; display: flex; align-items: center; gap: 12px; }
+.shop-item.best { border-color: color-mix(in srgb, var(--accent) 60%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent), 0 10px 26px rgba(255, 201, 74, .12); }
+.shop-ic { font-size: 1.8rem; width: 44px; text-align: center; }
+.shop-item .t { font-weight: 800; }
+.shop-item .d { font-size: .82rem; color: var(--muted); }
+.shop-item .btn { min-width: 92px; }
+.shop-tag { position: absolute; top: -10px; inset-inline-start: 14px; background: var(--accent); color: #2A1A00; font-size: .72rem; font-weight: 800; padding: 2px 10px; border-radius: 999px; }
+.pass-mark { color: #FFD45E; }
+.topbar .btn.sm.gold { margin-inline-start: auto; }

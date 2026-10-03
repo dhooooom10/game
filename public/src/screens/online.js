@@ -314,7 +314,7 @@ function lbList(lb, title) {
   const sec = h('section.card.section', h('h2.section-title', title));
   if (!lb.list.length) sec.append(h('p.note', t('net.lbEmpty')));
   const medal = (r) => r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '🥉' : num(r);
-  for (const r of lb.list) sec.append(h('div.lb-row' + (r.me ? '.me' : ''), h('span.rk', medal(r.rank)), drop(r.skin), h('span.nm', r.name + (r.me ? ` (${t('net.you')})` : '')), h('b', num(r.score))));
+  for (const r of lb.list) sec.append(h('div.lb-row' + (r.me ? '.me' : ''), h('span.rk', medal(r.rank)), drop(r.skin), h('span.nm', r.name + (r.me ? ` (${t('net.you')})` : ''), r.pass ? h('span.pass-mark', { title: t('shop.passHolder'), aria: { label: t('shop.passHolder') } }, ' ✦') : null), h('b', num(r.score))));
   if (lb.mine && !lb.list.some((x) => x.me)) sec.append(h('div.lb-row.me', h('span.rk', num(lb.mine.rank)), drop(app.data.cosmetics.skin), h('span.nm', `${lb.mine.name} (${t('net.you')})`), h('b', num(lb.mine.score))));
   return sec;
 }

@@ -11,6 +11,7 @@ import './screens/settings.js';
 import './screens/friend.js';
 import './screens/rain.js';
 import './screens/online.js';
+import './screens/shop.js';
 
 // مصدر أول زيارة (?ref=share/tiktok/teacher...) — يُرسل مجهولًا مع إحصاءات الاستخدام
 try {

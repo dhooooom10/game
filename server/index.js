@@ -11,6 +11,7 @@ import { openDb } from './db.js';
 import { createServices, HttpError, OCCASIONS } from './services.js';
 import { createRealtime } from './realtime.js';
 import { createPlayGames } from './playgames.js';
+import { createGooglePlay, loadServiceAccount } from './googleplay.js';
 import { dailyRain } from '../public/src/core/modes.js';
 
 const PUBLIC = fileURLToPath(new URL('../public/', import.meta.url));
@@ -21,10 +22,11 @@ const SECURITY = {
   'Content-Security-Policy': "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'",
 };
 
-export function startServer({ port = 0, dbPath = ':memory:', adminToken = '', now = () => Date.now(), realtimeOpts = {}, corsOrigins = [], registerLimit = 40, playGames = {} } = {}) {
+export function startServer({ port = 0, dbPath = ':memory:', adminToken = '', now = () => Date.now(), realtimeOpts = {}, corsOrigins = [], registerLimit = 40, playGames = {}, billing = {} } = {}) {
   const db = openDb(dbPath);
   const pgs = createPlayGames(playGames);
-  const svc = createServices(db, { now });
+  const play = createGooglePlay({ now, ...billing });
+  const svc = createServices(db, { now, play });
   svc.currentSeason();
 
   /* ---------- حدّ الطلبات لكل عنوان ---------- */
@@ -81,9 +83,12 @@ export function startServer({ port = 0, dbPath = ':memory:', adminToken = '', no
   route('GET', '/api/clubs/:id', (req, p) => { const pl = player(req); return { club: svc.getClub(pl.id, p.id) }; });
   route('DELETE', '/api/clubs/:id', (req, p) => { const pl = player(req); svc.deleteClub(pl.id, p.id); return { ok: true }; });
   route('DELETE', '/api/clubs/:id/members/:pid', (req, p) => { const pl = player(req); svc.leaveClub(pl.id, p.id, p.pid === 'me' ? null : p.pid); return { ok: true }; });
+  route('GET', '/api/me/entitlements', (req) => { const p = player(req); return { entitlements: svc.entitlements(p.id), billing: play.enabled }; });
+  route('POST', '/api/purchases/verify', async (req, _p, body, ip) => { const p = player(req); limit(ip, 'buy', 40, 600000); return { entitlements: await svc.verifyPurchase(p.id, body.productId, body.token) }; });
+  route('GET', '/api/admin/purchases', (req) => { admin(req); return svc.purchaseStats(); });
   route('GET', '/api/nations', (req) => { let pid = null; try { pid = svc.auth(bearer(req))?.id; } catch { /* ignore */ } return svc.nations(pid); });
   route('POST', '/api/me/skin', async (req, _p, body) => { const p = player(req); svc.setSkin(p, String(body.skin || '')); return { ok: true }; });
-  route('GET', '/api/config', (req) => { let pid = null; try { pid = svc.auth(bearer(req))?.id; } catch { /* ignore */ } return { ...svc.config(pid), playGames: pgs.enabled }; });
+  route('GET', '/api/config', (req) => { let pid = null; try { pid = svc.auth(bearer(req))?.id; } catch { /* ignore */ } return { ...svc.config(pid), playGames: pgs.enabled, billing: play.enabled }; });
   route('GET', '/api/leaderboard/:board', (req, p, _b, _ip, url) => {
     let pid = null; try { pid = svc.auth(bearer(req))?.id; } catch { /* ignore */ }
     if (p.board === 'friends' && !pid) throw new HttpError(401, 'unauthorized');
@@ -194,6 +199,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   if (adminToken.length < 12) console.warn('⚠️  ADMIN_TOKEN غير مضبوط أو قصير (12 حرفًا على الأقل) — لوحة الإدارة معطّلة.');
   const s = await startServer({ port: +process.env.PORT || 8080, dbPath: process.env.DB_PATH || './data/mathclash.db', adminToken,
     corsOrigins: (process.env.CORS_ORIGINS || '').split(',').filter(Boolean),
-    playGames: { clientId: process.env.GOOGLE_CLIENT_ID || '', clientSecret: process.env.GOOGLE_CLIENT_SECRET || '' } });
+    playGames: { clientId: process.env.GOOGLE_CLIENT_ID || '', clientSecret: process.env.GOOGLE_CLIENT_SECRET || '' },
+    billing: { packageName: process.env.PLAY_PACKAGE || 'app.mathclash.game', serviceAccount: loadServiceAccount(process.env.GOOGLE_SERVICE_ACCOUNT_JSON || '') } });
   console.log(`Math Clash server on ${s.url}  (admin: ${s.url}/admin)`);
 }

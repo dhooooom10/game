@@ -5,6 +5,7 @@
    لا يُقبل أي رقم يرسله الجهاز مباشرة.
    ========================================================================= */
 import { randomBytes, createHash } from 'node:crypto';
+import { PRODUCTS, grantsFrom } from '../public/src/core/products.js';
 import { replayRain, plausible, stormConfig, survivalConfig, rainConfig, TICK_MS } from '../public/src/core/rain.js';
 
 export const OCCASIONS = {
@@ -80,7 +81,7 @@ export function rulesToCfg(rules) {
   return stormConfig(diff, secs, rules.specials !== false);
 }
 
-export function createServices(db, { now = () => Date.now() } = {}) {
+export function createServices(db, { now = () => Date.now(), play = null } = {}) {
   const S = {};
 
   /* ---------------- اللاعبون ---------------- */
@@ -108,7 +109,7 @@ export function createServices(db, { now = () => Date.now() } = {}) {
   /** حذف الحساب وكل بياناته (متطلب من Google Play) */
   S.deleteAccount = (pid) => db.tx(() => {
     for (const c of db.all('SELECT id FROM clubs WHERE owner=?', pid)) { db.run('DELETE FROM club_members WHERE club_id=?', c.id); db.run('DELETE FROM clubs WHERE id=?', c.id); }
-    for (const sql of ['DELETE FROM runs WHERE player_id=?', 'DELETE FROM player_tokens WHERE player_id=?', 'DELETE FROM club_members WHERE player_id=?', 'DELETE FROM friends WHERE a=? OR b=?', 'DELETE FROM season_ratings WHERE player_id=?',
+    for (const sql of ['DELETE FROM runs WHERE player_id=?', 'DELETE FROM purchases WHERE player_id=?', 'DELETE FROM player_tokens WHERE player_id=?', 'DELETE FROM club_members WHERE player_id=?', 'DELETE FROM friends WHERE a=? OR b=?', 'DELETE FROM season_ratings WHERE player_id=?',
       'DELETE FROM rewards WHERE player_id=?', 'DELETE FROM challenges WHERE creator=?', 'DELETE FROM players WHERE id=?']) {
       const n = (sql.match(/\?/g) || []).length;
       db.run(sql, ...Array(n).fill(pid));
@@ -143,6 +144,44 @@ export function createServices(db, { now = () => Date.now() } = {}) {
     return { id: p.id, token, name: p.name, code: p.code, created: false, linked };
   });
   S.publicPlayer = (p) => ({ id: p.id, name: p.name, code: p.code, skin: p.skin, country: p.country || null });
+
+  /* ---------------- المشتريات (تحقق من Google Play على الخادم) ---------------- */
+  S.entitlements = (pid) => {
+    const rows = db.all('SELECT product, season_id FROM purchases WHERE player_id=?', pid);
+    const g = grantsFrom(rows.filter((r) => !PRODUCTS[r.product]?.consumable).map((r) => r.product));
+    const season = S.currentSeason();
+    const pass = rows.some((r) => r.product === 'season_pass' && r.season_id === season.id);
+    return { ...g, season: pass ? { id: season.id, name_ar: season.name_ar, name_en: season.name_en, color: season.color } : null };
+  };
+  S.passHolders = (ids) => {
+    if (!ids.length) return new Set();
+    const sid = S.currentSeason().id;
+    return new Set(db.all(`SELECT DISTINCT player_id FROM purchases WHERE product='season_pass' AND season_id=? AND player_id IN (${ids.map(() => '?').join(',')})`, sid, ...ids).map((r) => r.player_id));
+  };
+  S.verifyPurchase = async (pid, productId, token) => {
+    const prod = PRODUCTS[productId];
+    if (!prod) throw new HttpError(400, 'unknown_product');
+    if (typeof token !== 'string' || token.length < 10 || token.length > 4096) throw new HttpError(400, 'bad_token');
+    if (!play?.enabled) throw new HttpError(501, 'billing_disabled');
+    const prev = db.get('SELECT * FROM purchases WHERE token=?', token);
+    if (prev) { if (prev.player_id !== pid) throw new HttpError(409, 'purchase_used'); return S.entitlements(pid); }
+    const info = await play.getProduct(productId, token);
+    if (!info.purchased) throw new HttpError(402, 'not_purchased');
+    if (info.accountId && info.accountId !== pid) throw new HttpError(409, 'purchase_used');
+    if (prod.consumable && info.consumed) throw new HttpError(409, 'purchase_used');
+    const seasonId = prod.consumable ? S.currentSeason().id : null;
+    db.run('INSERT INTO purchases(token, player_id, product, order_id, season_id, test, created) VALUES (?,?,?,?,?,?,?)', token, pid, productId, info.orderId, seasonId, info.testPurchase ? 1 : 0, now());
+    // بعد التسجيل: الاستهلاك (تذكرة الموسم) أو الإقرار (الدائمة) — Google تسترد المبلغ تلقائيًا إن لم يُقرّ خلال ٣ أيام
+    try { if (prod.consumable) await play.consume(productId, token); else if (!info.acknowledged) await play.acknowledge(productId, token); }
+    catch { /* سيُعاد الإقرار في التحقق التالي من الجهاز */ }
+    return S.entitlements(pid);
+  };
+  S.purchaseStats = () => ({
+    total: db.get('SELECT COUNT(*) AS n FROM purchases WHERE test=0').n,
+    test: db.get('SELECT COUNT(*) AS n FROM purchases WHERE test=1').n,
+    byProduct: db.all('SELECT product AS k, COUNT(*) AS n FROM purchases WHERE test=0 GROUP BY product ORDER BY n DESC'),
+    last30: db.get('SELECT COUNT(*) AS n FROM purchases WHERE test=0 AND created>?', now() - 30 * 864e5).n,
+  });
 
   /* ---------------- النوادي (مجموعات: معلم وطلابه، مدرّب، أصدقاء، فريق عمل) ---------------- */
   const CLUB_MAX = 200, CLUBS_OWNED = 10, CLUBS_JOINED = 20;
@@ -362,7 +401,8 @@ export function createServices(db, { now = () => Date.now() } = {}) {
       const ids = [pid, ...S.friendIds(pid)];
       rows = bestByPlayer(`r.kind='weekly' AND r.week=? AND p.id IN (${ids.map(() => '?').join(',')})`, [isoWeek(now()), ...ids]);
     } else throw new HttpError(400, 'bad_board');
-    const list = rows.map((r, i) => ({ rank: i + 1, id: r.id, name: r.name, skin: r.skin, score: r.score, games: r.games, wins: r.wins, me: r.id === pid }));
+    const passes = S.passHolders(rows.map((r) => r.id));
+    const list = rows.map((r, i) => ({ rank: i + 1, id: r.id, name: r.name, skin: r.skin, score: r.score, games: r.games, wins: r.wins, me: r.id === pid, pass: passes.has(r.id) }));
     let mine = list.find((x) => x.me) || null;
     if (!mine && pid && board !== 'season' && board !== 'friends') {
       const all = board === 'weekly' ? bestByPlayer("r.kind='weekly' AND r.week=?", [isoWeek(now())], 100000)

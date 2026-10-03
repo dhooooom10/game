@@ -219,6 +219,9 @@ export async function boot() {
   analytics.configure(app);
   if (navigator.onLine !== false) analytics.flush();
   document.addEventListener('visibilitychange', () => { if (document.hidden) analytics.flush(); });
+  // تطبيق Android: الإعلانات (بعد الموافقة) واسترجاع المشتريات من Google Play
+  import('./net/ads.js').then((m) => m.init()).catch(() => {});
+  import('./net/billing.js').then((m) => m.available() && m.restore(app)).catch(() => {});
   // تطبيق Android: Google Play Games (دخول صامت، ربط الحساب، الإنجازات ولوحات الصدارة)
   pgs.init(app).catch(() => {});
 

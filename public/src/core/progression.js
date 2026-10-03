@@ -69,6 +69,12 @@ export function normalizeData(d, lang = 'ar') {
   out.missions = { ...base.missions, ...(d.missions || {}) };
   out.cosmetics = { ...base.cosmetics, ...(d.cosmetics || {}) };
   if (out.cosmetics.acc === 'glasses') out.cosmetics.acc = 'sparkle'; // أُزيلت النظارة مع إزالة الوجه
+  out.ent = d.ent && typeof d.ent === 'object' ? d.ent : {};
+  // مظهر من المتجر لم يعد مملوكًا (استرداد أو انتهاء موسم) ← نعود للافتراضي
+  for (const cat of ['skin', 'acc', 'theme']) {
+    const it = COSMETICS[cat].find((x) => x.id === out.cosmetics[cat]);
+    if (it?.need.ent && !out.ent[it.need.ent]) out.cosmetics[cat] = base.cosmetics[cat];
+  }
   out.prefs = { ...base.prefs, ...(d.prefs || {}) };
   for (const k of Object.keys(base.prefs)) out.prefs[k] = { ...base.prefs[k], ...((d.prefs || {})[k] || {}) };
   out.committed = Array.isArray(d.committed) ? d.committed : [];
@@ -219,13 +225,17 @@ export const COSMETICS = {
   skin: [
     { id: 'sky', need: { level: 1 } }, { id: 'mint', need: { level: 2 } }, { id: 'rose', need: { level: 4 } },
     { id: 'violet', need: { level: 6 } }, { id: 'sun', need: { badge: 'world5' } }, { id: 'night', need: { badge: 'daily7' } },
+    { id: 'ember', need: { ent: 'skins' } }, { id: 'lime', need: { ent: 'skins' } }, { id: 'glacier', need: { ent: 'skins' } }, { id: 'neon', need: { ent: 'skins' } },
+    { id: 'season', need: { ent: 'season' } },
   ],
   acc: [
     { id: 'none', need: { level: 1 } }, { id: 'cap', need: { level: 3 } }, { id: 'sparkle', need: { level: 5 } },
     { id: 'phones', need: { level: 7 } }, { id: 'crown', need: { badge: 'world1' } }, { id: 'scarf', need: { badge: 'daily3' } },
+    { id: 'halo', need: { ent: 'skins' } }, { id: 'star', need: { ent: 'season' } },
   ],
 };
 export function isUnlocked(data, item) {
+  if (item.need.ent) return !!data.ent?.[item.need.ent];
   if (item.need.badge) return !!data.badges[item.need.badge];
   return levelFromXp(data.xp).level >= (item.need.level || 1);
 }

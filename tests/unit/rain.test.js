@@ -124,3 +124,26 @@ test('plausibility flags inhuman reaction times', () => {
   const H = bot(createRain(stormConfig('hard', 60), 4), { think: 60 });
   assert.equal(plausible(H.summary()), true);
 });
+
+test('revive: continues after losing lives, recorded in log, replay honours it only when allowed', async () => {
+  const { createRain, replayRain, survivalConfig } = await import('../../public/src/core/rain.js');
+  const cfg = survivalConfig('easy');
+  const R = createRain(cfg, 99);
+  while (!R.state.over) R.step();             // لا إجابات: تنفد القلوب
+  assert.equal(R.state.endReason, 'lives');
+  assert.equal(R.revive(), true);
+  assert.equal(R.state.over, false);
+  assert.equal(R.state.lives, 1);
+  assert.equal(R.revive(), false, 'only when over by lives');
+  // نجيب على قطرتين ثم نخسر مجددًا
+  let answered = 0;
+  while (!R.state.over) {
+    const d = R.state.drops.filter((x) => !x.dead).sort((a, b) => b.y - a.y)[0];
+    if (d && answered < 2 && d.y > 0.2) { for (const ch of String(d.q.answer)) R.input(ch); R.input('ok'); answered++; }
+    R.step();
+  }
+  const end = R.state.tick, score = R.state.score;
+  assert.ok(score > 0);
+  assert.equal(replayRain(cfg, 99, R.state.log, { endTick: end, allowRevive: true }).summary.score, score);
+  assert.equal(replayRain(cfg, 99, R.state.log, { endTick: end }).summary.score, 0, 'server ignores ad revives');
+});

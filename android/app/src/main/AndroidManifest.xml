@@ -9,6 +9,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <!-- AdMob: معرّف التطبيق في res/values/monetization.xml (القيمة الافتراضية معرّف Google التجريبي) -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="@string/admob_app_id" />
+
         <!-- Google Play Games Services v2 -->
         <meta-data
             android:name="com.google.android.gms.games.APP_ID"

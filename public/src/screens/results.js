@@ -11,6 +11,7 @@ import { findPath } from '../core/curriculum.js';
 import { dailyShareText, shareText, shareUrl } from '../ui/share.js';
 import { toast } from '../ui/fx.js';
 import { track } from '../net/analytics.js';
+import * as ads from '../net/ads.js';
 
 registerScreen('results', (app, { view }) => {
   const data = app.data;
@@ -60,6 +61,20 @@ registerScreen('results', (app, { view }) => {
     el.appendChild(xpBox);
     fill.style.width = (lvB.level < lvA.level ? 0 : lvB.pct * 100) + '%';
     setTimeout(() => { fill.style.width = lvA.pct * 100 + '%'; }, 350);
+    // ضاعف الخبرة بإعلان بمكافأة (اختياري، مرة لكل جولة، لا يمس النتائج أو الترتيب)
+    if (rw.xp > 0 && ads.rewardedReady() && !['lesson', 'tutorial'].includes(view.kind)) {
+      const dbl = h('button.btn.sm.gold', { id: 'doubleXp', style: { marginTop: '8px' }, on: { click: async () => {
+        dbl.disabled = true;
+        if (await ads.showRewarded()) {
+          data.xp += rw.xp; app.save(); sfx.reward();
+          const lv = levelFromXp(data.xp);
+          fill.style.width = lv.pct * 100 + '%';
+          xpBox.querySelector('.top span').textContent = t('home.level', { n: lv.level });
+          dbl.replaceWith(h('div.chip.ok', { style: { marginTop: '8px' } }, t('ads.doubled', { n: rw.xp })));
+        } else dbl.disabled = false;
+      } } }, '🎬 ', t('ads.doubleXp', { n: rw.xp }));
+      xpBox.appendChild(dbl);
+    }
 
     const items = [];
     if (rw.levelAfter > rw.levelBefore) items.push(['⬆️', t('res.levelUp', { n: rw.levelAfter }), '']);
@@ -132,6 +147,8 @@ registerScreen('results', (app, { view }) => {
 
   return {
     el,
+    // عند مغادرة النتائج (التالي/إعادة/الرئيسية): إعلان بيني فقط إن سمحت حدود التكرار
+    destroy: () => { ads.maybeInterstitial({ data, kind: view.kind }); },
     afterMount: () => {
       track('round');
       countUp(scoreEl, view.score, { fmt: num, ms: 1000 });

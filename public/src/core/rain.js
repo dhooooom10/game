@@ -198,6 +198,17 @@ export function createRain(cfgIn, seed = 1) {
       if (!S.over && limitTicks && S.tick >= limitTicks) end('time', !cfg.target || S.popped >= cfg.target, events);
       return events;
     },
+    /**
+     * فرصة ثانية (بعد مشاهدة إعلان بمكافأة في الأنماط الفردية فقط): قلب واحد وتنظيف النصف السفلي.
+     * تُسجَّل في السجل كـ «rv» حتى تُعاد الجولة كما هي. الخادم يتجاهلها (allowRevive=false).
+     */
+    revive() {
+      if (!S.over || S.endReason !== 'lives') return false;
+      S.log.push([S.tick, 'rv']);
+      S.over = false; S.won = false; S.endReason = null; S.lives = 1; S.revives = (S.revives || 0) + 1;
+      for (const d of S.drops) if (!d.dead && d.y > 0.45) { d.dead = true; d.cleared = true; d.poppedAt = S.tick; }
+      return true;
+    },
     /** إنهاء يدوي (خروج) */
     quit() { const ev = []; end('quit', false, ev); return ev; },
     remainingMs() { return limitTicks ? Math.max(0, (limitTicks - S.tick) * TICK_MS) : null; },
@@ -222,11 +233,15 @@ export function createRain(cfgIn, seed = 1) {
  * يعيد تشغيل جولة من سجل الإدخال ويعيد ملخصها. يُستخدم في الخادم للتحقق.
  * log: [[tick, key], ...] مرتّب. endTick: نبضة الانتهاء المعلنة من الجهاز.
  */
-export function replayRain(cfg, seed, log, { endTick = null, maxTicks = 60 * 60 * 30 } = {}) {
+export function replayRain(cfg, seed, log, { endTick = null, maxTicks = 60 * 60 * 30, allowRevive = false } = {}) {
   const R = createRain(cfg, seed);
   let i = 0;
   const cap = Math.min(maxTicks, endTick != null ? endTick + 1 : maxTicks);
-  while (!R.state.over && R.state.tick < cap) {
+  while (R.state.tick < cap) {
+    if (R.state.over) {
+      if (allowRevive && i < log.length && log[i][1] === 'rv' && log[i][0] === R.state.tick && R.revive()) { i++; continue; }
+      break;
+    }
     while (i < log.length && log[i][0] <= R.state.tick) {
       if (log[i][0] === R.state.tick) R.input(String(log[i][1]));
       i++;

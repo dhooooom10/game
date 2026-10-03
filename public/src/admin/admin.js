@@ -76,7 +76,7 @@ async function dash(box) {
 /* ---------------- الإحصاءات المجهولة ---------------- */
 async function stats(box) {
   clear(box).append(h('p.note', 'جارٍ التحميل…'));
-  const a = await api('GET', '/api/admin/analytics?days=14');
+  const [a, pur] = await Promise.all([api('GET', '/api/admin/analytics?days=14'), api('GET', '/api/admin/purchases').catch(() => null)]);
   const pct = (v) => (v == null ? '—' : v + '%');
   const max = Math.max(1, ...a.days.map((d) => d.dau));
   const table = h('table.adm-table', h('thead', h('tr', h('th', 'اليوم'), h('th', 'نشطون'), h('th', 'جدد'), h('th', 'عادوا اليوم التالي'), h('th', 'عادوا بعد ٧ أيام'))),
@@ -87,6 +87,9 @@ async function stats(box) {
   clear(box).append(
     h('p.note', 'إحصاءات مجهولة: معرّف تثبيت عشوائي ويوم النشاط فقط. «عادوا اليوم التالي» = نسبة من ثبّتوا في ذلك اليوم ثم فتحوا اللعبة في اليوم التالي — أهم مؤشر لنجاح اللعبة (٣٥٪+ ممتاز للألعاب الخفيفة).'),
     h('section.card.section', h('h2.section-title', 'آخر ١٤ يومًا'), table),
+    pur ? h('section.card.section', h('h2.section-title', 'المبيعات (المتحقق منها على الخادم)'),
+      h('div.adm-grid', h('div.stat', h('div.v', String(pur.total)), h('div.l', 'عمليات شراء')), h('div.stat', h('div.v', String(pur.last30)), h('div.l', 'آخر ٣٠ يومًا')), h('div.stat', h('div.v', String(pur.test)), h('div.l', 'شراء تجريبي'))),
+      pur.byProduct.length ? h('table.adm-table', h('tbody', ...pur.byProduct.map((r) => h('tr', h('td', r.k), h('td', String(r.n)))))) : h('p.note', 'لا مبيعات بعد. الإيرادات الفعلية تجدها في Play Console و AdMob.')) : null,
     h('div.adm-cols', list('مصادر اللاعبين الجدد (ref)', a.sources), list('المنصة', a.platforms, (k) => ({ app: 'تطبيق Android', web: 'متصفح' })[k] || k),
       list('اللغات', a.langs), list('الأحداث', a.events, (k) => EV[k] || k)));
 }

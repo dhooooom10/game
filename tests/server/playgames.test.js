@@ -187,3 +187,62 @@ test('analytics: anonymous daily activity, retention, sources, events whitelist,
     assert.equal(r.events.find((x) => x.k === 'hack'), undefined);
   } finally { await s.close(); }
 });
+
+test('purchases: verified with Google (mocked), acknowledged/consumed, idempotent, not reusable, season pass marks leaderboard', async () => {
+  const { generateKeyPairSync, createVerify } = await import('node:crypto');
+  const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+  const sa = { client_email: 'svc@proj.iam.gserviceaccount.com', private_key: privateKey.export({ type: 'pkcs8', format: 'pem' }) };
+  const calls = [];
+  const store = { 'tok-ads-0000001': { productId: 'remove_ads', purchaseState: 0, acknowledgementState: 0, consumptionState: 0, orderId: 'GPA.1' },
+    'tok-pass-000001': { productId: 'season_pass', purchaseState: 0, acknowledgementState: 0, consumptionState: 0, orderId: 'GPA.2' },
+    'tok-pend-000001': { productId: 'skins_pack', purchaseState: 2 } };
+  const fetchImpl = async (url, opts = {}) => {
+    const u = String(url); calls.push([opts.method || 'GET', u]);
+    const res = (status, body) => ({ ok: status < 400, status, json: async () => body });
+    if (u.includes('oauth2')) {
+      const jwt = new URLSearchParams(opts.body).get('assertion').split('.');
+      const ok = createVerify('RSA-SHA256').update(jwt[0] + '.' + jwt[1]).verify(publicKey, Buffer.from(jwt[2], 'base64url'));
+      return ok ? res(200, { access_token: 'AT', expires_in: 3600 }) : res(401, {});
+    }
+    assert.equal(opts.headers.Authorization, 'Bearer AT');
+    const m = /products\/([^/]+)\/tokens\/([^/:]+)(?::(\w+))?/.exec(u);
+    const p = store[decodeURIComponent(m[2])];
+    if (!p || p.productId !== m[1]) return res(404, {});
+    if (m[3] === 'acknowledge') { p.acknowledgementState = 1; return res(204, {}); }
+    if (m[3] === 'consume') { p.consumptionState = 1; return res(204, {}); }
+    return res(200, p);
+  };
+  const s = await boot({ billing: { packageName: 'app.mathclash.game', serviceAccount: sa, fetchImpl } });
+  try {
+    const a = await s.api('POST', '/api/register', { name: 'مشتري' });
+    const b = await s.api('POST', '/api/register', { name: 'آخر' });
+    assert.equal((await s.api('GET', '/api/config')).billing, true);
+    let r = await s.api('POST', '/api/purchases/verify', { productId: 'remove_ads', token: 'tok-ads-0000001' }, a.token);
+    assert.equal(r.entitlements.noAds, true);
+    assert.equal(store['tok-ads-0000001'].acknowledgementState, 1, 'acknowledged on server');
+    assert.equal((await s.api('POST', '/api/purchases/verify', { productId: 'remove_ads', token: 'tok-ads-0000001' }, a.token)).entitlements.noAds, true, 'idempotent');
+    assert.equal((await s.api('POST', '/api/purchases/verify', { productId: 'remove_ads', token: 'tok-ads-0000001' }, b.token)).status, 409, 'token cannot be reused');
+    assert.equal((await s.api('POST', '/api/purchases/verify', { productId: 'skins_pack', token: 'tok-pend-000001' }, a.token)).status, 402, 'pending is not granted');
+    assert.equal((await s.api('POST', '/api/purchases/verify', { productId: 'skins_pack', token: 'tok-unknown-0001' }, a.token)).status, 400);
+    assert.equal((await s.api('POST', '/api/purchases/verify', { productId: 'gems', token: 'tok-ads-0000001' }, a.token)).status, 400);
+    r = await s.api('POST', '/api/purchases/verify', { productId: 'season_pass', token: 'tok-pass-000001' }, a.token);
+    assert.ok(r.entitlements.season);
+    assert.equal(store['tok-pass-000001'].consumptionState, 1, 'season pass consumed');
+    const ent = (await s.api('GET', '/api/me/entitlements', null, a.token)).entitlements;
+    assert.deepEqual({ noAds: ent.noAds, skins: ent.skins, season: !!ent.season }, { noAds: true, skins: false, season: true });
+    // علامة التذكرة في لوحة الصدارة
+    const { isoWeek } = await import('../../server/services.js');
+    s.db.run("INSERT INTO runs(id, player_id, kind, seed, cfg, started, submitted, score, valid, week) VALUES ('rx',?,?,?,?,?,?,?,1,?)", a.id, 'weekly', 's', '{}', s.clock.t, s.clock.t, 99, isoWeek(s.clock.t));
+    const lb = await s.api('GET', '/api/leaderboard/weekly');
+    assert.equal(lb.list[0].pass, true);
+  } finally { await s.close(); }
+});
+
+test('purchases: disabled without a service account', async () => {
+  const s = await boot();
+  try {
+    const a = await s.api('POST', '/api/register', { name: 'x' });
+    assert.equal((await s.api('POST', '/api/purchases/verify', { productId: 'remove_ads', token: 'tok-ads-0000001' }, a.token)).status, 501);
+    assert.equal((await s.api('GET', '/api/me/entitlements', null, a.token)).billing, false);
+  } finally { await s.close(); }
+});

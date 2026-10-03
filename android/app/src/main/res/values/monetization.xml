@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- معرّف تطبيق AdMob (يبدأ بـ ca-app-pub- وفيه ~). القيمة الحالية معرّف Google التجريبي الرسمي:
+         يعرض إعلانات تجريبية فقط ولا يحقق أرباحًا. استبدله بمعرّفك من AdMob قبل النشر. انظر docs/WHAT_YOU_NEED.md -->
+    <string name="admob_app_id" translatable="false">ca-app-pub-3940256099942544~3347511713</string>
+</resources>

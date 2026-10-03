@@ -6,7 +6,7 @@
    ========================================================================= */
 import { app, registerScreen } from '../app.js';
 import { h, icon, num, clear, mathText, mathEl } from '../ui/dom.js';
-import { mascotSVG } from '../ui/mascot.js';
+import { mascotSVG, SKINS } from '../ui/mascot.js';
 import { sfx, buzz } from '../ui/audio.js';
 import { floatText, replay, reducedMotion, confetti } from '../ui/fx.js';
 import { t } from '../i18n.js';
@@ -17,6 +17,7 @@ import { normalizeDigits } from '../core/numbers.js';
 import { streakMultiplier } from '../core/scoring.js';
 import { buildRainRun, finishRainRun } from '../runs.js';
 import { buildDrop, sizeDrop, dropDefsSVG, popBurst, groundSplash } from '../ui/drop.js';
+import * as ads from '../net/ads.js';
 
 
 /* ---------------- اللعب ---------------- */
@@ -31,7 +32,7 @@ registerScreen('rainPlay', (app, params) => {
   const realtime = !!meta.realtime;              // لا إيقاف: الوقت يمضي حتى لو غادرت (اليومي والأونلاين)
   const persist = !online && meta.persist;
 
-  let raf = 0, last = 0, acc = 0, ended = false, paused = false, overlay = null, started = false, lastSave = 0, lastReport = 0, lastSec = null;
+  let raf = 0, last = 0, acc = 0, ended = false, paused = false, revived = false, offering = false, overlay = null, started = false, lastSave = 0, lastReport = 0, lastSec = null;
   const dropEls = new Map();
 
   /* ---------- العناصر ---------- */
@@ -42,7 +43,9 @@ registerScreen('rainPlay', (app, params) => {
   const timerFill = h('i'); const timerEl = h('div.timer', timerFill); const timerText = h('span.timer-text');
   const iceEl = h('span.chip.ice-chip', { hidden: true }, '❄️');
   const oppBox = h('div.opp-box', { hidden: !online });
-  const sky = h('div.sky.rain-sky', { aria: { label: meta.label } },
+  // لون القطرات العادية = لون مظهر اللاعب (السماوي الافتراضي يبقى كما هو)
+  const skinTint = app.data.cosmetics.skin && app.data.cosmetics.skin !== 'sky' ? SKINS[app.data.cosmetics.skin]?.[0] : null;
+  const sky = h('div.sky.rain-sky', { aria: { label: meta.label }, style: skinTint ? { '--drop-tint': skinTint } : {} },
     h('div', { html: dropDefsSVG() }), h('div.sky-streaks', { aria: { hidden: 'true' } }), h('div.sky-streaks.far', { aria: { hidden: 'true' } }),
     h('div.ground', { aria: { hidden: 'true' } }, h('i.wave'), h('i.wave.w2')));
   if (meta.tint) sky.style.setProperty('--sky-tint', meta.tint);
@@ -291,9 +294,37 @@ registerScreen('rainPlay', (app, params) => {
     app.back();
   }
 
+  /* ---------- فرصة ثانية بإعلان بمكافأة (اختياري، مرة واحدة، أنماط فردية فقط) ---------- */
+  function canRevive() {
+    return !online && !meta.tutorial && ['journey', 'survival'].includes(kind) && R.state.endReason === 'lives' && !revived && ads.rewardedReady();
+  }
+  function offerRevive() {
+    offering = true; paused = true;
+    sky.classList.add('veiled');
+    const done = async (watch) => {
+      overlay?.remove(); overlay = null; sky.classList.remove('veiled');
+      if (watch && (await ads.showRewarded()) && R.revive()) {
+        revived = true;
+        for (const d of R.state.drops) if (d.cleared) { const de = dropEls.get(d.id); if (de) { de.classList.add('popped'); setTimeout(() => de.remove(), 260); dropEls.delete(d.id); } }
+        sfx.reward(); paintHud(true);
+        offering = false; paused = false; last = performance.now(); acc = 0;
+        return;
+      }
+      offering = false; paused = false; finish(true);
+    };
+    overlay = h('div.overlay', { role: 'dialog', aria: { modal: 'true', label: t('ads.reviveTitle') } }, h('div.panel',
+      h('div', { style: { fontSize: '2.4rem' } }, '💧'),
+      h('h2', t('ads.reviveTitle')), h('p.note', t('ads.reviveBody')),
+      h('div.stack', h('button.btn.gold.block.lg', { id: 'reviveYes', 'data-autofocus': true, on: { click: () => done(true) } }, '🎬 ', t('ads.reviveYes')),
+        h('button.btn.ghost.block', { id: 'reviveNo', on: { click: () => done(false) } }, t('ads.reviveNo')))));
+    document.body.appendChild(overlay);
+    overlay.querySelector('[data-autofocus]').focus();
+  }
+
   /* ---------- النهاية ---------- */
-  function finish() {
-    if (ended) return;
+  function finish(skipRevive = false) {
+    if (ended || offering) return;
+    if (!skipRevive && canRevive()) return offerRevive();
     ended = true; cleanup();
     const sum = R.summary();
     if (persist) app.store.clearActive(app.pid);
@@ -304,7 +335,9 @@ registerScreen('rainPlay', (app, params) => {
     }
     const { view } = finishRainRun(kind, params.args || {}, { id: built.id, seed }, sum, data);
     // لتحويل الجولة إلى تحدٍّ لصديق (يعيد الخادم تشغيلها للتحقق)
-    view.replay = { cfg: built.cfg, seed, log: R.state.log.slice(), endTick: R.state.tick };
+    // جولة استُخدمت فيها فرصة ثانية لا تتحول إلى تحدٍّ (الخادم لا يقبل الفرص الإعلانية)
+    view.replay = revived ? null : { cfg: built.cfg, seed, log: R.state.log.slice(), endTick: R.state.tick };
+    view.revived = revived;
     if (kind === 'daily' && view.official) import('./online.js').then((m) => m.uploadDaily(app, params.args.date, R.state.log, R.state.tick)).catch(() => {});
     app.save();
     app.go('results', { view }, { replace: true });
@@ -335,8 +368,12 @@ registerScreen('rainPlay', (app, params) => {
     R = createRain(cfg, seed);
     // نعيد البناء بإعادة إدخال السجل نبضة بنبضة حتى نفس اللحظة
     let i = 0;
-    while (R.state.tick < rs.tick && !R.state.over) {
-      while (i < rs.log.length && rs.log[i][0] === R.state.tick) { R.input(String(rs.log[i][1])); i++; }
+    while (R.state.tick < rs.tick) {
+      if (R.state.over) {
+        if (i < rs.log.length && rs.log[i][1] === 'rv' && rs.log[i][0] === R.state.tick && R.revive()) { i++; revived = true; continue; }
+        break;
+      }
+      while (i < rs.log.length && rs.log[i][0] === R.state.tick && rs.log[i][1] !== 'rv') { R.input(String(rs.log[i][1])); i++; }
       R.step();
     }
     for (const d of R.state.drops) if (!d.dead) spawnEl(d);
@@ -390,7 +427,7 @@ registerScreen('rainPlay', (app, params) => {
     el, rain: () => R,
     afterMount: begin,
     destroy: () => { if (!ended) persistNow(); cleanup(); },
-    onBack: () => { askQuit(); return true; },
+    onBack: () => { if (!offering) askQuit(); return true; },
     onHide: () => {
       if (ended) return;
       if (!realtime) pause();

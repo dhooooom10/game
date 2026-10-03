@@ -13,7 +13,8 @@ const THEME_SWATCH = { rain: ['#0A1230', '#38D6F5'], dawn: ['#EEF4FF', '#0E9BD8'
 registerScreen('locker', (app, params) => {
   const data = app.data;
   let tab = params.tab || 'badges';
-  const el = h('main', h('header.topbar', h('h1', t('lock.title'), h('span.sub', t('home.level', { n: levelFromXp(data.xp).level })))));
+  const el = h('main', h('header.topbar', h('h1', t('lock.title'), h('span.sub', t('home.level', { n: levelFromXp(data.xp).level }))),
+    h('button.btn.sm.gold', { id: 'openShop', on: { click: () => { sfx.tap(); app.go('shop'); } } }, '🛍️ ', t('shop.title'))));
   const body = h('div', { style: { marginTop: '14px' } });
   el.append(seg([['badges', t('lock.badges')], ['looks', t('lock.looks')]], tab, (v) => { tab = v; app.stack[app.stack.length - 1].params = { tab: v }; paint(); }, t('lock.title')), body);
 
@@ -43,10 +44,11 @@ registerScreen('locker', (app, params) => {
         if (cat === 'theme') { const [a, b] = THEME_SWATCH[it.id]; visual = h('span.sw', { style: { background: `linear-gradient(135deg, ${a} 55%, ${b} 55%)` } }); }
         else if (cat === 'skin') visual = h('span', { html: mascotSVG({ skin: it.id, acc: 'none', size: 40, label: '' }) });
         else visual = h('span', { html: mascotSVG({ skin: cos.skin, acc: it.id, size: 40, label: '' }) });
-        const need = it.need.badge ? t('lock.needBadge', { b: t('badge.' + it.need.badge) }) : t('lock.needLevel', { n: it.need.level });
+        const need = it.need.ent ? t(it.need.ent === 'season' ? 'shop.needSeason' : 'shop.needShop') : it.need.badge ? t('lock.needBadge', { b: t('badge.' + it.need.badge) }) : t('lock.needLevel', { n: it.need.level });
         grid.appendChild(h('button.cos' + (unlocked ? '' : '.locked'), {
           aria: { pressed: String(sel), label: `${t(cat + '.' + it.id)}${unlocked ? '' : ' — ' + need}` },
           on: { click: () => {
+            if (!unlocked && it.need.ent) { sfx.tap(); return app.go('shop'); }
             if (!unlocked) { sfx.wrong(); return toast(need); }
             sfx.tap(); cos[cat] = it.id; app.save(); app.applyLook(); paint();
           } },
