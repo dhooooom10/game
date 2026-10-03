@@ -2,6 +2,13 @@
 import { formatNumber } from '../core/numbers.js';
 import { t, tRaw, locale, digitsOut } from '../i18n.js';
 
+/* عناصر اختيارية تُمرَّر كثيرًا كـ null — نمنع ظهورها كنص «null» عند append */
+if (typeof Element !== 'undefined' && !Element.prototype.__mcAppend) {
+  const native = Element.prototype.append;
+  Element.prototype.append = function (...kids) { return native.apply(this, kids.filter((k) => k != null && k !== false)); };
+  Element.prototype.__mcAppend = true;
+}
+
 /**
  * h('button.btn.primary', { on: { click }, aria: { label } }, 'نص', child)
  * النصوص تُضاف كنص (لا HTML) لتجنّب أي حقن.

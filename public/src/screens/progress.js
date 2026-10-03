@@ -47,10 +47,9 @@ registerScreen('progress', (app) => {
     if (!o || !o.q) continue;
     const lvl = Math.floor(o.rating);
     opsBox.appendChild(h('div.op-row',
-      h('span.on', t('op.' + op)),
-      h('div', h('div.bar', { role: 'progressbar', aria: { valuenow: lvl, valuemin: 1, valuemax: 10, label: t('prog.levelOf', { n: lvl }) } }, h('i', { style: { width: (o.rating / 10) * 100 + '%' } })),
-        h('div.faint', { style: { marginTop: '2px' } }, `${t('prog.levelOf', { n: lvl })}`)),
-      h('span.ov', `${pct(o.acc)} · ${sec(o.avgMs)}${o.q < 10 ? ' · ' + t('prog.fewData') : ''}`)));
+      h('span.on', t('op.' + op), h('small', t('prog.levelOf', { n: lvl }))),
+      h('div.bar', { role: 'progressbar', aria: { valuenow: lvl, valuemin: 1, valuemax: 10, label: t('prog.levelOf', { n: lvl }) } }, h('i', { style: { width: (o.rating / 10) * 100 + '%' } })),
+      h('span.ov', `${t('prog.accuracy')} ${pct(o.acc)} · ${sec(o.avgMs)} · ${num(o.c)}/${num(o.q)}${o.q < 10 ? ' · ' + t('prog.fewData') : ''}`)));
   }
   el.appendChild(opsBox);
 

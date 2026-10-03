@@ -2,7 +2,7 @@
    يخزّن اللعبة محليًا لتعمل بلا إنترنت بعد أول زيارة.
    قائمة الملفات ورقم الإصدار يولّدهما: node scripts/build-sw.mjs */
 
-const CACHE = 'math-clash-98f56f6a1e';
+const CACHE = 'math-clash-3dd91802d0';
 const ASSETS = [
   './',
   './apple-touch-icon.png',

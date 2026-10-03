@@ -17,7 +17,7 @@ boot().catch((e) => {
   if (el) el.innerHTML = '<p style="padding:24px;text-align:center">حدث خطأ أثناء التشغيل. حدّث الصفحة.<br>Something went wrong — please reload.</p>';
 });
 
-if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !/^(localhost|127\.)/.test(location.hostname)) {
+if ('serviceWorker' in navigator && location.protocol.startsWith('http') && (!/^(localhost|127\.)/.test(location.hostname) || /[?&]sw=1/.test(location.search))) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 }
 

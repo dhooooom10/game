@@ -4,7 +4,7 @@ import { h, icon, clear } from '../ui/dom.js';
 import { mascotSVG } from '../ui/mascot.js';
 import { sfx, setLevels, hapticsSupported, buzz, startMusic, stopMusic } from '../ui/audio.js';
 import { toast } from '../ui/fx.js';
-import { t, LANGS } from '../i18n.js';
+import { t, tRaw, LANGS } from '../i18n.js';
 import { hashPass } from '../core/storage.js';
 import { newProfileData, todayStr, levelFromXp } from '../core/progression.js';
 import { topbar, seg } from './setup.js';
@@ -84,7 +84,7 @@ registerScreen('settings', (app) => {
     } } }, t('set.reset'))));
 
   el.append(h('section.card', h('h2.section-title', t('set.about')),
-    h('p.note', 'Math Clash — ', t('app.tagline')), h('p.note', t('set.credits')), h('p.faint', t('set.version', { v: VERSION }))));
+    h('p.note', 'Math Clash — ', t('app.tagline')), h('p.note', tRaw('set.credits')), h('p.faint', t('set.version', { v: VERSION }))));
   return { el };
 });
 
