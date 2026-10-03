@@ -531,49 +531,43 @@ details.how ul { margin: 6px 0 0; padding-inline-start: 20px; color: var(--muted
 .sky.flash::after { content: ''; position: absolute; inset: 0; background: #fff; animation: flashOut .45s both; pointer-events: none; }
 @keyframes flashOut { from { opacity: .8; } to { opacity: 0; } }
 .sky.frozen { box-shadow: inset 0 0 0 3px #BFF3FF, inset 0 0 40px rgba(191, 243, 255, .35); }
-.sky.frozen .drop { filter: saturate(.6) brightness(1.15); }
+.sky.frozen .drop { --tint: #DFF8FF; }
 .sky.veiled .drop { filter: blur(12px); opacity: .4; }
-/* ---- القطرة: شكل زجاجي حقيقي (SVG) ---- */
-.drop { position: absolute; top: 0; left: 0; width: 92px; height: 98px; will-change: transform; contain: layout style; pointer-events: none; }
-.drop::before { /* أثر السقوط */ content: ''; position: absolute; left: 50%; bottom: 78%; width: 3px; height: 46px; transform: translateX(-50%); border-radius: 3px;
-  background: linear-gradient(180deg, transparent, rgba(160, 230, 255, .32)); }
-.drop-inner { position: absolute; inset: 0; display: block; transform-origin: 50% 85%; animation: dropWobble 1.6s ease-in-out infinite; }
-.drop-shape { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 10px 10px rgba(0, 10, 40, .38)); }
-.drop .d-body { fill: url(#dg-normal); transition: fill .25s; }
-.drop.near .d-body { fill: url(#dg-near); }
-.drop.k-gold .d-body { fill: url(#dg-gold); }
-.drop.k-ice .d-body { fill: url(#dg-ice); }
-.drop.k-storm .d-body { fill: url(#dg-storm); }
+/* ---- القطرة: شفافة وبسيطة ---- */
+.drop { --tint: #8FE3FF; position: absolute; top: 0; left: 0; width: 92px; height: 98px; will-change: transform; contain: layout style; pointer-events: none; }
+.drop.k-gold { --tint: #FFD45E; }
+.drop.k-ice { --tint: #D4F7FF; }
+.drop.k-storm { --tint: #B9A6FF; }
+.drop.near { --tint: #FF9466; }
+.drop::before { /* أثر سقوط خفيف */ content: ''; position: absolute; left: 50%; bottom: 99%; width: 2px; height: 30px; transform: translateX(-50%); border-radius: 2px;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--tint) 45%, transparent)); }
+.drop-inner { position: absolute; inset: 0; display: block; transform-origin: 50% 80%; animation: dropIn .28s cubic-bezier(.2, .9, .3, 1.3) both, dropSway 2.4s ease-in-out .28s infinite; }
+.drop-shape { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.drop .d-body { fill: var(--tint); fill-opacity: .13; transition: fill .3s; }
+.drop .d-rim { fill: none; stroke: var(--tint); stroke-width: 2.6; stroke-opacity: .9; vector-effect: non-scaling-stroke; transition: stroke .3s; }
+.drop .d-hl { fill: none; stroke: #fff; stroke-opacity: .55; stroke-width: 3.5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.drop .d-ref { fill: none; stroke: var(--tint); stroke-opacity: .55; stroke-width: 2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.drop.k-gold .drop-shape, .drop.k-storm .drop-shape, .drop.near .drop-shape { filter: drop-shadow(0 0 8px color-mix(in srgb, var(--tint) 55%, transparent)); }
+.drop.near .d-body { fill-opacity: .2; }
 .drop-txt { position: absolute; left: 0; right: 0; top: 47%; bottom: 8%; display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-weight: 800; font-size: 1.22rem; color: #032B45; letter-spacing: .2px;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, .55); white-space: nowrap; }
+  font-family: var(--font-display); font-weight: 800; font-size: 1.22rem; color: #fff; letter-spacing: .2px;
+  text-shadow: 0 1px 3px rgba(0, 12, 40, .55); white-space: nowrap; }
 .drop.long .drop-txt { font-size: 1.02rem; }
 .drop.xlong .drop-txt { font-size: .9rem; letter-spacing: 0; }
 .sky .ripple, .sky .droplet, .sky .puddle { z-index: 60; }
 .sky .ground { z-index: 50; }
 .drop .dq { direction: ltr; unicode-bidi: isolate; margin: 0; gap: .18em; }
-.drop .dq .op { color: inherit; opacity: .75; }
-.drop .dq .blank { border: 2px dashed currentColor; border-radius: 6px; min-width: 1.15em; padding: 0 .1em; color: inherit; opacity: .9; }
-.drop.near .drop-txt { color: #3A1400; }
-.drop.k-gold .drop-txt { color: #3B2500; }
-.drop.k-ice .drop-txt { color: #053A4C; }
-.drop.k-storm .drop-txt { color: #fff; text-shadow: 0 1px 2px rgba(20, 0, 80, .6); }
-.drop-badge { position: absolute; top: 30%; right: -6px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, .35), inset 0 0 0 2px rgba(255, 255, 255, .7); animation: badgePulse 1.2s ease-in-out infinite; }
-.drop-badge svg { width: 15px; height: 15px; }
-.drop.k-gold .drop-badge { background: linear-gradient(180deg, #FFC94A, #E08A00); }
-.drop.k-ice .drop-badge { background: linear-gradient(180deg, #7FD8F0, #2E8FB8); }
-.drop.k-storm .drop-badge { background: linear-gradient(180deg, #9B8CFF, #5A36E0); }
-.drop.k-gold .drop-shape { filter: drop-shadow(0 0 12px rgba(255, 201, 74, .65)) drop-shadow(0 10px 10px rgba(0, 10, 40, .35)); }
-.drop.k-storm .drop-shape { filter: drop-shadow(0 0 12px rgba(155, 140, 255, .75)) drop-shadow(0 10px 10px rgba(0, 10, 40, .35)); }
-.drop.k-ice .drop-shape { filter: drop-shadow(0 0 10px rgba(200, 245, 255, .7)) drop-shadow(0 10px 10px rgba(0, 10, 40, .35)); }
-.drop.near .drop-shape { filter: drop-shadow(0 0 10px rgba(255, 140, 40, .55)) drop-shadow(0 10px 10px rgba(0, 10, 40, .35)); }
-@keyframes dropWobble { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.035, .97); } }
-@keyframes badgePulse { 50% { transform: scale(1.12); } }
-[data-motion="reduce"] .drop-inner, [data-motion="reduce"] .drop-badge { animation: none; }
+.drop .dq .op { color: var(--tint); opacity: 1; }
+.drop .dq .blank { border: 2px dashed var(--tint); border-radius: 6px; min-width: 1.15em; padding: 0 .1em; color: inherit; }
+.drop-badge { position: absolute; top: 34%; right: -2px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+  color: #0A1230; background: var(--tint); box-shadow: 0 0 10px color-mix(in srgb, var(--tint) 70%, transparent); }
+.drop-badge svg { width: 12px; height: 12px; }
+@keyframes dropIn { from { transform: scale(.4); opacity: 0; } }
+@keyframes dropSway { 0%, 100% { transform: rotate(-2deg) scale(1, 1); } 50% { transform: rotate(2deg) scale(1.02, .985); } }
+[data-motion="reduce"] .drop-inner { animation: none; }
 .drop.popped { animation: dropPop .24s ease-out both; }
 .drop.splash { animation: dropSplash .3s ease-in both; }
-@keyframes dropPop { 40% { opacity: 1; } to { transform: var(--tf) scale(1.45); opacity: 0; } }
+@keyframes dropPop { 30% { opacity: 1; } to { transform: var(--tf) scale(1.3); opacity: 0; } }
 @keyframes dropSplash { to { transform: var(--tf) translateY(18px) scale(1.5, .25); opacity: 0; } }
 .sky .droplet { position: absolute; margin: -4px; border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%; pointer-events: none;
   background: radial-gradient(circle at 35% 30%, #fff, var(--c) 55%); transform: rotate(var(--r)); animation: droplet .6s cubic-bezier(.2, .7, .3, 1) both; }
