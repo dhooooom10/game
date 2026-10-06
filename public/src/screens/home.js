@@ -57,7 +57,7 @@ registerScreen('home', (app) => {
     h('div.hero-top',
       h('span.mascot-wrap', { html: mascotSVG({ skin: cos.skin, acc: cos.acc, mood: 'happy', size: 84, label: t('mascot.name') }) }),
       h('div', { style: { flex: '1' } },
-        h('div.brand-mark', { dir: 'ltr' }, h('b', 'Math'), 'Clash'),
+        h('div.brand-mark', h('b', t('app.name'))),
         h('div.bubble', lines[(new Date().getDate() + data.stats.rounds) % lines.length]))),
     h('button.btn.gold.play-btn', { id: 'playNow', on: { click: playNow } }, icon('play', 'fill'), t('home.play')),
     h('div.play-sub', playSub),

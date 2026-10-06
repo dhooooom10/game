@@ -1,9 +1,9 @@
 {
-  "name": "math-clash",
+  "name": "qatra",
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "Math Clash — Arabic-first mental math game (static site, no build step)",
+  "description": "Qatra (قطرة) — Arabic-first mental math game (static site, no build step)",
   "scripts": {
     "start": "node --no-warnings server/index.js",
     "dev": "ADMIN_TOKEN=dev-admin-token-please-change DB_PATH=./data/dev.db node --no-warnings server/index.js",

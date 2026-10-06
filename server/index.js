@@ -1,5 +1,5 @@
 /* =========================================================================
-   خادم Math Clash — يخدم ملفات اللعبة + واجهة برمجية REST + WebSocket.
+   خادم Qatra — يخدم ملفات اللعبة + واجهة برمجية REST + WebSocket.
    التشغيل:  ADMIN_TOKEN=سر-طويل  DB_PATH=./data/mc.db  PORT=8080  node server/index.js
    ========================================================================= */
 import { createServer as createHttp } from 'node:http';
@@ -197,9 +197,9 @@ export function startServer({ port = 0, dbPath = ':memory:', adminToken = '', no
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const adminToken = process.env.ADMIN_TOKEN || '';
   if (adminToken.length < 12) console.warn('⚠️  ADMIN_TOKEN غير مضبوط أو قصير (12 حرفًا على الأقل) — لوحة الإدارة معطّلة.');
-  const s = await startServer({ port: +process.env.PORT || 8080, dbPath: process.env.DB_PATH || './data/mathclash.db', adminToken,
+  const s = await startServer({ port: +process.env.PORT || 8080, dbPath: process.env.DB_PATH || './data/qatra.db', adminToken,
     corsOrigins: (process.env.CORS_ORIGINS || '').split(',').filter(Boolean),
     playGames: { clientId: process.env.GOOGLE_CLIENT_ID || '', clientSecret: process.env.GOOGLE_CLIENT_SECRET || '' },
-    billing: { packageName: process.env.PLAY_PACKAGE || 'app.mathclash.game', serviceAccount: loadServiceAccount(process.env.GOOGLE_SERVICE_ACCOUNT_JSON || '') } });
-  console.log(`Math Clash server on ${s.url}  (admin: ${s.url}/admin)`);
+    billing: { packageName: process.env.PLAY_PACKAGE || 'app.qatra.game', serviceAccount: loadServiceAccount(process.env.GOOGLE_SERVICE_ACCOUNT_JSON || '') } });
+  console.log(`Qatra server on ${s.url}  (admin: ${s.url}/admin)`);
 }

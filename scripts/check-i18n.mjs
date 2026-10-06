@@ -12,7 +12,7 @@ for (const lang of langs) {
   const extra = Object.keys(d).filter((k) => !(k in en));
   const phBad = Object.keys(en).filter((k) => k in d && ph(en[k]) !== ph(d[k]));
   const empty = Object.keys(d).filter((k) => typeof d[k] !== 'string' || !d[k].trim());
-  const same = Object.keys(en).filter((k) => d[k] === en[k] && /[a-z]{4,}/i.test(en[k]) && !/Math Clash|Google|AdMob|^[A-Z]{2,}$/.test(en[k]));
+  const same = Object.keys(en).filter((k) => d[k] === en[k] && /[a-z]{4,}/i.test(en[k]) && !/Qatra|Google|AdMob|^[A-Z]{2,}$/.test(en[k]));
   const ok = !missing.length && !extra.length && !phBad.length && !empty.length;
   if (!ok) bad++;
   console.log(`${lang}: ${Object.keys(d).length}/${Object.keys(en).length} keys` +

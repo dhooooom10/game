@@ -5,7 +5,7 @@ import { SERVER } from './net/online.js';
 
 export const CONFIG = {
   // اسم حزمة تطبيق Android (يطابق capacitor.config.json)
-  playPackage: 'app.mathclash.game',
+  playPackage: 'app.qatra.game',
   // رقم التحدي اليومي الأول (#1) — يوم إطلاق اللعبة
   launchDate: '2026-10-01',
 };

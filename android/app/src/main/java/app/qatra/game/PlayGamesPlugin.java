@@ -1,4 +1,4 @@
-package app.mathclash.game;
+package app.qatra.game;
 
 import android.app.Activity;
 import android.content.Intent;

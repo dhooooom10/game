@@ -1,4 +1,4 @@
-# النشر وGoogle Play — Math Clash
+# النشر وGoogle Play — Qatra
 
 ## الصورة الكاملة
 
@@ -6,7 +6,7 @@
 جوال اللاعب (تطبيق Google Play عبر Capacitor + Google Play Games)
         │  HTTPS + WebSocket
         ▼
-خادمك (Docker):  Caddy (HTTPS تلقائي)  →  خادم Math Clash (Node 22)
+خادمك (Docker):  Caddy (HTTPS تلقائي)  →  خادم Qatra (Node 22)
                                           ├─ ملفات اللعبة (public/)
                                           ├─ REST API + WebSocket (/ws)
                                           ├─ لوحة الإدارة (/admin)
@@ -37,14 +37,14 @@ npm run dev            # http://localhost:8080 ، لوحة الإدارة: http:
 3. احجز نطاقًا ووجّه سجل **A** إلى عنوان الجهاز (مثلًا `play.yourdomain.com`).
 4. على الجهاز:
    ```bash
-   git clone <مستودعك> mathclash && cd mathclash/deploy
+   git clone <مستودعك> qatra && cd qatra/deploy
    cp .env.example .env      # عدّل DOMAIN و ADMIN_TOKEN (openssl rand -hex 24)
    docker compose up -d --build
    ```
 5. افتح `https://النطاق` للعبة و`https://النطاق/admin` للوحة الإدارة.
 
 **البيانات** في القرص الدائم `gamedata` (ملف SQLite). للنسخ الاحتياطي:
-`docker compose cp game:/data/mathclash.db ./backup-$(date +%F).db` — أو فعّل لقطات القرص اليومية في Google Cloud (Snapshot schedule).
+`docker compose cp game:/data/qatra.db ./backup-$(date +%F).db` — أو فعّل لقطات القرص اليومية في Google Cloud (Snapshot schedule).
 
 > **لماذا ليس Cloud Run؟** يعمل Cloud Run بلا قرص دائم، وقاعدة SQLite تحتاج قرصًا دائمًا وخادمًا واحدًا. على Cloud Run يلزم استبدال SQLite بـ Firestore/Cloud SQL (تعديل `server/db.js` و`server/services.js`). الجهاز الافتراضي أبسط وأرخص لهذا الحجم.
 
@@ -52,13 +52,13 @@ npm run dev            # http://localhost:8080 ، لوحة الإدارة: http:
 | المتغير | الوصف |
 |---|---|
 | `ADMIN_TOKEN` | رمز لوحة الإدارة (12 حرفًا على الأقل، يفضّل 48 عشوائيًا). بدونه تتعطل لوحة الإدارة. |
-| `DB_PATH` | مسار قاعدة البيانات (افتراضي `./data/mathclash.db`) |
+| `DB_PATH` | مسار قاعدة البيانات (افتراضي `./data/qatra.db`) |
 | `PORT` | المنفذ (افتراضي 8080) |
 | `CORS_ORIGINS` | الأصول المسموح لها بالاتصال من نطاق آخر، مفصولة بفواصل. لتطبيق Android: `https://localhost` |
 | `GOOGLE_CLIENT_ID` | معرّف عميل OAuth (Web application) لـ Play Games — اختياري، بدونه يتعطل ربط Play Games فقط |
 | `GOOGLE_CLIENT_SECRET` | السر المقابل — لا تضعه أبدًا في التطبيق أو المستودع |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | مسار مفتاح حساب الخدمة للتحقق من مشتريات Google Play (مثل `/secrets/play-sa.json`) — اختياري |
-| `PLAY_PACKAGE` | اسم حزمة التطبيق (افتراضي `app.mathclash.game`) |
+| `PLAY_PACKAGE` | اسم حزمة التطبيق (افتراضي `app.qatra.game`) |
 
 إن استضفت ملفات `public/` على نطاق آخر (مثل Cloudflare Pages) والخادم على نطاق مختلف، ضع في `index.html`:
 `<meta name="mc-server" content="https://api.yourdomain.com">` وأضف `connect-src` للنطاق في سياسة المحتوى. **الأبسط: خادم واحد يخدم الاثنين.**
@@ -93,7 +93,7 @@ cd android && ./gradlew bundleRelease                      # ينتج app/build/
 ```
 تحتاج **Android Studio** (أسهل) أو JDK 21 + Android SDK. افتح المجلد `android/` في Android Studio ← Build ← Generate Signed App Bundle.
 
-- **اسم الحزمة** `app.mathclash.game` — يمكنك تغييره قبل أول رفع فقط (في `capacitor.config.json` و`android/app/build.gradle` ومسار مجلد Java)، وبعد الرفع لا يتغير أبدًا.
+- **اسم الحزمة** `app.qatra.game` — يمكنك تغييره قبل أول رفع فقط (في `capacitor.config.json` و`android/app/build.gradle` ومسار مجلد Java)، وبعد الرفع لا يتغير أبدًا.
 - **على الخادم** أضف `CORS_ORIGINS=https://localhost` (أصل صفحات التطبيق داخل Capacitor).
 
 ### Google Play Games

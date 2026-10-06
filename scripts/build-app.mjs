@@ -11,7 +11,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const out = root + 'build/app-www';
 const server = (process.env.MC_SERVER || '').replace(/\/+$/, '');
 if (!/^https:\/\/[^/]+$/.test(server)) {
-  console.error('✗ اضبط MC_SERVER على عنوان خادمك بـ https (مثال: MC_SERVER=https://mathclash.duckdns.org)');
+  console.error('✗ اضبط MC_SERVER على عنوان خادمك بـ https (مثال: MC_SERVER=https://qatra.duckdns.org)');
   process.exit(1);
 }
 rmSync(out, { recursive: true, force: true });

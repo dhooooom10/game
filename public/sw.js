@@ -1,8 +1,8 @@
-/* Math Clash — Service Worker
+/* قطرة — Service Worker
    يخزّن اللعبة محليًا لتعمل بلا إنترنت بعد أول زيارة.
    قائمة الملفات ورقم الإصدار يولّدهما: node scripts/build-sw.mjs */
 
-const CACHE = 'math-clash-7ac8cee4c4';
+const CACHE = 'qatra-94b48fa5b6';
 const ASSETS = [
   './',
   './admin.html',

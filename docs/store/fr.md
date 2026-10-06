@@ -1,6 +1,6 @@
 # Fiche Google Play — Français (fr-FR)
 
-**Titre (max 30) :** Math Clash : Calcul mental
+**Titre (max 30) :** Qatra : Calcul mental
 
 **Description courte (max 80) :** Éclate les calculs qui tombent du ciel ! Calcul mental rapide, défie le monde.
 
@@ -8,7 +8,7 @@
 
 Des calculs tombent du ciel. Tape la réponse, éclate la goutte — avant qu'elle ne touche l'eau !
 
-Math Clash transforme le calcul mental en un jeu de réflexes rapide et addictif. Facile à prendre en main, difficile à maîtriser, et chaque manche dure environ une minute.
+Qatra transforme le calcul mental en un jeu de réflexes rapide et addictif. Facile à prendre en main, difficile à maîtriser, et chaque manche dure environ une minute.
 
 💧 COMMENT ÇA MARCHE
 Chaque goutte porte une opération. Tape la bonne réponse et elle éclate. Rate-la et elle plonge dans la mer. Plus tu progresses, plus l'averse s'accélère.

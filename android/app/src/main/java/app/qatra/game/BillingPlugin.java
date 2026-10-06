@@ -1,4 +1,4 @@
-package app.mathclash.game;
+package app.qatra.game;
 
 import com.android.billingclient.api.AcknowledgePurchaseParams;
 import com.android.billingclient.api.BillingClient;

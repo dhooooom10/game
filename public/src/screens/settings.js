@@ -76,7 +76,7 @@ registerScreen('settings', (app) => {
       h('button.btn', { on: { click: () => {
         sfx.tap();
         const blob = new Blob([JSON.stringify(app.store.exportData(app.pid))], { type: 'application/json' });
-        const a = h('a', { href: URL.createObjectURL(blob), download: `math-clash-${todayStr()}.json` });
+        const a = h('a', { href: URL.createObjectURL(blob), download: `qatra-${todayStr()}.json` });
         document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
       } } }, icon('download'), t('set.export')),
       h('button.btn', { on: { click: () => fileIn.click() } }, icon('upload'), t('set.import'))),
@@ -89,7 +89,7 @@ registerScreen('settings', (app) => {
     } } }, t('set.reset'))));
 
   el.append(h('section.card', h('h2.section-title', t('set.about')),
-    h('p.note', 'Math Clash — ', t('app.tagline')), h('p.note', tRaw('set.credits')), h('p.faint', t('set.version', { v: VERSION }))));
+    h('p.note', t('app.name') + ' — ', t('app.tagline')), h('p.note', tRaw('set.credits')), h('p.faint', t('set.version', { v: VERSION }))));
   return { el };
 });
 

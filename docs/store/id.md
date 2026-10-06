@@ -1,6 +1,6 @@
 # Google Play listing — Bahasa Indonesia (id)
 
-**Title (max 30):** Math Clash: Hujan Matematika
+**Title (max 30):** Qatra: Hujan Matematika
 
 **Short description (max 80):** Pecahkan soal yang jatuh dari langit! Adu matematika cepat dengan dunia.
 
@@ -8,7 +8,7 @@
 
 Soal-soal berjatuhan dari langit. Ketik jawabannya, pecahkan tetesannya — sebelum jatuh ke air.
 
-Math Clash mengubah berhitung cepat jadi game refleks yang seru dan bikin puas. Mudah dimulai, sulit dikuasai, dan setiap ronde cuma sekitar satu menit.
+Qatra mengubah berhitung cepat jadi game refleks yang seru dan bikin puas. Mudah dimulai, sulit dikuasai, dan setiap ronde cuma sekitar satu menit.
 
 💧 CARA MAIN
 Setiap tetesan membawa satu soal. Ketik jawabannya dan tetesan langsung pecah. Kalau terlewat, tetesan tercebur ke laut. Badainya makin cepat seiring kamu makin jago.

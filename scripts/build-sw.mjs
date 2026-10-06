@@ -19,7 +19,7 @@ const hash = createHash('sha256');
 for (const f of files) hash.update(f).update(readFileSync(join(root, f)));
 const version = hash.digest('hex').slice(0, 10);
 const sw = readFileSync(join(root, 'sw.js'), 'utf8')
-  .replace(/const CACHE = '[^']*';/, `const CACHE = 'math-clash-${version}';`)
+  .replace(/const CACHE = '[^']*';/, `const CACHE = 'qatra-${version}';`)
   .replace(/const ASSETS = \[[\s\S]*?\];/, `const ASSETS = [\n  './',\n${files.map((f) => `  './${f}'`).join(',\n')}\n];`);
 writeFileSync(join(root, 'sw.js'), sw);
-console.log(`sw.js updated: ${files.length} files, cache math-clash-${version}`);
+console.log(`sw.js updated: ${files.length} files, cache qatra-${version}`);

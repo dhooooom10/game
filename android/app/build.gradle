@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "app.mathclash.game"
+    namespace = "app.qatra.game"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "app.mathclash.game"
+        applicationId "app.qatra.game"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

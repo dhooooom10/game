@@ -212,14 +212,14 @@ export function createStore(be, { lang = 'ar' } = {}) {
 
     exportData(id) {
       const p = readProfiles().list.find((x) => x.id === id);
-      return { app: 'math-clash', v: DATA_VERSION, when: Date.now(), name: p?.name || '', data: store.load(id) };
+      return { app: 'qatra', v: DATA_VERSION, when: Date.now(), name: p?.name || '', data: store.load(id) };
     },
     /** يستورد ملف حفظ (الجديد أو صيغة النسخة السابقة v1) إلى الملف المحدد */
     importData(id, json) {
       const obj = typeof json === 'string' ? parse(json) : json;
       if (!obj || typeof obj !== 'object') throw new Error('invalid');
       let data;
-      if (obj.app === 'math-clash' && obj.data) data = normalizeData(obj.data, lang);
+      if ((obj.app === 'qatra' || obj.app === 'math-clash') && obj.data) data = normalizeData(obj.data, lang);
       else if (obj.progress) data = convertLegacy({ set: obj.settings, prog: obj.progress, stats: obj.stats }, lang);
       else throw new Error('invalid');
       store.save(id, data);

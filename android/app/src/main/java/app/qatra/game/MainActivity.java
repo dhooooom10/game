@@ -1,4 +1,4 @@
-package app.mathclash.game;
+package app.qatra.game;
 
 import android.os.Bundle;
 

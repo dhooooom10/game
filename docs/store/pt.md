@@ -1,6 +1,6 @@
 # Google Play listing — Português (pt-BR)
 
-**Title (max 30):** Math Clash: Chuva de Contas
+**Title (max 30):** Qatra: Chuva de Contas
 
 **Short description (max 80):** Estoure as contas antes que caiam! Cálculo mental rápido contra o mundo.
 
@@ -8,7 +8,7 @@
 
 Está chovendo conta! Digite a resposta e estoure a gota antes que ela caia na água.
 
-Math Clash transforma cálculo mental em um jogo de reflexo rápido e viciante. Fácil de começar, difícil de dominar — e cada rodada dura mais ou menos um minuto. Perfeito para treinar a tabuada, dar aquela turbinada no raciocínio ou só passar o tempo com o cérebro ligado.
+Qatra transforma cálculo mental em um jogo de reflexo rápido e viciante. Fácil de começar, difícil de dominar — e cada rodada dura mais ou menos um minuto. Perfeito para treinar a tabuada, dar aquela turbinada no raciocínio ou só passar o tempo com o cérebro ligado.
 
 💧 COMO FUNCIONA
 Cada gota traz uma conta. Digite o resultado e ela estoura. Deixou passar? Ela cai no mar. E quanto melhor você fica, mais forte a tempestade.

@@ -1,6 +1,6 @@
 {
-  "appId": "app.mathclash.game",
-  "appName": "Math Clash",
+  "appId": "app.qatra.game",
+  "appName": "Qatra",
   "webDir": "build/app-www",
   "android": {
     "backgroundColor": "#0A1230",

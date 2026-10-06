@@ -1,5 +1,5 @@
 /* =========================================================================
-   تطبيق Math Clash — الحالة العامة، التنقل بين الشاشات، الحفظ، والنوافذ.
+   تطبيق قطرة — الحالة العامة، التنقل بين الشاشات، الحفظ، والنوافذ.
    ========================================================================= */
 import { createBackend, createStore, verifyPass } from './core/storage.js';
 import { ensureMissions, todayStr, levelFromXp } from './core/progression.js';

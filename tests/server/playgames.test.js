@@ -212,7 +212,7 @@ test('purchases: verified with Google (mocked), acknowledged/consumed, idempoten
     if (m[3] === 'consume') { p.consumptionState = 1; return res(204, {}); }
     return res(200, p);
   };
-  const s = await boot({ billing: { packageName: 'app.mathclash.game', serviceAccount: sa, fetchImpl } });
+  const s = await boot({ billing: { packageName: 'app.qatra.game', serviceAccount: sa, fetchImpl } });
   try {
     const a = await s.api('POST', '/api/register', { name: 'مشتري' });
     const b = await s.api('POST', '/api/register', { name: 'آخر' });
