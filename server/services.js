@@ -43,7 +43,7 @@ export class HttpError extends Error { constructor(status, code) { super(code); 
 export function cleanName(name, max = 16) {
   const n = String(name ?? '').normalize('NFC').replace(/\s+/g, ' ').trim();
   if (n.length < 2 || n.length > max) throw new HttpError(400, 'name_length');
-  if (!/^[\p{L}\p{N} _.\-—]+$/u.test(n)) throw new HttpError(400, 'name_chars');
+  if (!/^[\p{L}\p{M}\p{N} _.\-—]+$/u.test(n)) throw new HttpError(400, 'name_chars');
   const low = n.toLowerCase();
   if (BAD_WORDS.some((w) => low.includes(w))) throw new HttpError(400, 'name_blocked');
   return n;

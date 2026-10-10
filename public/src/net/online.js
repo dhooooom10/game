@@ -47,7 +47,9 @@ export async function ensureIdentity(app) {
     const pg = await import('./playgames.js');
     if (pg.available() && (await pg.signIn({ interactive: true })) && (await pg.linkAccount(app))) { identity = d.online; return identity; }
   } catch { /* نكمل بالتسجيل العادي */ }
-  const name = (app.playerName || '').trim();
+  // بلا اسم: اسم افتراضي بلغة اللاعب (قطرة١٢٣٤ / Qatra1234)
+  let name = (app.playerName || '').trim();
+  if (!name) { const { t } = await import('../i18n.js'); name = (t('mascot.name') + (1000 + Math.floor(Math.random() * 9000))).replace(/\s+/g, ''); }
   const { detectCountry } = await import('../core/country.js');
   const r = await api('POST', '/api/register', { name, country: detectCountry() }, { auth: false });
   d.online = { id: r.id, token: r.token, name: r.name, code: r.code };
