@@ -1,5 +1,5 @@
 /* =========================================================================
-   لوحة إدارة قطرة — للمالك فقط (رمز ADMIN_TOKEN من إعدادات الخادم).
+   لوحة إدارة «تحدي قطرة» — للمالك فقط (رمز ADMIN_TOKEN من إعدادات الخادم).
    البطولات حسب المناسبات والمواسم، الإعلانات، المواسم، وإدارة اللاعبين.
    ========================================================================= */
 import { h, clear } from '../ui/dom.js';
@@ -39,7 +39,7 @@ function login(err = '') {
   };
   inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
   root.append(h('section.card', { style: { maxWidth: '420px', margin: '12vh auto 0' } },
-    h('h1', { style: { fontFamily: 'var(--font-display)', marginTop: 0 } }, '🛠️ لوحة إدارة قطرة'),
+    h('h1', { style: { fontFamily: 'var(--font-display)', marginTop: 0 } }, '🛠️ لوحة إدارة «تحدي قطرة»'),
     h('p.note', 'أدخل رمز الإدارة المضبوط في متغير البيئة ADMIN_TOKEN على الخادم.'), inp,
     err ? h('p.note', { style: { color: 'var(--bad)' } }, err) : null,
     h('button.btn.primary.block', { style: { marginTop: '12px' }, on: { click: go } }, 'دخول')));
@@ -55,7 +55,7 @@ async function main() {
   const body = h('div');
   const paintNav = () => { clear(nav); for (const [k, l] of tabs) nav.append(h('button', { aria: { current: tab === k ? 'page' : null }, on: { click: () => { tab = k; paintNav(); show(); } } }, l)); };
   const show = () => ({ dash, stats, tour, season, ann, players })[tab](body);
-  root.append(h('header.adm-head', h('h1', '🛠️ إدارة قطرة'), h('a.btn.sm', { href: './' }, 'فتح اللعبة'),
+  root.append(h('header.adm-head', h('h1', '🛠️ إدارة «تحدي قطرة»'), h('a.btn.sm', { href: './' }, 'فتح اللعبة'),
     h('button.btn.sm.ghost', { on: { click: () => { sessionStorage.removeItem('mc_admin'); token = ''; login(); } } }, 'خروج')), nav, body);
   paintNav(); show();
 }

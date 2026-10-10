@@ -1,6 +1,6 @@
 # Google Play listing — English (en-US)
 
-**Title (max 30):** Qatra: Mental Math Rain
+**Title (max 30):** Qatra Challenge: Math Rain
 
 **Short description (max 80):** Pop falling equations before they land! Fast mental math vs the world.
 
@@ -8,7 +8,7 @@
 
 Equations are falling from the sky. Type the answer, pop the drop — before it hits the water.
 
-Qatra turns mental math into a fast, satisfying reaction game. Simple to start, hard to master, and every round takes about a minute.
+Qatra Challenge turns mental math into a fast, satisfying reaction game. Simple to start, hard to master, and every round takes about a minute.
 
 💧 HOW IT WORKS
 Each drop carries a sum. Type the answer and it bursts. Miss one and it splashes into the sea. The storm gets faster as you improve.

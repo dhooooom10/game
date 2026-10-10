@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Qatra</string>
-    <string name="title_activity_main">Qatra</string>
+    <string name="app_name">Qatra Challenge</string>
+    <string name="title_activity_main">Qatra Challenge</string>
     <string name="package_name">app.qatra.game</string>
     <string name="custom_url_scheme">app.qatra.game</string>
 </resources>

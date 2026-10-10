@@ -1,6 +1,6 @@
 # Google Play listing — Türkçe (tr-TR)
 
-**Title (max 30):** Qatra: Zihinden Matematik
+**Title (max 30):** Qatra Challenge: Matematik
 
 **Short description (max 80):** Düşen işlemleri yere inmeden patlat! Hızlı zihinden matematik, dünyaya karşı.
 
@@ -8,7 +8,7 @@
 
 Gökyüzünden işlemler yağıyor. Cevabı yaz, damlayı patlat — suya düşmeden önce.
 
-Qatra, zihinden matematiği hızlı ve keyifli bir refleks oyununa dönüştürür. Başlaması kolay, ustalaşması zor; her tur yaklaşık bir dakika sürer. Hızlı hesaplama becerini geliştiren bir zeka oyunu ve günlük beyin egzersizi.
+Qatra Challenge, zihinden matematiği hızlı ve keyifli bir refleks oyununa dönüştürür. Başlaması kolay, ustalaşması zor; her tur yaklaşık bir dakika sürer. Hızlı hesaplama becerini geliştiren bir zeka oyunu ve günlük beyin egzersizi.
 
 💧 NASIL OYNANIR
 Her damla bir işlem taşır. Cevabı yaz, damla patlasın. Birini kaçırırsan denize düşer. Sen geliştikçe fırtına da hızlanır.

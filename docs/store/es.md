@@ -1,6 +1,6 @@
 # Google Play listing — Español (es-419)
 
-**Title (max 30):** Qatra: Lluvia de cálculo
+**Title (max 30):** Qatra Challenge: Matemáticas
 
 **Short description (max 80):** ¡Revienta las ecuaciones antes de que caigan! Cálculo mental rápido y retador.
 
@@ -8,7 +8,7 @@
 
 Del cielo caen ecuaciones. Escribe el resultado y revienta la gota… antes de que toque el agua.
 
-Qatra convierte el cálculo mental en un juego de reflejos rápido y adictivo. Fácil de empezar, difícil de dominar, y cada ronda dura más o menos un minuto.
+Qatra Challenge convierte el cálculo mental en un juego de reflejos rápido y adictivo. Fácil de empezar, difícil de dominar, y cada ronda dura más o menos un minuto.
 
 💧 CÓMO SE JUEGA
 Cada gota lleva una operación. Escribe la respuesta y ¡pum!, revienta. Si se te escapa, cae al mar. La tormenta se acelera a medida que mejoras.

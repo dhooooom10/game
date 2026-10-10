@@ -1,4 +1,4 @@
-# النشر وGoogle Play — Qatra
+# النشر وGoogle Play — Qatra Challenge
 
 ## الصورة الكاملة
 
@@ -6,7 +6,7 @@
 جوال اللاعب (تطبيق Google Play عبر Capacitor + Google Play Games)
         │  HTTPS + WebSocket
         ▼
-خادمك (Docker):  Caddy (HTTPS تلقائي)  →  خادم Qatra (Node 22)
+خادمك (Docker):  Caddy (HTTPS تلقائي)  →  خادم Qatra Challenge (Node 22)
                                           ├─ ملفات اللعبة (public/)
                                           ├─ REST API + WebSocket (/ws)
                                           ├─ لوحة الإدارة (/admin)

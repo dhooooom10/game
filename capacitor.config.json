@@ -1,6 +1,6 @@
 {
   "appId": "app.qatra.game",
-  "appName": "Qatra",
+  "appName": "Qatra Challenge",
   "webDir": "build/app-www",
   "android": {
     "backgroundColor": "#0A1230",
