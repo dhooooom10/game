@@ -4,7 +4,7 @@ import * as ads from '../net/ads.js';
 import { app, registerScreen, VERSION } from '../app.js';
 import { h, icon, clear } from '../ui/dom.js';
 import { mascotSVG } from '../ui/mascot.js';
-import { sfx, setLevels, hapticsSupported, buzz, startMusic, stopMusic } from '../ui/audio.js';
+import { sfx, setLevels, hapticsSupported, buzz } from '../ui/audio.js';
 import { toast } from '../ui/fx.js';
 import { t, tRaw, LANGS, loadLang } from '../i18n.js';
 import { hashPass } from '../core/storage.js';
@@ -36,11 +36,10 @@ registerScreen('settings', (app) => {
 
   // الصوت
   const sfxRange = h('input', { type: 'range', min: 0, max: 1, step: 0.05, value: s.sfx, aria: { label: t('set.sfx') }, on: { input: (e) => { s.sfx = +e.target.value; setLevels({ sfx: s.sfx }); }, change: () => { app.save(); sfx.correct(); } } });
-  const musRange = h('input', { type: 'range', min: 0, max: 1, step: 0.05, value: s.music, aria: { label: t('set.music') }, on: { input: (e) => { s.music = +e.target.value; setLevels({ music: s.music }); }, change: () => { app.save(); if (s.music > 0) startMusic(); else stopMusic(); } } });
   el.append(h('section.card',
     h('h2.section-title', t('set.sound')),
-    h('div.field', h('div.label', h('span', icon('volume'), ' ', t('set.sfx'))), sfxRange),
-    h('div.field', h('div.label', h('span', icon('music'), ' ', t('set.music'))), musRange),
+    row(t('set.sfx'), null, sw(s.sfx > 0, t('set.sfx'), (v) => { s.sfx = v ? (s._sfxPrev || 0.8) : 0; if (!v) s._sfxPrev = +sfxRange.value || 0.8; sfxRange.value = s.sfx; setLevels({ sfx: s.sfx }); app.save(); if (v) sfx.correct(); })),
+    h('div.field', h('div.label', h('span', icon('volume'), ' ', t('set.sfxVol'))), sfxRange),
     row(t('set.haptics'), hapticsSupported() ? null : t('set.hapticsNA'), hapticsSupported() ? sw(s.haptics, t('set.haptics'), (v) => { s.haptics = v; app.save(); app.applyLook(); buzz(30); }) : h('span.faint', '—'))));
 
   // سهولة الاستخدام

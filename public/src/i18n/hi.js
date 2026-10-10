@@ -1,5 +1,6 @@
 /* हिन्दी — इंटरफ़ेस का पूरा अनुवाद */
 export default {
+  'set.sfxVol': 'इफ़ेक्ट्स वॉल्यूम',
   'app.name': 'Qatra Challenge',
   'app.tagline': 'नंबरों को हराओ, अपना रिकॉर्ड तोड़ो',
   'mascot.name': 'क़तरा',

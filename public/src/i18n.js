@@ -136,7 +136,7 @@ const ar = {
   'skin.sky': 'سماوي', 'skin.mint': 'نعناعي', 'skin.rose': 'وردي', 'skin.violet': 'بنفسجي', 'skin.sun': 'شمسي', 'skin.night': 'ليلي',
   'acc.none': 'بلا', 'acc.cap': 'قبعة', 'acc.sparkle': 'لمعة', 'acc.phones': 'سماعات', 'acc.crown': 'تاج', 'acc.scarf': 'وشاح',
 
-  'set.title': 'الإعدادات', 'set.language': 'اللغة', 'set.digits': 'شكل الأرقام', 'set.sfx': 'المؤثرات الصوتية', 'set.music': 'الموسيقى',
+  'set.title': 'الإعدادات', 'set.language': 'اللغة', 'set.digits': 'شكل الأرقام', 'set.sfx': 'المؤثرات الصوتية', 'set.sfxVol': 'مستوى المؤثرات', 'set.music': 'الموسيقى',
   'set.haptics': 'الاهتزاز', 'set.hapticsNA': 'غير مدعوم على هذا الجهاز', 'set.motion': 'الحركة والمؤثرات',
   'set.motionSystem': 'حسب الجهاز', 'set.motionReduce': 'مخفّفة', 'set.motionFull': 'كاملة', 'set.contrast': 'تباين عالٍ',
   'set.bigText': 'خط أكبر', 'set.autoSubmit': 'قبول تلقائي', 'set.autoSubmitSub': 'تُقبل الإجابة الصحيحة فور كتابتها دون ضغط «تحقّق»',
@@ -598,7 +598,7 @@ const en = {
   'skin.sky': 'Sky', 'skin.mint': 'Mint', 'skin.rose': 'Rose', 'skin.violet': 'Violet', 'skin.sun': 'Sunny', 'skin.night': 'Night',
   'acc.none': 'None', 'acc.cap': 'Cap', 'acc.sparkle': 'Sparkles', 'acc.phones': 'Headphones', 'acc.crown': 'Crown', 'acc.scarf': 'Scarf',
 
-  'set.title': 'Settings', 'set.language': 'Language', 'set.digits': 'Numerals', 'set.sfx': 'Sound effects', 'set.music': 'Music',
+  'set.title': 'Settings', 'set.language': 'Language', 'set.digits': 'Numerals', 'set.sfx': 'Sound effects', 'set.sfxVol': 'Effects volume', 'set.music': 'Music',
   'set.haptics': 'Vibration', 'set.hapticsNA': 'Not supported on this device', 'set.motion': 'Motion & effects',
   'set.motionSystem': 'System', 'set.motionReduce': 'Reduced', 'set.motionFull': 'Full', 'set.contrast': 'High contrast',
   'set.bigText': 'Larger text', 'set.autoSubmit': 'Auto-accept', 'set.autoSubmitSub': 'A correct answer is accepted as soon as you type it',

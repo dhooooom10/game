@@ -1,5 +1,6 @@
 /* Türkçe — arayüzün tam çevirisi */
 export default {
+  'set.sfxVol': 'Efekt ses düzeyi',
   'app.name': 'Qatra Challenge',
   'app.tagline': 'Sayıları yen, rekorunu kır',
   'mascot.name': 'Qatra',

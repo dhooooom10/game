@@ -62,7 +62,7 @@ export const app = {
     de.dataset.contrast = s.contrast ? '1' : '0';
     de.dataset.bigtext = s.bigText ? '1' : '0';
     setMotion(s.motion || 'system');
-    setLevels({ sfx: s.sfx, music: s.music });
+    setLevels({ sfx: s.sfx, music: 0 });
     setHaptics(s.haptics);
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.content = getComputedStyle(de).getPropertyValue('--bg').trim() || '#0A1230';
@@ -229,7 +229,7 @@ export async function boot() {
   pgs.init(app).catch(() => {});
 
   // أول لمسة تفتح الصوت (سياسة المتصفحات)
-  const unlock = () => { unlockAudio(); if (app.settings.music > 0) startMusic(); window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock); };
+  const unlock = () => { unlockAudio(); window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock); };
   window.addEventListener('pointerdown', unlock);
   window.addEventListener('keydown', unlock);
 

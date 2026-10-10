@@ -1,5 +1,6 @@
 /* Português (Brasil) — tradução completa da interface */
 export default {
+  'set.sfxVol': 'Volume dos efeitos',
   'app.name': 'Qatra Challenge',
   'app.tagline': 'Vença os números, quebre seu recorde',
   'mascot.name': 'Qatra',

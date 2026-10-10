@@ -78,13 +78,8 @@ function schedule() {
     nextNoteTime += BEAT; step++;
   }
 }
-export function startMusic() {
-  musicWanted = true;
-  const c = ctx();
-  if (!c || levels.music <= 0 || musicTimer || c.state !== 'running') return;
-  nextNoteTime = c.currentTime + 0.1;
-  musicTimer = setInterval(schedule, 200);
-}
+/** الموسيقى أُزيلت من اللعبة (المؤثرات فقط). تبقى الدالة للتوافق. */
+export function startMusic() { musicWanted = false; }
 export function stopMusic(keepWanted = false) {
   if (!keepWanted) musicWanted = false;
   clearInterval(musicTimer); musicTimer = null;

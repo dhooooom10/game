@@ -29,7 +29,7 @@ export function dayDiff(a, b) {
 export function defaultSettings(lang = 'ar') {
   return {
     lang, digits: lang === 'ar' ? 'arabic' : 'western',
-    sfx: 0.8, music: 0.25, haptics: true,
+    sfx: 0.8, music: 0, haptics: true,
     motion: 'system', // system | reduce | full
     contrast: false, bigText: false,
     tutorialDone: false,

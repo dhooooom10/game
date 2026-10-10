@@ -7,7 +7,7 @@
 import { app, registerScreen } from '../app.js';
 import { h, icon, num, clear, mathText, mathEl } from '../ui/dom.js';
 import { mascotSVG, SKINS } from '../ui/mascot.js';
-import { sfx, buzz } from '../ui/audio.js';
+import { sfx, buzz, setLevels } from '../ui/audio.js';
 import { floatText, replay, reducedMotion, confetti } from '../ui/fx.js';
 import { t } from '../i18n.js';
 import { createRain, TICK_MS, TPS, RAIN_DIFFS } from '../core/rain.js';
@@ -263,6 +263,19 @@ registerScreen('rainPlay', (app, params) => {
   }
 
   /* ---------- الإيقاف ---------- */
+  function quickToggle(kind, onIc, offIc, label) {
+    const st = data.settings;
+    const prevKey = '_prev_' + kind;
+    const on = () => st[kind] > 0;
+    const b = h('button.qa-btn', { type: 'button', aria: { pressed: String(on()), label } }, h('span.qa-ic', on() ? onIc : offIc), h('span', label));
+    b.addEventListener('click', () => {
+      if (on()) { st[prevKey] = st[kind]; st[kind] = 0; } else st[kind] = st[prevKey] || 0.8;
+      setLevels({ sfx: st.sfx, music: 0 });
+      app.save(); b.setAttribute('aria-pressed', String(on())); b.firstChild.textContent = on() ? onIc : offIc;
+      if (kind === 'sfx' && on()) sfx.tap();
+    });
+    return b;
+  }
   function pause() {
     if (ended || paused || !started || realtime) return;
     paused = true; persistNow();
@@ -270,6 +283,9 @@ registerScreen('rainPlay', (app, params) => {
     overlay = h('div.overlay', { role: 'dialog', aria: { modal: 'true', label: t('game.paused') } }, h('div.panel',
       h('div', { html: mascotSVG({ skin: data.cosmetics.skin, acc: data.cosmetics.acc, mood: 'think', size: 64, label: t('mascot.name') }) }),
       h('h2', t('game.paused')), h('p.note', t('rain.pausedNote')),
+      // إعدادات سريعة أثناء اللعب: المؤثرات والموسيقى
+      h('div.quick-audio', { role: 'group', aria: { label: t('set.title') } },
+        quickToggle('sfx', '🔊', '🔇', t('set.sfx'))),
       h('div.stack', h('button.btn.primary.block.lg', { 'data-autofocus': true, on: { click: resume } }, icon('play'), t('game.resume')),
         h('button.btn.ghost.block', { on: { click: () => askQuit(true) } }, t('game.quit')))));
     document.body.appendChild(overlay);

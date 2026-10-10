@@ -1,5 +1,6 @@
 /* Bahasa Indonesia — terjemahan lengkap antarmuka */
 export default {
+  'set.sfxVol': 'Volume efek',
   'app.name': 'Qatra Challenge',
   'app.tagline': 'Taklukkan angka, pecahkan rekormu',
   'mascot.name': 'Qatra',
