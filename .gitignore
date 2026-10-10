@@ -4,3 +4,9 @@ test-results/
 data/
 build/
 deploy/secrets/
+
+# مفتاح التوقيع — لا ترفعه أبدًا
+android/keystore.properties
+*.jks
+*.keystore
+release/
