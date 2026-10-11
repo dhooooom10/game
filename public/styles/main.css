@@ -730,3 +730,17 @@ details.card summary { cursor: pointer; font-weight: 800; }
 .qa-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
 .qa-btn[aria-pressed="false"] { opacity: .55; text-decoration: line-through; }
 .qa-ic { font-size: 1.2rem; }
+/* إجابة خطأ: وميض أحمر على حواف السماء */
+.sky.wrong-flash::before { content: ''; position: absolute; inset: 0; z-index: 70; pointer-events: none; border-radius: inherit;
+  box-shadow: inset 0 0 0 4px rgba(255, 70, 90, 1), inset 0 0 90px rgba(255, 40, 60, .7); background: rgba(255, 40, 60, .12); animation: wrongFlash .6s ease-out both; }
+@keyframes wrongFlash { from { opacity: 1; } to { opacity: 0; } }
+.sky.speed-pulse { animation: speedPulse .6s ease-out; }
+@keyframes speedPulse { 30% { box-shadow: inset 0 0 0 3px rgba(255, 201, 74, .9), inset 0 0 50px rgba(255, 201, 74, .35); } }
+/* اختيار متعدد */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-toggle { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--muted); font: inherit; font-weight: 800; cursor: pointer; }
+.chip-toggle[aria-pressed="true"] { background: color-mix(in srgb, var(--primary) 25%, var(--surface-2)); color: var(--ink); border-color: var(--primary); }
+
+.sky .wrong-x { position: absolute; left: 50%; top: 45%; z-index: 71; transform: translate(-50%, -50%); font-style: normal; font-size: 96px; font-weight: 900; line-height: 1;
+  color: #FF4A5E; text-shadow: 0 0 24px rgba(255, 60, 80, .8); pointer-events: none; animation: wrongX .65s cubic-bezier(.2, 1.4, .4, 1) both; }
+@keyframes wrongX { 0% { transform: translate(-50%, -50%) scale(.4); opacity: 0; } 25% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; } 70% { opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }

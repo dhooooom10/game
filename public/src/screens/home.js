@@ -128,6 +128,7 @@ registerScreen('home', (app) => {
       card('modeJourney', 'map', '#38D6F5', t('mode.journey'), t('mode.journeySub'), `★ ${num(totalStars)}/${num(300)}`, () => app.go('journey'), true),
       card('modeTime', 'clock', '#FFC94A', t('mode.time'), t('mode.timeSub'), tRec >= 0 ? t('setup.record', { n: num(tRec) }) : null, () => app.go('setupTime')),
       card('modeSurvival', 'shield', '#FF7BB0', t('mode.survival'), t('mode.survivalSub'), sRec >= 0 ? t('setup.record', { n: num(sRec) }) : null, () => app.go('setupSurvival')),
+      card('modeCustom', 'bolt', '#FF9F5A', t('mode.custom'), t('mode.customSub'), null, () => app.go('setupCustom')),
       card('modePractice', 'target', '#3DDC97', t('mode.practice'), t('mode.practiceSub'), null, () => app.go('practice')),
       card('modeFriend', 'users', '#9B8CFF', t('mode.friend'), t('mode.friendSub'), null, () => app.go('friendSetup')),
       card('modeOnline', 'users', '#FF7BB0', t('online.title'), t('online.sub'), null, () => app.go('online'), true))));

@@ -6,7 +6,7 @@ import { ensureMissions, todayStr, levelFromXp } from './core/progression.js';
 import { setLocale, t, LANGS, detectLang, isRtl, loadLang, isLoaded } from './i18n.js';
 import { h, clear, icon } from './ui/dom.js';
 import { setLevels, setHaptics, sfx, unlockAudio, startMusic, pauseAll, resumeAll } from './ui/audio.js';
-import { setMotion } from './ui/fx.js';
+import { setMotion, toast } from './ui/fx.js';
 import { useIdentity } from './net/online.js';
 import * as pgs from './net/playgames.js';
 import * as analytics from './net/analytics.js';
@@ -243,6 +243,22 @@ export async function boot() {
     }
     try { history.pushState({ mc: app.stack.length }, ''); } catch { /* ignore */ }
   });
+
+  // زر الرجوع في تطبيق Android: يتنقل داخل اللعبة، وفي الرئيسية يطلب ضغطة ثانية للخروج
+  const C = window.Capacitor;
+  if (C?.isNativePlatform?.() && C.isPluginAvailable?.('App')) {
+    const AppPlugin = C.registerPlugin('App');
+    let lastBack = 0;
+    AppPlugin.addListener('backButton', () => {
+      if (document.querySelector('.modal-backdrop')) { app._modalClose && app._modalClose(null); return; }
+      const handled = app.current?.onBack ? app.current.onBack() : false;
+      if (handled) return;
+      if (app.stack.length > 1 || app.current?.name !== 'home') { app.back(); return; }
+      if (Date.now() - lastBack < 2000) { AppPlugin.exitApp(); return; }
+      lastBack = Date.now();
+      toast(t('app.exitHint'));
+    });
+  }
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { pauseAll(); app.current?.onHide?.(); }

@@ -28,10 +28,15 @@ export function rainConfig(o = {}) {
     lives: 3,                     // null = بلا قلوب
     timeLimit: null,              // بالثواني (عاصفة الوقت)
     ramp: null,                   // { every, mul, tierEvery, tierMax }
+    accel: null,                  // تسارع زمني: نسبة تقصير زمن السقوط كل ١٠ ثوانٍ (مثل 0.07)
+    fair: null,                   // معامل أرضية العدالة (null = ١٫٣)
+    minTravel: null,              // أقل زمن سقوط بالثواني (null = ٣)
     specials: false,
     ...o,
   };
 }
+
+const ACCEL_EVERY = 10, ACCEL_MIN = 0.32;
 
 export function createRain(cfgIn, seed = 1) {
   const cfg = rainConfig(cfgIn);
@@ -53,13 +58,16 @@ export function createRain(cfgIn, seed = 1) {
     lastEvent: null,
   };
 
+  // التسارع الزمني: كل ١٠ ثوانٍ تصبح القطرات أسرع (حتمي بالنبضات، فيُعاد كما هو على الخادم)
+  const accelStep = () => (cfg.accel ? Math.floor(S.tick / (ACCEL_EVERY * TPS)) : 0);
+  const accelF = () => (cfg.accel ? Math.max(ACCEL_MIN, Math.pow(1 - cfg.accel, accelStep())) : 1);
   const curTravel = () => {
     const r = cfg.ramp ? Math.pow(cfg.ramp.mul ?? 0.94, S.rampLevel) : 1;
-    return cfg.travel * r;
+    return cfg.travel * r * accelF();
   };
   const curSpawn = () => {
     const r = cfg.ramp ? Math.pow(cfg.ramp.mul ?? 0.94, S.rampLevel) : 1;
-    return Math.max(0.8, cfg.spawn * r);
+    return Math.max(cfg.accel ? 0.45 : 0.8, cfg.spawn * r * accelF());
   };
   const live = () => S.drops.filter((d) => !d.dead);
 
@@ -73,8 +81,8 @@ export function createRain(cfgIn, seed = 1) {
       // لا تظهر قطرتان بنفس الإجابة معًا (حتى لا يلتبس الانفجار)
       if (!live().some((d) => d.q.answer === q.answer)) break;
     }
-    // أرضية العدالة: لا تسقط أسرع من زمن الحل المتوقع × 1.3
-    const travel = Math.max(curTravel(), (q.parMs / 1000) * 1.3, 3);
+    // أرضية العدالة: لا تسقط أسرع من زمن الحل المتوقع × fair (١٫٣ افتراضيًا)، وتتقلص مع التسارع
+    const travel = Math.max(curTravel(), (q.parMs / 1000) * (cfg.fair ?? 1.3) * accelF(), cfg.minTravel ?? 3);
     let kind = 'normal';
     if (cfg.specials) {
       const r = rng.next();
@@ -194,6 +202,7 @@ export function createRain(cfgIn, seed = 1) {
       }
       S.drops = S.drops.filter((d) => !d.dead || S.tick - (d.poppedAt ?? d.missedAt ?? S.tick) < 30);
       S.tick++;
+      if (cfg.accel && !S.over && (!limitTicks || S.tick < limitTicks) && S.tick % (ACCEL_EVERY * TPS) === 0 && accelF() > ACCEL_MIN) events.push({ type: 'speedup', level: accelStep() });
       if (S.tick % 30 === 0) S.timeline.push([S.tick, S.score]);
       if (!S.over && limitTicks && S.tick >= limitTicks) end('time', !cfg.target || S.popped >= cfg.target, events);
       return events;
@@ -269,9 +278,33 @@ export const RAIN_DIFFS = {
 };
 export const RAIN_LIVES = 3;
 
+/* ---------------- تحدّيك الخاص: اللاعب يصنع تحدّيه ---------------- */
+export const CUSTOM_OPS = ['add', 'sub', 'mul', 'div'];
+export const CUSTOM_LEVELS = ['easy', 'medium', 'hard', 'expert'];
+export const CUSTOM_SPEEDS = {
+  slow: { travel: 12, spawn: 3.4, maxDrops: 2, fair: 1.3, minTravel: 3 },
+  normal: { travel: 9, spawn: 2.6, maxDrops: 3, fair: 1.1, minTravel: 3 },
+  fast: { travel: 6, spawn: 1.8, maxDrops: 3, fair: 0.85, minTravel: 2.4 },
+  veryfast: { travel: 4.4, spawn: 1.3, maxDrops: 4, fair: 0.7, minTravel: 2 },
+  insane: { travel: 3.2, spawn: 0.95, maxDrops: 4, fair: 0.55, minTravel: 1.7 },
+};
+export const CUSTOM_ENDS = ['t60', 't120', 'lives'];
+const LEVEL_TIER = { easy: [2, 1], medium: [3, 2], hard: [4, 3], expert: [6, 4] }; // [جمع/طرح, ضرب/قسمة]
+export function customConfig({ ops = ['add', 'sub'], level = 'medium', speed = 'fast', end = 't60', accel = true } = {}) {
+  const valid = ops.filter((o) => CUSTOM_OPS.includes(o));
+  const list = valid.length ? valid : ['add'];
+  const [as, md] = LEVEL_TIER[level] || LEVEL_TIER.medium;
+  const tiers = Object.fromEntries(list.map((o) => [o, o === 'add' || o === 'sub' ? as : md]));
+  const sp = CUSTOM_SPEEDS[speed] || CUSTOM_SPEEDS.fast;
+  return rainConfig({ tiers, ...sp, specials: true, lives: end === 'lives' ? 3 : null, timeLimit: end === 't120' ? 120 : end === 't60' ? 60 : null, accel: accel ? 0.08 : null });
+}
+export const customRecordKey = (o) => `custom:${[...o.ops].sort().join('')}:${o.level}:${o.speed}:${o.end}:${o.accel ? 1 : 0}`;
+
 /** عاصفة الوقت: أكبر عدد من القطرات خلال مدة محددة (بلا قلوب، المطر يشتد) */
-export const stormConfig = (diff = 'medium', seconds = 60, specials = true) => rainConfig({
-  ...RAIN_DIFFS[diff], lives: null, timeLimit: seconds, specials,
+/** accel: تسارع زمني (للمنافسة أونلاين وبين الأصدقاء: ٠٫٠٧ = أسرع ٧٪ كل ١٠ ثوانٍ) */
+export const COMPETITIVE_ACCEL = 0.07;
+export const stormConfig = (diff = 'medium', seconds = 60, specials = true, accel = null) => rainConfig({
+  ...RAIN_DIFFS[diff], lives: null, timeLimit: seconds, specials, accel,
   ramp: { every: 6, mul: 0.95, tierEvery: 10, tierMax: 2 },
 });
 /** البقاء: مطر لا ينتهي يشتد تدريجيًا، و٣ قلوب */

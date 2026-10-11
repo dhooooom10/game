@@ -52,7 +52,7 @@ export function newProfileData(lang = 'ar') {
     badges: {},
     cosmetics: { theme: 'rain', skin: 'sky', acc: 'none' },
     committed: [],
-    prefs: { practice: { topics: ['add', 'sub'], level: 'auto', format: 'mixed', timer: false, length: 10 }, time: { dur: 60, diff: 'medium' }, survival: { diff: 'medium' }, friend: { names: ['', ''], count: 10, diff: 'medium', layout: 'turns' }, rain: { diff: 'medium' } },
+    prefs: { practice: { topics: ['add', 'sub'], level: 'auto', format: 'mixed', timer: false, length: 10 }, time: { dur: 60, diff: 'medium' }, survival: { diff: 'medium' }, friend: { names: ['', ''], count: 10, diff: 'medium', layout: 'turns' }, rain: { diff: 'medium' }, custom: { ops: ['add', 'sub', 'mul'], level: 'medium', speed: 'fast', end: 't60', accel: true } },
   };
 }
 

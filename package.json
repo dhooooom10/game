@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.1.0",
+    "@capacitor/app": "^8.1.2",
     "@capacitor/share": "^8.0.3",
     "ws": "^8.22.0"
   }

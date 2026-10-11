@@ -147,3 +147,21 @@ test('revive: continues after losing lives, recorded in log, replay honours it o
   assert.equal(replayRain(cfg, 99, R.state.log, { endTick: end, allowRevive: true }).summary.score, score);
   assert.equal(replayRain(cfg, 99, R.state.log, { endTick: end }).summary.score, 0, 'server ignores ad revives');
 });
+
+test('accel: drops get faster every 10 s, deterministic replay, speedup events; custom config', async () => {
+  const { createRain, replayRain, customConfig, stormConfig, COMPETITIVE_ACCEL } = await import('../../public/src/core/rain.js');
+  const cfg = customConfig({ ops: ['add', 'mul'], level: 'hard', speed: 'insane', end: 't60', accel: true });
+  assert.equal(cfg.timeLimit, 60); assert.equal(cfg.lives, null); assert.equal(cfg.accel, 0.08);
+  assert.deepEqual(Object.keys(cfg.tiers).sort(), ['add', 'mul']);
+  const R = createRain(cfg, 7);
+  let ups = 0; const speeds = [];
+  while (!R.state.over) { for (const e of R.step()) { if (e.type === 'speedup') ups++; if (e.type === 'spawn') speeds.push([R.state.tick, e.drop.speed]); } }
+  assert.equal(ups, 5, 'speedup at 10,20,30,40,50 s');
+  const early = speeds.filter(([t]) => t < 600).map(([, s]) => s), late = speeds.filter(([t]) => t > 3000).map(([, s]) => s);
+  const avg = (a) => a.reduce((x, y) => x + y, 0) / a.length;
+  assert.ok(avg(late) > avg(early) * 1.3, 'late drops fall clearly faster on average');
+  assert.equal(replayRain(cfg, 7, R.state.log, { endTick: R.state.tick }).summary.missed, R.summary().missed);
+  // المنافسة أونلاين تتسارع، والأوضاع القديمة بلا تسارع لا تتغير
+  assert.equal(stormConfig('medium', 60, true, COMPETITIVE_ACCEL).accel, COMPETITIVE_ACCEL);
+  assert.equal(stormConfig('medium', 60, true).accel, null);
+});

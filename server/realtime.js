@@ -4,7 +4,7 @@
    ========================================================================= */
 import { WebSocketServer } from 'ws';
 import { randomBytes, randomInt } from 'node:crypto';
-import { stormConfig, TICK_MS } from '../public/src/core/rain.js';
+import { stormConfig, TICK_MS, COMPETITIVE_ACCEL } from '../public/src/core/rain.js';
 import { newId, DUEL, EMOTES, HttpError } from './services.js';
 
 const COLORS = ['#FF7BB0', '#FFC94A', '#3DDC97', '#9B8CFF', '#FF9F5A', '#7CF0D0', '#5FD3F5', '#E06FA8'];
@@ -21,7 +21,7 @@ export function createRealtime(httpServer, svc, db, { now = () => Date.now(), qu
   const online = () => new Set(clients.keys());
 
   /* ---------------- المباريات ---------------- */
-  function createMatch(kind, players, { cfg = stormConfig(DUEL.diff, DUEL.seconds, true), seed = 'M:' + randomBytes(6).toString('hex'), room = null, ghosts = [] } = {}) {
+  function createMatch(kind, players, { cfg = stormConfig(DUEL.diff, DUEL.seconds, true, COMPETITIVE_ACCEL), seed = 'M:' + randomBytes(6).toString('hex'), room = null, ghosts = [] } = {}) {
     if (forceSeconds && kind !== 'ghost') cfg = { ...cfg, timeLimit: forceSeconds }; // للاختبارات فقط
     const id = newId('m_');
     const startAt = now() + startDelayMs;
@@ -151,7 +151,7 @@ export function createRealtime(httpServer, svc, db, { now = () => Date.now(), qu
       const r = [...rooms.values()].find((x) => x.members.has(ws.player.id));
       if (!r || r.host !== ws.player.id || r.match) return;
       if (r.members.size < 2) return send(ws, { t: 'error', code: 'need_players' });
-      const cfg = stormConfig(r.settings.diff, r.settings.seconds, r.settings.specials);
+      const cfg = stormConfig(r.settings.diff, r.settings.seconds, r.settings.specials, COMPETITIVE_ACCEL);
       r.match = createMatch('room', [...r.members.values()], { cfg, room: r });
       broadcastRoom(r);
     },

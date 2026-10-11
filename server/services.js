@@ -6,7 +6,7 @@
    ========================================================================= */
 import { randomBytes, createHash } from 'node:crypto';
 import { PRODUCTS, grantsFrom } from '../public/src/core/products.js';
-import { replayRain, plausible, stormConfig, survivalConfig, rainConfig, TICK_MS } from '../public/src/core/rain.js';
+import { replayRain, plausible, stormConfig, survivalConfig, rainConfig, TICK_MS, COMPETITIVE_ACCEL } from '../public/src/core/rain.js';
 
 export const OCCASIONS = {
   ramadan: { icon: '🌙', color: '#9B8CFF', ar: 'رمضان', en: 'Ramadan' },
@@ -68,6 +68,7 @@ export function sanitizeCfg(cfg) {
     && (c.lives != null || c.timeLimit != null || c.target != null)
     && (c.ramp == null || (typeof c.ramp === 'object' && num(c.ramp.every ?? 5, 1, 100) && num(c.ramp.mul ?? 0.94, 0.5, 1) && num(c.ramp.tierEvery ?? 8, 1, 100) && num(c.ramp.tierMax ?? 2, 0, 9)))
     && typeof c.specials === 'boolean'
+    && (c.accel == null || num(c.accel, 0, 0.3)) && (c.fair == null || num(c.fair, 0.4, 3)) && (c.minTravel == null || num(c.minTravel, 1.2, 30))
     && c.tiers && typeof c.tiers === 'object' && Object.entries(c.tiers).every(([k, v]) => /^[a-z]{2,8}$/.test(k) && num(v, 0, 9))
     && c.formats && typeof c.formats === 'object' && Object.entries(c.formats).every(([k, v]) => ['input', 'missing'].includes(k) && num(v, 0, 9));
   if (!ok || JSON.stringify(c).length > 2000) throw new HttpError(400, 'bad_cfg');
@@ -78,7 +79,7 @@ export function rulesToCfg(rules) {
   const diff = ['easy', 'medium', 'hard', 'expert'].includes(rules.diff) ? rules.diff : 'medium';
   if (rules.mode === 'survival') return { ...survivalConfig(diff), timeLimit: 15 * 60 };
   const secs = Math.max(30, Math.min(300, rules.seconds | 0 || 60));
-  return stormConfig(diff, secs, rules.specials !== false);
+  return stormConfig(diff, secs, rules.specials !== false, COMPETITIVE_ACCEL);
 }
 
 export function createServices(db, { now = () => Date.now(), play = null } = {}) {
@@ -493,7 +494,7 @@ export function createServices(db, { now = () => Date.now(), play = null } = {})
 
   /* ---------------- العاصفة الأسبوعية واليومي ---------------- */
   S.startWeeklyRun = (pid) => {
-    const cfg = stormConfig(WEEKLY.diff, WEEKLY.seconds, true);
+    const cfg = stormConfig(WEEKLY.diff, WEEKLY.seconds, true, COMPETITIVE_ACCEL);
     const seed = 'W:' + randomBytes(6).toString('hex');
     return { runId: S.startRun(pid, { kind: 'weekly', seed, cfg }), seed, cfg };
   };

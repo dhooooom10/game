@@ -119,3 +119,48 @@ test('languages: full translations load on demand (Spanish), LTR, no missing-key
   assert.match(await p.locator('#app').innerText(), /Desafío diario|Jugar/);
   assert.deepEqual(p.errors, []);
 });
+
+test('custom challenge: pick ops/speed/accel, play, wrong answer flashes red, speedup shows, record saved', async () => {
+  const p = await page();
+  await p.goto(S.url + '/?e2e=1');
+  await waitScreen(p, 'home');
+  await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; });
+  await p.click('#modeCustom');
+  await waitScreen(p, 'setupCustom');
+  await p.click('text=جنونية');
+  await p.click('#startCustom');
+  await waitScreen(p, 'rainPlay');
+  const cfg = await p.evaluate(() => window.__mc.current.rain().cfg);
+  assert.equal(cfg.travel, 3.2); assert.equal(cfg.accel, 0.08);
+  await p.waitForFunction(() => window.__mc.current.rain().state.drops.some((d) => !d.dead), null, { timeout: 8000 });
+  // إجابة خطأ مؤكدة: رقم لا يبدأ به أي ناتج
+  const bad = await p.evaluate(() => { const ans = window.__mc.current.rain().state.drops.filter((d) => !d.dead).map((d) => String(d.q.answer)); for (let i = 1; i < 10; i++) if (!ans.some((a) => a.startsWith(String(i)))) return String(i); return '9'; });
+  await p.keyboard.press(bad);
+  await p.waitForSelector('.sky.wrong-flash', { timeout: 3000 });
+  // نقفز ١٠ ثوانٍ في المحرك للتأكد من حدث التسارع
+  const ups = await p.evaluate(() => { const R = window.__mc.current.rain(); let n = 0; while (R.state.tick < 610 && !R.state.over) for (const e of R.step()) if (e.type === 'speedup') n++; return n; });
+  assert.equal(ups, 1);
+  assert.deepEqual(p.errors, []);
+});
+
+test('android back button: navigates inside the game, double press on home to exit', async () => {
+  const p = await newPage(browser);
+  await p.addInitScript(() => {
+    window.__exit = 0; let cb = null;
+    const appPlugin = { addListener: (ev, fn) => { if (ev === 'backButton') cb = fn; return Promise.resolve({ remove() {} }); }, exitApp: () => { window.__exit++; } };
+    window.__back = () => cb && cb();
+    window.Capacitor = { isNativePlatform: () => true, isPluginAvailable: (n) => n === 'App', registerPlugin: () => appPlugin };
+  });
+  await p.goto(S.url + '/?e2e=1');
+  await waitScreen(p, 'home');
+  await p.evaluate(() => window.__mc.go('settings'));
+  await waitScreen(p, 'settings');
+  await p.evaluate(() => window.__back());
+  await waitScreen(p, 'home');
+  await p.evaluate(() => window.__back());
+  assert.equal(await p.evaluate(() => window.__exit), 0, 'first press on home only warns');
+  await p.waitForSelector('text=اضغط رجوع مرة أخرى للخروج');
+  await p.evaluate(() => window.__back());
+  assert.equal(await p.evaluate(() => window.__exit), 1);
+  assert.deepEqual(p.errors, []);
+});

@@ -9,6 +9,7 @@ import { tierPolicy } from '../core/questions.js';
 import { tierFromSkill } from '../core/adaptive.js';
 import { STAGES, PATHS, lessonKey, pathOpen, lessonUnlocked, findPath } from '../core/curriculum.js';
 import { pick } from '../runs.js';
+import { CUSTOM_OPS, CUSTOM_LEVELS, CUSTOM_SPEEDS, CUSTOM_ENDS, customRecordKey } from '../core/rain.js';
 
 export const topbar = (title, sub) => h('header.topbar',
   h('button.icon-btn.back', { aria: { label: t('common.back') }, on: { click: () => { sfx.tap(); app.back(); } } }, icon('back')),
@@ -42,6 +43,40 @@ registerScreen('setupTime', (app) => {
   h('p.note', { style: { marginTop: '12px' } }, t('rain.timeRules')),
   h('p.note', t('rain.specials')),
   h('button.btn.primary.block.lg', { id: 'startTime', style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'time', args: { dur: pref.dur, diff: pref.diff } }); } } }, icon('play'), t('common.start')));
+  paintRec();
+  return { el };
+});
+
+/* ---------------- تحدّيك الخاص (لعب حر بالمطر) ---------------- */
+registerScreen('setupCustom', (app) => {
+  const pref = (app.data.prefs.custom ||= { ops: ['add', 'sub', 'mul'], level: 'medium', speed: 'fast', end: 't60', accel: true });
+  const el = h('main', topbar(t('mode.custom'), t('mode.customSub')));
+  const recBox = h('div.chip.gold');
+  const paintRec = () => { const r = app.data.records[customRecordKey(pref)]; recBox.textContent = r ? '🏆 ' + t('setup.record', { n: num(r.value) }) : t('setup.noRecord'); };
+  const save = () => { app.save(); paintRec(); };
+  // العمليات (اختيار متعدد)
+  const opsBox = h('div.chips', { role: 'group', aria: { label: t('cus.ops') } });
+  for (const o of CUSTOM_OPS) {
+    const b = h('button.chip-toggle', { type: 'button', aria: { pressed: String(pref.ops.includes(o)) } }, t('op.' + o));
+    b.addEventListener('click', () => {
+      sfx.tap();
+      const on = pref.ops.includes(o);
+      if (on && pref.ops.length === 1) return toast(t('cus.oneOp'));
+      pref.ops = on ? pref.ops.filter((x) => x !== o) : [...pref.ops, o];
+      b.setAttribute('aria-pressed', String(!on)); save();
+    });
+    opsBox.appendChild(b);
+  }
+  const accelSw = h('button.switch', { role: 'switch', aria: { checked: String(!!pref.accel), label: t('cus.accel') } });
+  accelSw.addEventListener('click', () => { sfx.tap(); pref.accel = !pref.accel; accelSw.setAttribute('aria-checked', String(pref.accel)); save(); });
+  el.append(h('section.card',
+    field(t('cus.ops'), opsBox),
+    field(t('cus.level'), seg(CUSTOM_LEVELS.map((d) => [d, t('diff.' + d)]), pref.level, (v) => { pref.level = v; save(); }, t('cus.level'))),
+    field(t('cus.speedLabel'), seg(Object.keys(CUSTOM_SPEEDS).map((s) => [s, t('cus.speed.' + s)]), pref.speed, (v) => { pref.speed = v; save(); }, t('cus.speedLabel'))),
+    field(t('cus.end'), seg(CUSTOM_ENDS.map((e) => [e, t('cus.end.' + e)]), pref.end, (v) => { pref.end = v; save(); }, t('cus.end'))),
+    h('div.row', { style: { marginTop: '8px' } }, h('div.grow', h('div.t', t('cus.accel')), h('div.d', t('cus.accelSub'))), accelSw),
+    recBox),
+  h('button.btn.primary.block.lg', { id: 'startCustom', style: { marginTop: '12px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'custom', args: { ...pref, ops: [...pref.ops] } }); } } }, icon('play'), t('common.start')));
   paintRec();
   return { el };
 });

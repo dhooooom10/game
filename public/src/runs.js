@@ -8,12 +8,12 @@ import { findPath, lessonKey } from './core/curriculum.js';
 import { parTime } from './core/questions.js';
 import { accuracyBonus } from './core/scoring.js';
 import { randomSeed } from './core/rng.js';
-import { rainConfig } from './core/rain.js';
+import { rainConfig, customConfig, customRecordKey } from './core/rain.js';
 import { journeyRain, evaluateRainJourney, dailyRain, stormConfig, survivalConfig } from './core/modes.js';
 import { t } from './i18n.js';
 
 export const PERSISTED = new Set(['practice', 'lesson']);
-export const RAIN_PERSISTED = new Set(['journey', 'time', 'survival', 'daily']);
+export const RAIN_PERSISTED = new Set(['journey', 'time', 'survival', 'daily', 'custom']);
 
 /* ---------- أسئلة الشرح التفاعلي (ثابتة وسهلة) ---------- */
 const N = (n) => ({ n });
@@ -192,6 +192,7 @@ export function buildRainRun(kind, args, data, seed = randomSeed()) {
     }
     case 'time': cfg = stormConfig(args.diff, args.dur, true); meta.label = `${t('mode.time')} · ${t('diff.' + args.diff)}`; break;
     case 'survival': cfg = survivalConfig(args.diff); meta.label = `${t('mode.survival')} · ${t('diff.' + args.diff)}`; break;
+    case 'custom': cfg = customConfig(args); meta.label = `${t('mode.custom')} · ${t('cus.speed.' + args.speed)}`; meta.tint = '#FF9F5A'; break;
     case 'daily': {
       const d = dailyRain(args.date); cfg = d.cfg; seed = d.seed;
       meta.realtime = true;
@@ -230,6 +231,9 @@ export function finishRainRun(kind, args, run, sum, data, date = todayStr()) {
       celebrate: ev.passed && (ev.stars === 3 || info.kind === 'boss'),
     });
     if (!ev.passed) view.notes.push(info.kind === 'sprint' ? t('rain.ruleSprint', { n: info.target }) : t('rain.ruleClassic', { n: info.target }));
+  } else if (kind === 'custom') {
+    round = { ...base, recordKey: customRecordKey(args), recordValue: sum.popped };
+    Object.assign(view, { title: t('cus.done', { n: sum.popped }), mood: sum.popped >= 15 ? 'cheer' : 'happy' });
   } else if (kind === 'time' || kind === 'survival') {
     const key = kind === 'time' ? timeRecordKey(args.dur, args.diff) : survivalRecordKey(args.diff);
     round = { ...base, recordKey: key, recordValue: sum.popped, duration: args.dur, diff: args.diff };
