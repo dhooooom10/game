@@ -172,11 +172,10 @@ registerScreen('rainPlay', (app, params) => {
         paintHud(true);
         continue;
       } else if (ev.type === 'wrong') {
-        // إجابة خطأ: اهتزاز + وميض أحمر + علامة ✗ + صوت
+        // إجابة خطأ: اهتزاز + وميض أحمر + صوت
         sfx.wrong(); buzz([30, 40, 30]); replay(display, 'bad');
         if (!reducedMotion()) replay(sky, 'shake');
         replay(sky, 'wrong-flash');
-        const x = h('i.wrong-x', { aria: { hidden: 'true' } }, '✗'); sky.appendChild(x); setTimeout(() => x.remove(), 650);
       } else if (ev.type === 'speedup') {
         sfx.combo(); floatText(sky, t('rain.faster'), 'gold');
         if (!reducedMotion()) replay(sky, 'speed-pulse');
