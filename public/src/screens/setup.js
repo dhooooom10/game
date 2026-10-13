@@ -9,6 +9,7 @@ import { tierPolicy } from '../core/questions.js';
 import { tierFromSkill } from '../core/adaptive.js';
 import { STAGES, PATHS, lessonKey, pathOpen, lessonUnlocked, findPath } from '../core/curriculum.js';
 import { pick } from '../runs.js';
+import { turboRow, turboOn } from '../ui/turbo.js';
 import { CUSTOM_OPS, CUSTOM_LEVELS, CUSTOM_SPEEDS, CUSTOM_ENDS, customRecordKey } from '../core/rain.js';
 
 export const topbar = (title, sub) => h('header.topbar',
@@ -33,16 +34,17 @@ registerScreen('setupTime', (app) => {
   const el = h('main', topbar(t('mode.time'), t('mode.timeSub')));
   const recBox = h('div.chip.gold');
   const paintRec = () => {
-    const r = app.data.records[timeRecordKey(pref.dur, pref.diff)];
+    const r = app.data.records[timeRecordKey(pref.dur, pref.diff) + (turboOn(app.data) ? ':turbo' : '')];
     recBox.textContent = r ? '🏆 ' + t('setup.record', { n: num(r.value) }) + ' · ' + t('prog.scoreUnit', { n: num(r.score) }) : t('setup.noRecord');
   };
   el.append(h('section.card',
     field(t('setup.duration'), seg(TIME_DURATIONS.map((d) => [d, t('common.sec', { n: d })]), pref.dur, (v) => { pref.dur = +v; app.save(); paintRec(); }, t('setup.duration'))),
     field(t('setup.difficulty'), seg(DIFFICULTIES.map((d) => [d, t('diff.' + d)]), pref.diff, (v) => { pref.diff = v; app.save(); paintRec(); }, t('setup.difficulty'))),
     recBox),
+  h('div.section', turboRow(app, { onChange: () => paintRec() })),
   h('p.note', { style: { marginTop: '12px' } }, t('rain.timeRules')),
   h('p.note', t('rain.specials')),
-  h('button.btn.primary.block.lg', { id: 'startTime', style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'time', args: { dur: pref.dur, diff: pref.diff } }); } } }, icon('play'), t('common.start')));
+  h('button.btn.primary.block.lg', { id: 'startTime', style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'time', args: { dur: pref.dur, diff: pref.diff, turbo: turboOn(app.data) } }); } } }, icon('play'), t('common.start')));
   paintRec();
   return { el };
 });
@@ -88,16 +90,17 @@ registerScreen('setupSurvival', (app) => {
   const recBox = h('div.chip.gold');
   const rules = h('p.note');
   const paint = () => {
-    const r = app.data.records[survivalRecordKey(pref.diff)];
+    const r = app.data.records[survivalRecordKey(pref.diff) + (turboOn(app.data) ? ':turbo' : '')];
     recBox.textContent = r ? '🏆 ' + t('setup.record', { n: num(r.value) }) : t('setup.noRecord');
     rules.textContent = t('rain.survRules');
   };
   el.append(h('section.card',
     field(t('setup.difficulty'), seg(DIFFICULTIES.map((d) => [d, t('diff.' + d)]), pref.diff, (v) => { pref.diff = v; app.save(); paint(); }, t('setup.difficulty'))),
     recBox),
+  h('div.section', turboRow(app, { onChange: () => paint() })),
   h('div', { style: { marginTop: '12px' } }, rules),
   h('p.note', t('rain.specials')),
-  h('button.btn.primary.block.lg', { id: 'startSurvival', style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'survival', args: { diff: pref.diff } }); } } }, icon('play'), t('common.start')));
+  h('button.btn.primary.block.lg', { id: 'startSurvival', style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'survival', args: { diff: pref.diff, turbo: turboOn(app.data) } }); } } }, icon('play'), t('common.start')));
   paint();
   return { el };
 });

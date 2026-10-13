@@ -41,6 +41,8 @@ export function newProfileData(lang = 'ar') {
     v: DATA_VERSION,
     settings: defaultSettings(lang),
     xp: 0,
+    shields: 0,          // دروع السلسلة اليومية 🛡️ (حتى ٣)
+    speedBest: 1,        // أعلى معامل سرعة بلغه اللاعب
     journey: { unlocked: 1, stars: {}, best: {} },
     lessons: { done: {}, unlocked: {} },
     records: {},
@@ -52,7 +54,7 @@ export function newProfileData(lang = 'ar') {
     badges: {},
     cosmetics: { theme: 'rain', skin: 'sky', acc: 'none' },
     committed: [],
-    prefs: { practice: { topics: ['add', 'sub'], level: 'auto', format: 'mixed', timer: false, length: 10 }, time: { dur: 60, diff: 'medium' }, survival: { diff: 'medium' }, friend: { names: ['', ''], count: 10, diff: 'medium', layout: 'turns' }, rain: { diff: 'medium' }, custom: { ops: ['add', 'sub', 'mul'], level: 'medium', speed: 'fast', end: 't60', accel: true } },
+    prefs: { practice: { topics: ['add', 'sub'], level: 'auto', format: 'mixed', timer: false, length: 10 }, time: { dur: 60, diff: 'medium' }, survival: { diff: 'medium' }, friend: { names: ['', ''], count: 10, diff: 'medium', layout: 'turns' }, rain: { diff: 'medium' }, custom: { ops: ['add', 'sub', 'mul'], level: 'medium', speed: 'fast', end: 't60', accel: true }, turbo: { on: false } },
   };
 }
 
@@ -127,6 +129,7 @@ export const BADGES = [
   { id: 'speed20', icon: '⚡' }, { id: 'survive25', icon: '🛡️' }, { id: 'daily3', icon: '📅' }, { id: 'daily7', icon: '🗓️' },
   { id: 'world1', icon: '🌦️' }, { id: 'world5', icon: '🌊' }, { id: 'world10', icon: '👑' }, { id: 'allstars', icon: '🌟' },
   { id: 'allround', icon: '🧭' }, { id: 'friend', icon: '🤝' }, { id: 'scholar', icon: '🎓' }, { id: 'rain', icon: '💧' },
+  { id: 'fever', icon: '🔥' }, { id: 'gift', icon: '🎁' }, { id: 'speedx2', icon: '🏎️' }, { id: 'speedx3', icon: '🚀' }, { id: 'turbo', icon: '⚡' },
 ];
 
 function checkBadges(data, round) {
@@ -157,6 +160,11 @@ function checkBadges(data, round) {
   give('friend', st.friendMatches >= 1);
   give('scholar', round && round.mode === 'lesson' && round.pathComplete);
   give('rain', round && round.mode === 'rain' && round.passed && (round.diff === 'hard' || round.diff === 'expert'));
+  give('fever', round && (round.fevers || 0) >= 1);
+  give('gift', round && (round.gifts || 0) >= 1);
+  give('speedx2', round && (round.speedX || 1) >= 2);
+  give('speedx3', round && (round.speedX || 1) >= 3);
+  give('turbo', round && round.turbo && (round.correct || 0) >= 20);
   return earn;
 }
 
@@ -317,7 +325,13 @@ export function currentDailyStreak(data, date = todayStr()) {
   const last = data.daily.last;
   if (!last) return 0;
   const gap = dayDiff(last, date);
-  return gap <= 1 ? data.daily.streak : 0;
+  // الأيام الفائتة تُغطّى بدروع السلسلة 🛡️ إن وُجدت (تُستهلك عند اللعب التالي)
+  return gap <= 1 || gap - 1 <= (data.shields || 0) ? data.daily.streak : 0;
+}
+/** عدد الدروع اللازمة لإنقاذ السلسلة اليوم (٠ = لا حاجة) */
+export function shieldsNeeded(data, date = todayStr()) {
+  if (!data.daily.last) return 0;
+  return Math.max(0, dayDiff(data.daily.last, date) - 1);
 }
 /** يسجّل نتيجة المحاولة الرسمية لليوم (مرة واحدة). يعيد true إن كانت رسمية. */
 export function recordDaily(data, date, result) {
@@ -326,7 +340,11 @@ export function recordDaily(data, date, result) {
   const keys = Object.keys(data.daily.results).sort();
   while (keys.length > 60) delete data.daily.results[keys.shift()];
   const gap = data.daily.last ? dayDiff(data.daily.last, date) : null;
-  data.daily.streak = gap === 1 ? data.daily.streak + 1 : gap === 0 ? data.daily.streak : 1;
+  const missed = gap != null && gap > 1 ? gap - 1 : 0;
+  if (missed && missed <= (data.shields || 0)) {
+    data.shields -= missed; data.daily.shieldUsed = date;
+    data.daily.streak += 1;
+  } else data.daily.streak = gap === 1 ? data.daily.streak + 1 : gap === 0 ? data.daily.streak : 1;
   data.daily.bestStreak = Math.max(data.daily.bestStreak || 0, data.daily.streak);
   data.daily.last = date;
   data.daily.best = Math.max(data.daily.best || 0, result.score);

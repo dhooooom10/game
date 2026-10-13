@@ -52,7 +52,11 @@ export const sfx = {
   wrong: () => { tone(220, 0.16, 'triangle', 0, 0.16); tone(180, 0.2, 'triangle', 0.08, 0.12); },
   combo: () => [784, 988, 1319].forEach((f, i) => tone(f, 0.09, 'triangle', i * 0.05, 0.12)),
   tick: () => tone(1200, 0.03, 'square', 0, 0.03),
-  pop: () => { tone(700, 0.07, 'sine', 0, 0.16); tone(1050, 0.09, 'sine', 0.05, 0.12); },
+  // الطبقة ترتفع مع السلسلة (حتى أوكتاف تقريبًا) — إحساس «الاندفاع»
+  pop: (streak = 0) => { const k = Math.pow(2, Math.min(12, Math.max(0, streak - 1)) / 12); tone(700 * k, 0.07, 'sine', 0, 0.16); tone(1050 * k, 0.09, 'sine', 0.05, 0.12); },
+  fever: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.12, 'square', i * 0.06, 0.07)),
+  gift: () => [1047, 1319, 1568, 2093].forEach((f, i) => tone(f, 0.1, 'triangle', i * 0.07, 0.11)),
+  record: () => [659, 784, 988, 1319, 1568].forEach((f, i) => tone(f, 0.14, 'triangle', i * 0.08, 0.13)),
   splash: () => { tone(200, 0.18, 'sine', 0, 0.14); tone(130, 0.22, 'triangle', 0.05, 0.1); },
   win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.18, 'sine', i * 0.1, 0.16)),
   fanfare: () => [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, 0.2, 'triangle', i * 0.09, 0.14)),

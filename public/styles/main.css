@@ -741,3 +741,61 @@ details.card summary { cursor: pointer; font-weight: 800; }
 .chip-toggle { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--muted); font: inherit; font-weight: 800; cursor: pointer; }
 .chip-toggle[aria-pressed="true"] { background: color-mix(in srgb, var(--primary) 25%, var(--surface-2)); color: var(--ink); border-color: var(--primary); }
 
+
+/* ===================== التيربو ⚡ والحمّى 🔥 وخط الشبح ===================== */
+.turbo-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 18px; cursor: pointer; user-select: none;
+  background: var(--surface); border: 1px solid var(--line-strong); transition: background .25s, border-color .25s, box-shadow .25s; }
+.turbo-row .t { font-weight: 900; }
+.turbo-row .d { font-size: .82rem; color: var(--muted); }
+.turbo-row.compact { margin: 4px 0 12px; padding: 10px 12px; }
+.turbo-ic { font-size: 1.5rem; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--surface-2); filter: grayscale(.7); transition: filter .25s, transform .25s; }
+.turbo-row[data-on="true"] { border-color: #FF9F5A; background: linear-gradient(100deg, color-mix(in srgb, #FF9F5A 22%, var(--surface)), color-mix(in srgb, #FFC94A 12%, var(--surface)));
+  box-shadow: 0 0 0 1px rgba(255, 159, 90, .35), 0 6px 24px -10px rgba(255, 159, 90, .7); }
+.turbo-row[data-on="true"] .turbo-ic { filter: none; background: #FF9F5A; transform: rotate(-8deg); animation: turboGlow 1.6s ease-in-out infinite; }
+.turbo-row[data-on="true"] .switch { background: #FF9F5A; }
+@keyframes turboGlow { 50% { box-shadow: 0 0 16px 2px rgba(255, 159, 90, .7); } }
+
+.speed-chip { font-variant-numeric: tabular-nums; }
+.shield-chip { background: color-mix(in srgb, #5FD3F5 22%, var(--surface-2)); }
+.pill-col { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.shield-box { margin: 10px 0 14px; padding: 12px; border-radius: 14px; background: var(--surface-2); display: grid; gap: 6px; }
+.shield-box .t { font-weight: 900; }
+.shield-box .d { font-size: .85rem; color: var(--muted); }
+.shield-box .d.ok { color: var(--ok); font-weight: 800; }
+.shield-box .btn { justify-self: start; }
+
+/* خط الشبح: تقدّمك مقابل رقمك القياسي */
+.chase { display: flex; align-items: center; gap: 8px; margin: 2px 2px 6px; font-size: .78rem; font-weight: 800; color: var(--muted); }
+.chase-bar { position: relative; flex: 1; height: 6px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+.chase-bar i { position: absolute; inset: 0; transform-origin: left center; transform: scaleX(0); background: linear-gradient(90deg, #38D6F5, #FFC94A); border-radius: inherit; transition: transform .25s; }
+[dir="rtl"] .chase-bar i { transform-origin: right center; }
+.chase-mark { position: absolute; top: -3px; bottom: -3px; inset-inline-end: 0; width: 3px; background: #FFC94A; border-radius: 2px; }
+.chase.broken .chase-bar i { background: linear-gradient(90deg, #FFC94A, #FF7BB0); }
+.chase.broken { color: #FFC94A; }
+
+/* الحمّى: حواف نارية وقطرات دافئة */
+.sky.fever::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 60; border-radius: inherit;
+  box-shadow: inset 0 0 0 2px rgba(255, 159, 90, .8), inset 0 0 60px rgba(255, 120, 60, .35); animation: feverPulse 1s ease-in-out infinite; }
+.sky.fever .drop:not(.k-gold):not(.k-ice):not(.k-storm):not(.near) { --tint: #FFB86B; }
+.rain-view.fever .streak-chip { background: linear-gradient(90deg, #FF7B3A, #FFC94A); color: #2A1200; }
+@keyframes feverPulse { 50% { box-shadow: inset 0 0 0 3px rgba(255, 201, 74, .95), inset 0 0 90px rgba(255, 120, 60, .5); } }
+/* السرعة العالية: خطوط المطر أسرع */
+.sky.hyper .sky-streaks { animation-duration: .45s !important; opacity: .5; }
+.sky.hyper .sky-streaks.far { animation-duration: .9s !important; }
+.drop.k-gift { --tint: #FF8FD0; }
+.drop.k-gift .drop-shape { filter: drop-shadow(0 0 8px rgba(255, 143, 208, .6)); }
+[data-motion="reduce"] .sky.fever::after, [data-motion="reduce"] .turbo-row[data-on="true"] .turbo-ic { animation: none; }
+@media (prefers-reduced-motion: reduce) { :root:not([data-motion="full"]) .sky.fever::after, :root:not([data-motion="full"]) .turbo-row[data-on="true"] .turbo-ic { animation: none; } }
+
+/* نتيجة: «كدت تكسرها» وشارة السرعة والهدايا */
+.near-miss { margin: 10px 0; padding: 12px 14px; border-radius: 16px; text-align: center; font-weight: 900; font-size: 1.05rem;
+  background: linear-gradient(100deg, color-mix(in srgb, #FF7BB0 25%, var(--surface)), color-mix(in srgb, #FFC94A 18%, var(--surface))); border: 1px solid rgba(255, 123, 176, .5); }
+.speed-badge { display: flex; align-items: center; gap: 10px; margin: 10px 0; padding: 10px 14px; border-radius: 16px; background: var(--surface-2); }
+.speed-badge .sb-ic { font-size: 1.6rem; }
+.speed-badge .sb-t { font-weight: 900; }
+.speed-badge .sb-d { font-size: .82rem; color: var(--muted); }
+.speed-badge[data-tier="1"] { box-shadow: inset 0 0 0 1px #C98A4B; }
+.speed-badge[data-tier="2"] { box-shadow: inset 0 0 0 1px #C9D3DD; }
+.speed-badge[data-tier="3"] { box-shadow: inset 0 0 0 1px #FFC94A; }
+.speed-badge[data-tier="4"] { box-shadow: inset 0 0 0 1px #7CF0FF, 0 0 18px -6px #7CF0FF; }
+.gift-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0; }

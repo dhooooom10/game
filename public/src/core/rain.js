@@ -6,7 +6,8 @@
      والتحقق من النتيجة (لا يُقبل أي رقم مرسل من الجهاز دون إعادة حسابه).
    • قواعد العدالة: زمن سقوط القطرة ≥ زمن حلّها المتوقع × 1.3 دائمًا.
    • قطرات خاصة (اختيارية): ذهبية (نقاط ×2)، جليدية (تبطئ المطر 5 ثوانٍ)،
-     برقية (تفجّر كل القطرات الظاهرة).
+     برقية (تفجّر كل القطرات الظاهرة)، غامضة 🎁 (مكافأة نقاط عشوائية من البذرة).
+   • وضع الحمّى 🔥: من الإجابة الصحيحة العاشرة المتتالية تتضاعف النقاط حتى أول خطأ.
    ========================================================================= */
 import { createRng } from './rng.js';
 import { createQuestionFactory } from './questions.js';
@@ -15,6 +16,8 @@ import { answerPoints } from './scoring.js';
 export const TPS = 60;                 // نبضة في الثانية
 export const TICK_MS = 1000 / TPS;
 const ICE_TICKS = 5 * TPS;
+export const FEVER_AT = 10;            // سلسلة الدخول في وضع الحمّى
+export const GIFT_BONUS = [40, 80, 120, 200];
 
 /** إعدادات افتراضية — كل نمط يغيّر ما يحتاجه */
 export function rainConfig(o = {}) {
@@ -56,7 +59,11 @@ export function createRain(cfgIn, seed = 1) {
     rampLevel: 0, tierBoost: 0,
     log: [], queue: [], answers: [], timeline: [],
     lastEvent: null,
+    fevers: 0, gifts: 0, giftPts: 0,
   };
+  const inFever = () => S.streak >= FEVER_AT;
+  /** يقطع السلسلة، ويعلن انتهاء الحمّى إن كانت قائمة */
+  const breakStreak = (events) => { if (inFever()) events.push({ type: 'feverEnd' }); S.streak = 0; };
 
   // التسارع الزمني: كل ١٠ ثوانٍ تصبح القطرات أسرع (حتمي بالنبضات، فيُعاد كما هو على الخادم)
   const accelStep = () => (cfg.accel ? Math.floor(S.tick / (ACCEL_EVERY * TPS)) : 0);
@@ -86,7 +93,7 @@ export function createRain(cfgIn, seed = 1) {
     let kind = 'normal';
     if (cfg.specials) {
       const r = rng.next();
-      kind = r < 0.07 ? 'gold' : r < 0.11 ? 'ice' : r < 0.14 ? 'storm' : 'normal';
+      kind = r < 0.06 ? 'gold' : r < 0.10 ? 'ice' : r < 0.13 ? 'storm' : r < 0.16 ? 'gift' : 'normal';
     }
     // موضع أفقي بعيد عن القطرات القريبة من الأعلى حتى لا تتراكب (حتمي: من البذرة)
     let x = rng.next(), bestGap = -1;
@@ -108,10 +115,15 @@ export function createRain(cfgIn, seed = 1) {
     const p = answerPoints({ correct: true, tier: d.q.tier, streak: S.streak });
     let pts = p.total + Math.round(50 * height);
     if (d.kind === 'gold') pts *= 2;
+    if (S.streak > FEVER_AT) pts *= 2;              // الحمّى: كل إصابة بعد الدخول نقاطها مضاعفة
+    if (S.streak === FEVER_AT) { S.fevers++; events.push({ type: 'fever' }); }
+    let gift = 0;
+    if (d.kind === 'gift') { gift = rng.pick(GIFT_BONUS); pts += gift; S.gifts++; S.giftPts += gift; }
     S.score += pts;
     const ms = Math.round((S.tick - d.born) * TICK_MS);
     S.answers.push({ op: d.q.op, topic: d.q.topic, tier: d.q.tier, format: d.q.format, correct: true, ms: chain ? null : ms });
-    events.push({ type: 'pop', drop: d, points: pts, chain });
+    events.push({ type: 'pop', drop: d, points: pts, chain, fever: S.streak > FEVER_AT });
+    if (gift) events.push({ type: 'gift', drop: d, bonus: gift });
     if (cfg.ramp && S.popped % (cfg.ramp.every || 5) === 0) S.rampLevel++;
     if (cfg.ramp?.tierEvery && S.popped % cfg.ramp.tierEvery === 0) S.tierBoost = Math.min(cfg.ramp.tierMax ?? 3, S.tierBoost + 1);
     if (!chain && d.kind === 'ice') { S.iceUntil = S.tick + ICE_TICKS; events.push({ type: 'ice' }); }
@@ -142,7 +154,7 @@ export function createRain(cfgIn, seed = 1) {
       return;
     }
     if (forced || !pre) {
-      S.wrong++; S.streak = 0; S.typed = '';
+      S.wrong++; breakStreak(events); S.typed = '';
       events.push({ type: 'wrong' });
     }
   }
@@ -193,7 +205,7 @@ export function createRain(cfgIn, seed = 1) {
         d.y += d.speed * slow;
         if (d.y >= 1) {
           d.dead = true; d.missedAt = S.tick;
-          S.missed++; S.streak = 0;
+          S.missed++; breakStreak(events);
           S.answers.push({ op: d.q.op, topic: d.q.topic, tier: d.q.tier, format: d.q.format, correct: false, ms: null, timeout: true });
           if (S.lives != null) S.lives--;
           events.push({ type: 'miss', drop: d });
@@ -220,6 +232,9 @@ export function createRain(cfgIn, seed = 1) {
     },
     /** إنهاء يدوي (خروج) */
     quit() { const ev = []; end('quit', false, ev); return ev; },
+    /** معامل السرعة الحالي (١ = عادي، ٢ = ضعف السرعة) */
+    speedX() { return +(1 / accelF()).toFixed(2); },
+    fever: inFever,
     remainingMs() { return limitTicks ? Math.max(0, (limitTicks - S.tick) * TICK_MS) : null; },
     summary() {
       const answered = S.popped + S.missed + S.wrong;
@@ -232,6 +247,7 @@ export function createRain(cfgIn, seed = 1) {
         lives: S.lives, ticks: S.tick, activeMs: Math.round(S.tick * TICK_MS), timeLeftMs: api.remainingMs(),
         avgMs: timed.length ? Math.round(timed.reduce((s, a) => s + a.ms, 0) / timed.length) : null,
         perOp, answers: S.answers.slice(), skipped: 0,
+        speedX: api.speedX(), fevers: S.fevers, gifts: S.gifts, giftPts: S.giftPts,
       };
     },
   };
@@ -299,6 +315,25 @@ export function customConfig({ ops = ['add', 'sub'], level = 'medium', speed = '
   return rainConfig({ tiers, ...sp, specials: true, lives: end === 'lives' ? 3 : null, timeLimit: end === 't120' ? 120 : end === 't60' ? 60 : null, accel: accel ? 0.08 : null });
 }
 export const customRecordKey = (o) => `custom:${[...o.ops].sort().join('')}:${o.level}:${o.speed}:${o.end}:${o.accel ? 1 : 0}`;
+
+/* ---------------- التيربو ⚡: تسارع مرعب بأرقام سهلة ----------------
+   الصعوبة من السرعة لا من الحساب: المستويات تُحدّ بـ٣ (جمع حتى ١٥، ضرب حتى ١٠×١٠)،
+   والتسارع ١٤٪ كل ١٠ ثوانٍ، وأرضية العدالة أخفض حتى تشعر بالسرعة فعلًا. */
+export const TURBO_ACCEL = 0.14;
+export const TURBO_TIER_MAX = 3;
+export function turbo(cfgIn) {
+  const cfg = rainConfig(cfgIn);
+  const tiers = Object.fromEntries(Object.entries(cfg.tiers).map(([op, t]) => [op, Math.min(t, TURBO_TIER_MAX)]));
+  return { ...cfg, tiers, accel: Math.max(cfg.accel || 0, TURBO_ACCEL), fair: Math.min(cfg.fair ?? 1.3, 0.75), minTravel: Math.min(cfg.minTravel ?? 3, 1.9),
+    ramp: cfg.ramp ? { ...cfg.ramp, tierEvery: null } : null, turbo: true };
+}
+/** مباراة التيربو أونلاين (ساحة مستقلة) */
+export const TURBO_DUEL = { seconds: 60 };
+export const turboDuelConfig = () => turbo(rainConfig({ tiers: { add: 2, sub: 2, mul: 2 }, travel: 7.5, spawn: 2.1, maxDrops: 4, lives: null, timeLimit: TURBO_DUEL.seconds, specials: true,
+  ramp: { every: 6, mul: 0.96 } }));
+/** مستوى السرعة الذي بلغه اللاعب: ٠ عادي، ١ برونزي ×١٫٥، ٢ فضي ×٢، ٣ ذهبي ×٢٫٥، ٤ ماسي ×٣ */
+export const SPEED_TIERS = [1.5, 2, 2.5, 3];
+export const speedTier = (x) => SPEED_TIERS.filter((v) => (x || 1) >= v - 1e-9).length;
 
 /** عاصفة الوقت: أكبر عدد من القطرات خلال مدة محددة (بلا قلوب، المطر يشتد) */
 /** accel: تسارع زمني (للمنافسة أونلاين وبين الأصدقاء: ٠٫٠٧ = أسرع ٧٪ كل ١٠ ثوانٍ) */

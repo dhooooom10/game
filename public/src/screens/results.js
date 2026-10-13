@@ -12,6 +12,7 @@ import { dailyShareText, shareText, shareUrl } from '../ui/share.js';
 import { toast } from '../ui/fx.js';
 import { track } from '../net/analytics.js';
 import * as ads from '../net/ads.js';
+import { speedText } from './rain.js';
 
 registerScreen('results', (app, { view }) => {
   const data = app.data;
@@ -35,6 +36,20 @@ registerScreen('results', (app, { view }) => {
   if (view.bonus) hero.appendChild(h('div.chip.ok', { style: { marginTop: '6px' } }, t('res.accBonus', { n: view.bonus })));
   if (view.record?.prev) hero.appendChild(h('div.faint', t('res.prevBest', { n: num(view.record.prev) })));
   el.appendChild(hero);
+  // «كدت تكسرها!» — أقوى دافع لمحاولة أخرى
+  if (view.nearMiss) el.appendChild(h('div.near-miss', { id: 'nearMiss' }, '😱 ', view.nearMiss.journey ? t('res.nearJourney', { n: num(view.nearMiss.left) }) : t('res.nearMiss', { n: num(view.nearMiss.left) })));
+  // شارة السرعة التي بلغتها
+  if (view.speed && view.speed.x >= 1.15) {
+    const tier = view.speed.tier;
+    el.appendChild(h('div.speed-badge', { 'data-tier': String(tier) },
+      h('span.sb-ic', ['💨', '🥉', '🥈', '🥇', '💎'][tier]),
+      h('div.grow', h('div.sb-t', t('res.speedTier.' + tier), ' · ⚡ ', speedText(view.speed.x)),
+        h('div.sb-d', view.speed.newBest ? t('res.speedBest') : t('res.speedPrev', { x: speedText(view.speed.prevBest) })))));
+  }
+  // القطرات الغامضة
+  if (view.giftRewards?.length) {
+    el.appendChild(h('div.gift-list', ...view.giftRewards.map((g) => h('span.chip' + (g.type === 'shield' ? '.ok' : '.gold'), g.type === 'shield' ? '🎁 🛡️ ' + t('shield.one') : '🎁 \u2066+' + num(g.xp) + ' XP\u2069'))));
+  }
   for (const n of view.notes) el.appendChild(h('p.note', { style: { textAlign: 'center', margin: '6px 0 0' } }, n));
 
   // الإحصاءات
@@ -108,7 +123,7 @@ registerScreen('results', (app, { view }) => {
   if (view.kind === 'journey') {
     const L = view.args.level;
     if (view.passed && L < TOTAL_LEVELS) {
-      btns.append(h('button.btn.block.lg.primary', { on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'journey', args: { level: L + 1 } }, { replace: true }); } } }, icon('play'), t('res.next')), replayBtn(t('res.retry'), false));
+      btns.append(h('button.btn.block.lg.primary', { on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'journey', args: { level: L + 1, turbo: !!view.args.turbo } }, { replace: true }); } } }, icon('play'), t('res.next')), replayBtn(t('res.retry'), false));
     } else btns.append(replayBtn(t('res.retry')));
     btns.append(h('button.btn.block.ghost', { on: { click: () => { sfx.tap(); app.go('world', { w: worldOf(L) }, { replace: true }); } } }, icon('map'), t('jr.worldN', { n: worldOf(L) + 1 }) + ' · ' + t('world.' + WORLDS[worldOf(L)].key)));
   } else if (view.kind === 'lesson') {
@@ -154,7 +169,7 @@ registerScreen('results', (app, { view }) => {
       countUp(scoreEl, view.score, { fmt: num, ms: 1000 });
       if (view.celebrate || (rw && (rw.levelAfter > rw.levelBefore || rw.badges.length))) {
         setTimeout(() => { sfx.fanfare(); buzz([20, 60, 20]); confetti(); }, reducedMotion() ? 0 : 300);
-      } else if (view.passed === false) sfx.lose();
+      } else if (view.passed === false || view.nearMiss) { sfx.lose(); if (view.nearMiss) buzz([40, 30, 40]); }
       else sfx.win();
     },
   };

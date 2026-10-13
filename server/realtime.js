@@ -4,7 +4,7 @@
    ========================================================================= */
 import { WebSocketServer } from 'ws';
 import { randomBytes, randomInt } from 'node:crypto';
-import { stormConfig, TICK_MS, COMPETITIVE_ACCEL } from '../public/src/core/rain.js';
+import { stormConfig, TICK_MS, COMPETITIVE_ACCEL, turbo, turboDuelConfig } from '../public/src/core/rain.js';
 import { newId, DUEL, EMOTES, HttpError } from './services.js';
 
 const COLORS = ['#FF7BB0', '#FFC94A', '#3DDC97', '#9B8CFF', '#FF9F5A', '#7CF0D0', '#5FD3F5', '#E06FA8'];
@@ -12,7 +12,7 @@ const COLORS = ['#FF7BB0', '#FFC94A', '#3DDC97', '#9B8CFF', '#FF9F5A', '#7CF0D0'
 export function createRealtime(httpServer, svc, db, { now = () => Date.now(), queueWaitMs = 12000, startDelayMs = 4000, graceMs = 15000, forceSeconds = null } = {}) {
   const wss = new WebSocketServer({ server: httpServer, path: '/ws', maxPayload: 512 * 1024 });
   const clients = new Map();       // playerId -> Set<ws>
-  const queue = [];                // [{ws, pid, at, rating}]
+  const queue = [];                // [{player, at, rating, mode}] — mode: duel | turbo (ساحة التيربو ⚡)
   const rooms = new Map();         // code -> room
   const matches = new Map();       // id -> match
 
@@ -66,13 +66,16 @@ export function createRealtime(httpServer, svc, db, { now = () => Date.now(), qu
   /* ---------------- قائمة الانتظار ---------------- */
   function tryMatch() {
     queue.sort((a, b) => a.at - b.at);
-    while (queue.length >= 2) {
-      const a = queue.shift();
-      // أقرب تصنيف لمن ينتظر أطول
-      let bi = 0, best = Infinity;
-      queue.forEach((q, i) => { const d = Math.abs(q.rating - a.rating); if (d < best) { best = d; bi = i; } });
-      const b = queue.splice(bi, 1)[0];
-      createMatch('duel', [a.player, b.player]);
+    for (let ai = 0; ai < queue.length; ai++) {
+      const a = queue[ai];
+      // أقرب تصنيف لمن ينتظر أطول (في نفس الساحة فقط)
+      let bi = -1, best = Infinity;
+      queue.forEach((q, i) => { if (i === ai || q.mode !== a.mode) return; const d = Math.abs(q.rating - a.rating); if (d < best) { best = d; bi = i; } });
+      if (bi < 0) continue;
+      const b = queue[bi];
+      queue.splice(Math.max(ai, bi), 1); queue.splice(Math.min(ai, bi), 1);
+      createMatch('duel', [a.player, b.player], a.mode === 'turbo' ? { cfg: turboDuelConfig() } : {});
+      ai = -1;
     }
   }
   setInterval(() => {
@@ -81,7 +84,7 @@ export function createRealtime(httpServer, svc, db, { now = () => Date.now(), qu
       const q = queue[i];
       if (Date.now() - q.at < queueWaitMs) continue;
       queue.splice(i, 1);
-      const g = svc.pickGhost(q.player.id);
+      const g = svc.pickGhost(q.player.id, { turbo: q.mode === 'turbo' });
       if (!g) { sendTo(q.player.id, { t: 'queue.empty' }); continue; }
       createMatch('ghost', [q.player], { seed: g.seed, cfg: JSON.parse(g.cfg), ghosts: [{ id: 'ghost:' + g.pid, name: g.name, score: g.score, timeline: JSON.parse(g.timeline) }] });
     }
@@ -105,14 +108,15 @@ export function createRealtime(httpServer, svc, db, { now = () => Date.now(), qu
     seconds: [30, 60, 90, 120].includes(+s.seconds) ? +s.seconds : 60,
     mode: s.mode === 'teams' ? 'teams' : 'race',
     specials: s.specials !== false,
+    turbo: !!s.turbo,
   });
 
   /* ---------------- الرسائل ---------------- */
   const handlers = {
-    queue(ws) {
+    queue(ws, msg) {
       if (queue.some((q) => q.player.id === ws.player.id)) return;
       leaveRoom(ws.player.id);
-      queue.push({ player: ws.player, at: Date.now(), rating: svc.rating(ws.player.id).rating });
+      queue.push({ player: ws.player, at: Date.now(), rating: svc.rating(ws.player.id).rating, mode: msg?.mode === 'turbo' ? 'turbo' : 'duel' });
       send(ws, { t: 'queue.joined', waitMs: queueWaitMs });
       tryMatch();
     },
@@ -151,7 +155,8 @@ export function createRealtime(httpServer, svc, db, { now = () => Date.now(), qu
       const r = [...rooms.values()].find((x) => x.members.has(ws.player.id));
       if (!r || r.host !== ws.player.id || r.match) return;
       if (r.members.size < 2) return send(ws, { t: 'error', code: 'need_players' });
-      const cfg = stormConfig(r.settings.diff, r.settings.seconds, r.settings.specials, COMPETITIVE_ACCEL);
+      const base = stormConfig(r.settings.diff, r.settings.seconds, r.settings.specials, COMPETITIVE_ACCEL);
+      const cfg = r.settings.turbo ? turbo(base) : base;
       r.match = createMatch('room', [...r.members.values()], { cfg, room: r });
       broadcastRoom(r);
     },

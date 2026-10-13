@@ -20,6 +20,9 @@ import { buildDrop, sizeDrop, dropDefsSVG, popBurst, groundSplash } from '../ui/
 import * as ads from '../net/ads.js';
 
 
+/** «×١٫٤» معزولة الاتجاه حتى لا تنقلب في الواجهة العربية */
+export const speedText = (x) => '\u2066×' + num((x || 1).toFixed(1)) + '\u2069';
+
 /* ---------------- اللعب ---------------- */
 registerScreen('rainPlay', (app, params) => {
   const data = app.data;
@@ -42,6 +45,12 @@ registerScreen('rainPlay', (app, params) => {
   const goalEl = h('span.chip');
   const timerFill = h('i'); const timerEl = h('div.timer', timerFill); const timerText = h('span.timer-text');
   const iceEl = h('span.chip.ice-chip', { hidden: true }, '❄️');
+  const speedEl = h('span.chip.speed-chip', { hidden: !cfg.accel, aria: { label: t('rain.speedA11y') } });
+  // خط الشبح: تقدّمك الآن مقابل رقمك القياسي — اكسره أمام عينيك
+  const chase = meta.chase || null;
+  let chaseBroken = false;
+  const chaseFill = h('i'); const chaseText = h('span.chase-t');
+  const chaseEl = chase ? h('div.chase', { aria: { hidden: 'true' } }, h('div.chase-bar', chaseFill, h('b.chase-mark')), chaseText) : null;
   const oppBox = h('div.opp-box', { hidden: !online });
   // لون القطرات العادية = لون مظهر اللاعب (السماوي الافتراضي يبقى كما هو)
   const skinTint = app.data.cosmetics.skin && app.data.cosmetics.skin !== 'sky' ? SKINS[app.data.cosmetics.skin]?.[0] : null;
@@ -78,8 +87,8 @@ registerScreen('rainPlay', (app, params) => {
   if (R.limitTicks) center.append(h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, h('div', { style: { flex: '1' } }, timerEl), timerText));
   const el = h('main.game-view.rain-view',
     h('div.hud', quitBtn, center, pauseBtn, h('div.score', scoreEl, h('small', t('game.score')))),
-    h('div.hud-sub', h('span.label', meta.label), goalEl, streakEl, iceEl, livesEl),
-    oppBox, h('div.sky-wrap', sky, coach), h('div.answer-area', display, kp), live);
+    h('div.hud-sub', h('span.label', meta.label), goalEl, streakEl, speedEl, iceEl, livesEl),
+    chaseEl, oppBox, h('div.sky-wrap', sky, coach), h('div.answer-area', display, kp), live);
 
   /* ---------- HUD ---------- */
   function paintHud(lost = false) {
@@ -93,8 +102,22 @@ registerScreen('rainPlay', (app, params) => {
     goalEl.hidden = !cfg.target;
     if (cfg.target) goalEl.textContent = '💧 ' + t('rain.pops', { a: num(S.popped), b: num(cfg.target) });
     else { goalEl.hidden = false; goalEl.textContent = '💧 ' + num(S.popped); }
-    if (S.streak >= 2) { streakEl.hidden = false; clear(streakEl).append(icon('fire'), h('span', `${num(S.streak)} · ×${num(streakMultiplier(S.streak).toFixed(1))}`)); }
+    if (S.streak >= 2) { streakEl.hidden = false; clear(streakEl).append(icon('fire'), h('span', `${num(S.streak)} · ${speedText(streakMultiplier(S.streak))}`)); }
     else streakEl.hidden = true;
+    if (cfg.accel) speedEl.textContent = '⚡ ' + speedText(R.speedX());
+    if (chase) paintChase();
+  }
+  function paintChase() {
+    const cur = chase.by === 'score' ? R.state.score : R.state.popped;
+    const f = Math.min(1, cur / chase.value);
+    chaseFill.style.transform = `scaleX(${f})`;
+    chaseText.textContent = chaseBroken ? '🏆 ' + t('rain.recordBroken') : '🏁 ' + num(Math.max(0, chase.value - cur + 1));
+    if (!chaseBroken && cur > chase.value) {
+      chaseBroken = true; chaseEl.classList.add('broken');
+      chaseText.textContent = '🏆 ' + t('rain.recordBroken');
+      sfx.record(); buzz([20, 40, 20, 40, 60]); floatText(sky, t('rain.newRecordLive'), 'gold');
+      if (!reducedMotion()) confetti({ count: 40 });
+    }
   }
   function paintTyped() {
     const typed = R.previewTyped();
@@ -147,11 +170,11 @@ registerScreen('rainPlay', (app, params) => {
       else if (ev.type === 'pop') {
         const de = dropEls.get(ev.drop.id);
         if (de) {
-          burst(de, ev.drop.kind === 'gold' ? '#FFD86B' : ev.drop.kind === 'ice' ? '#DFF8FF' : ev.drop.kind === 'storm' ? '#B9A6FF' : '#7BE3FF');
-          floatText(de, '+' + num(ev.points), ev.drop.kind === 'gold' ? 'gold' : '');
+          burst(de, ev.drop.kind === 'gold' ? '#FFD86B' : ev.drop.kind === 'ice' ? '#DFF8FF' : ev.drop.kind === 'storm' ? '#B9A6FF' : ev.drop.kind === 'gift' ? '#FF8FD0' : ev.fever ? '#FFB347' : '#7BE3FF');
+          floatText(de, '+' + num(ev.points), ev.drop.kind === 'gold' || ev.fever ? 'gold' : '');
           de.classList.add('popped'); setTimeout(() => de.remove(), 260); dropEls.delete(ev.drop.id);
         }
-        if (!ev.chain) { sfx.pop(); buzz(12); }
+        if (!ev.chain) { sfx.pop(R.state.streak); buzz(ev.fever ? 18 : 12); }
         const a = R.state.answers[R.state.answers.length - 1];
         if (meta.stats && a && a.correct) recordAnswer(data, { ...a, adapt: true });
         const st = R.state.streak;
@@ -177,8 +200,19 @@ registerScreen('rainPlay', (app, params) => {
         if (!reducedMotion()) replay(sky, 'shake');
         replay(sky, 'wrong-flash');
       } else if (ev.type === 'speedup') {
-        sfx.combo(); floatText(sky, t('rain.faster'), 'gold');
-        if (!reducedMotion()) replay(sky, 'speed-pulse');
+        sfx.combo(); floatText(sky, t('rain.fasterX', { x: speedText(R.speedX()) }), 'gold');
+        if (!reducedMotion()) { replay(sky, 'speed-pulse'); replay(speedEl, 'bump'); }
+        sky.style.setProperty('--speed', String(Math.min(3, R.speedX())));
+        sky.classList.toggle('hyper', R.speedX() >= 2);
+      } else if (ev.type === 'fever') {
+        sfx.fever(); buzz([15, 30, 15, 30, 15]);
+        sky.classList.add('fever'); el.classList.add('fever');
+        floatText(sky, t('rain.fever'), 'gold');
+      } else if (ev.type === 'feverEnd') {
+        sky.classList.remove('fever'); el.classList.remove('fever');
+      } else if (ev.type === 'gift') {
+        sfx.gift(); buzz([10, 20, 10]);
+        floatText(sky, t('rain.gift', { n: num(ev.bonus) }), 'gold');
       } else if (ev.type === 'ice') {
         sfx.reward(); sky.classList.add('frozen');
       } else if (ev.type === 'storm') {

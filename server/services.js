@@ -563,12 +563,14 @@ export function createServices(db, { now = () => Date.now(), play = null } = {})
   };
 
   /* ---------------- الأشباح (جولات مسجّلة حقيقية) ---------------- */
-  S.pickGhost = (pid) => {
+  S.pickGhost = (pid, { turbo = false } = {}) => {
+    // ساحة التيربو تواجه أشباح تيربو فقط (نفس السرعة)، والعادية تتجنّبها
+    const tf = turbo ? `AND r.cfg LIKE '%"turbo":true%'` : `AND r.cfg NOT LIKE '%"turbo":true%'`;
     const r = db.get(`SELECT r.seed, r.cfg, r.timeline, r.score, p.name, p.id AS pid FROM runs r JOIN players p ON p.id=r.player_id
-      WHERE r.kind IN ('duel','weekly') AND r.valid=1 AND r.player_id<>? AND r.timeline IS NOT NULL AND p.banned=0
+      WHERE r.kind IN ('duel','weekly') AND r.valid=1 AND r.player_id<>? AND r.timeline IS NOT NULL AND p.banned=0 ${tf}
       ORDER BY r.submitted DESC LIMIT 1 OFFSET ?`, pid, Math.floor(Math.random() * 10));
     return r || db.get(`SELECT r.seed, r.cfg, r.timeline, r.score, p.name, p.id AS pid FROM runs r JOIN players p ON p.id=r.player_id
-      WHERE r.kind IN ('duel','weekly') AND r.valid=1 AND r.player_id<>? AND r.timeline IS NOT NULL AND p.banned=0 ORDER BY r.submitted DESC LIMIT 1`, pid) || null;
+      WHERE r.kind IN ('duel','weekly') AND r.valid=1 AND r.player_id<>? AND r.timeline IS NOT NULL AND p.banned=0 ${tf} ORDER BY r.submitted DESC LIMIT 1`, pid) || null;
   };
 
   /* ---------------- الإعلانات والإعداد العام ---------------- */

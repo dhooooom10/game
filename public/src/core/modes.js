@@ -277,7 +277,9 @@ export function journeyRain(level) {
   const maxDrops = Math.min(4, 2 + Math.floor((w + (i > 6 ? 1 : 0)) / 3));
   let timeLimit = null;
   if (info.kind === 'sprint') timeLimit = Math.ceil((target * spawn * 1.25 + travel) / 5) * 5;
-  const cfg = rainConfig({ tiers, formats, travel, spawn, maxDrops, target, lives: 3, timeLimit, specials: info.kind === 'boss' || w >= 6 });
+  // تسارع تدريجي داخل المرحلة يكبر مع العوالم: ٣٪ كل ١٠ ثوانٍ في العالم الأول حتى ٨٪ في الأخير (والزعيم أسرع)
+  const accel = +(Math.min(0.08, 0.03 + w * 0.005 + (info.kind === 'boss' ? 0.01 : 0))).toFixed(3);
+  const cfg = rainConfig({ tiers, formats, travel, spawn, maxDrops, target, lives: 3, timeLimit, accel, specials: info.kind === 'boss' || w >= 6 });
   return { info: { ...info, target, timeLimitMs: timeLimit ? timeLimit * 1000 : null, goal: target }, cfg };
 }
 

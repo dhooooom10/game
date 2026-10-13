@@ -3,15 +3,17 @@ import { app, registerScreen } from '../app.js';
 import { h, icon, num } from '../ui/dom.js';
 import { mascotSVG } from '../ui/mascot.js';
 import { sfx } from '../ui/audio.js';
-import { reducedMotion } from '../ui/fx.js';
+import { reducedMotion, toast } from '../ui/fx.js';
 import { t } from '../i18n.js';
-import { levelFromXp, dailyStatus, todayStr } from '../core/progression.js';
+import { levelFromXp, dailyStatus, todayStr, shieldsNeeded } from '../core/progression.js';
+import { turboRow, turboOn } from '../ui/turbo.js';
+import * as ads from '../net/ads.js';
 import { WORLDS, worldOf, DAILY_COUNT, timeRecordKey } from '../core/modes.js';
 import { createSession } from '../core/session.js';
 import { isNativeApp, PLAY_URL } from '../config.js';
 import { flag, countryName } from '../core/country.js';
 import { track } from '../net/analytics.js';
-import { nextJourneyLevel, buildRun, finishRun, PERSISTED, RAIN_PERSISTED, buildRainRun, finishRainRun } from '../runs.js';
+import { nextJourneyLevel, buildRun, finishRun, PERSISTED, RAIN_PERSISTED, buildRainRun, finishRainRun, MAX_SHIELDS } from '../runs.js';
 import { replayRain } from '../core/rain.js';
 import { loadConfig, api } from '../net/online.js';
 import { eventCard } from './online.js';
@@ -66,6 +68,9 @@ registerScreen('home', (app) => {
       h('div.hs', h('div.v', bestMin != null ? num(bestMin) : '—'), h('div.l', t('home.bestTime'))),
       h('div.hs', h('div.v', '🔥 ' + num(ds.streak)), h('div.l', t('home.streak'))))));
 
+  // التيربو ⚡: تسارع مرعب بأرقام سهلة — يسري على الرحلة والوقت والبقاء
+  el.appendChild(h('section.section', turboRow(app)));
+
   // بطاقات المناسبات والبطولات الجارية (تظهر عند توفر الاتصال فقط)
   const eventsSlot = h('div.events-slot');
   el.appendChild(eventsSlot);
@@ -73,7 +78,7 @@ registerScreen('home', (app) => {
   function playNow() {
     sfx.tap();
     if (!data.settings.tutorialDone) return app.go('rainPlay', { kind: 'tutorial', args: {} });
-    app.go('rainPlay', { kind: 'journey', args: { level: L } });
+    app.go('rainPlay', { kind: 'journey', args: { level: L, turbo: turboOn(data) } });
   }
 
   // التحدي اليومي
@@ -85,7 +90,7 @@ registerScreen('home', (app) => {
         h('div.dn', t('daily.title')),
         h('div.dd', ds.done ? `${t('daily.done', { score: num(ds.result.score) })} · ${t('daily.comeBack')}` : t('daily.sub', { n: DAILY_COUNT })),
         dots),
-      h('span.chip.gold', '🔥 ' + num(ds.streak)))));
+      h('span.pill-col', h('span.chip.gold', '🔥 ' + num(ds.streak)), data.shields ? h('span.chip.shield-chip', { aria: { label: t('shield.count', { n: data.shields }) } }, '🛡️ ' + num(data.shields)) : null))));
 
   function openDaily() {
     sfx.tap();
@@ -96,12 +101,28 @@ registerScreen('home', (app) => {
         h('p.note', t('daily.sub', { n: DAILY_COUNT })),
         h('p.note', t('daily.leaveNote')),
         st.done ? h('p.note', { style: { color: 'var(--ok)', fontWeight: 800 } }, t('daily.done', { score: num(st.result.score) })) : null,
+        shieldBox(close),
         h('div.stack',
           st.done
             ? h('button.btn.primary.block.lg', { 'data-autofocus': true, on: { click: () => { close(); app.go('rainPlay', { kind: 'daily', args: { date: today, official: false } }); } } }, icon('refresh'), t('daily.practice'))
             : h('button.btn.gold.block.lg', { 'data-autofocus': true, on: { click: () => { close(); app.go('rainPlay', { kind: 'daily', args: { date: today, official: true } }); } } }, icon('play', 'fill'), t('daily.start')),
           h('button.btn.ghost.block', { on: { click: () => close() } }, t('common.close'))));
     });
+  }
+
+  /** دروع السلسلة 🛡️: تحمي سلسلتك إن فاتك يوم. تُكسب من القطرات الغامضة أو بإعلان بمكافأة. */
+  function shieldBox(close) {
+    const need = shieldsNeeded(data);
+    const box = h('div.shield-box', h('div.t', '🛡️ ', t('shield.title'), ' · ', num(data.shields || 0), '/', num(MAX_SHIELDS)), h('div.d', t('shield.sub')));
+    if (need && need <= (data.shields || 0) && !dailyStatus(data).done) box.append(h('div.d.ok', t('shield.saving', { n: need })));
+    if ((data.shields || 0) < MAX_SHIELDS && ads.rewardedReady()) {
+      box.append(h('button.btn.sm.gold', { id: 'shieldAd', type: 'button', on: { click: async () => {
+        if (!(await ads.showRewarded())) return;
+        data.shields = Math.min(MAX_SHIELDS, (data.shields || 0) + 1); app.save(); sfx.reward();
+        toast(t('shield.got')); close(); app.go('home', {}, { root: true });
+      } } }, '🎬 ', t('shield.watch')));
+    }
+    return box;
   }
 
   // مهام اليوم

@@ -19,6 +19,7 @@ const BADGE = {
   gold: '<path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z" fill="currentColor"/>',
   ice: '<g stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"><path d="M12 2.5v19M3.8 7.2l16.4 9.6M3.8 16.8l16.4-9.6"/><path d="M9.5 4.5 12 7l2.5-2.5M9.5 19.5 12 17l2.5 2.5"/></g>',
   storm: '<path d="M13.5 2 5 13.5h5.8L9.6 22 19 9.8h-6z" fill="currentColor"/>',
+  gift: '<g fill="currentColor"><rect x="3" y="9" width="18" height="4.5" rx="1.2"/><rect x="4.5" y="13.5" width="15" height="8" rx="1.2"/><path d="M12 9c-1.5-3.6-5.6-5-6.3-2.6C5.1 8.6 9 9 12 9zm0 0c1.5-3.6 5.6-5 6.3-2.6C18.9 8.6 15 9 12 9z"/></g><rect x="11" y="9" width="2" height="12.5" fill="#fff" opacity=".7"/>',
 };
 
 /** يبني عنصر قطرة: الشكل + المحتوى (عنصر المعادلة) + شارة اختيارية */

@@ -239,3 +239,24 @@ test('websocket: rooms by code — join, host settings, team toggle, start, resu
   assert.equal(res.rating, null, 'room games are unranked');
   ca.close(); cb.close(); cc.close();
 });
+
+test('websocket: turbo arena pairs turbo players only, with a turbo config (easy numbers, strong accel)', async () => {
+  const [a, b, c] = await Promise.all([reg('Turbo Tia'), reg('Turbo Tom'), reg('Normal Nour')]);
+  const [ca, cb, cc] = await Promise.all([wsClient(S.url, a.token), wsClient(S.url, b.token), wsClient(S.url, c.token)]);
+  cc.send({ t: 'queue' });
+  ca.send({ t: 'queue', mode: 'turbo' });
+  cb.send({ t: 'queue', mode: 'turbo' });
+  const ma = await ca.wait('match'), mb = await cb.wait('match');
+  assert.equal(ma.id, mb.id);
+  assert.deepEqual(ma.players.map((p) => p.name).sort(), ['Turbo Tia', 'Turbo Tom']);
+  assert.equal(ma.cfg.turbo, true);
+  assert.ok(ma.cfg.accel >= 0.14);
+  assert.ok(Object.values(ma.cfg.tiers).every((t) => t <= 3));
+  const pa = playBot(ma.cfg, ma.seed, { think: 35 }), pb = playBot(mb.cfg, mb.seed, { think: 60 });
+  S.clock.t = ma.startAt + Math.max(pa.endTick, pb.endTick) * TICK_MS + 200;
+  ca.send({ t: 'finish', id: ma.id, log: pa.log, endTick: pa.endTick });
+  cb.send({ t: 'finish', id: mb.id, log: pb.log, endTick: pb.endTick });
+  const ra = await ca.wait('result');
+  assert.ok(ra.standings.every((s) => s.valid), 'turbo runs replay and validate on the server');
+  ca.close(); cb.close(); cc.close();
+});

@@ -104,7 +104,8 @@ registerScreen('online', (app) => {
     for (const ev of cfg.events) box.append(eventCard(ev));
     // الأزرار
     box.append(h('div.mode-grid.section',
-      bigBtn('qmBtn', '⚡', '#38D6F5', t('net.quick'), t('net.quickSub'), () => app.go('matchmaking'), true),
+      bigBtn('qmBtn', '⚔️', '#38D6F5', t('net.quick'), t('net.quickSub'), () => app.go('matchmaking'), true),
+      bigBtn('turboBtn', '⚡', '#FF9F5A', t('net.turbo'), t('net.turboSub'), () => app.go('matchmaking', { mode: 'turbo' }), true),
       bigBtn('roomBtn', '🔑', '#9B8CFF', t('net.rooms'), t('net.roomsSub'), () => app.go('rooms')),
       bigBtn('tourBtn', '🏆', '#FFC94A', t('net.tournaments'), t('net.tournamentsSub'), () => app.go('tournaments')),
       bigBtn('weeklyBtn', '🌧️', '#3DDC97', t('net.weekly'), t('net.weeklySub'), () => startWeekly()),
@@ -167,10 +168,11 @@ async function startWeekly() {
 /* =========================================================================
    المباراة السريعة
    ========================================================================= */
-registerScreen('matchmaking', (app) => {
+registerScreen('matchmaking', (app, params = {}) => {
+  const mode = params.mode === 'turbo' ? 'turbo' : 'duel';
   const status = h('p.note', t('net.searching'));
-  const el = h('main.handoff', h('div.search-anim', { html: mascotSVG({ skin: app.data.cosmetics.skin, mood: 'think', size: 90, label: '' }) }),
-    h('div.big', t('net.quick')), status, h('p.faint', t('net.ghostNote')),
+  const el = h('main.handoff' + (mode === 'turbo' ? '.turbo-search' : ''), h('div.search-anim', { html: mascotSVG({ skin: app.data.cosmetics.skin, mood: 'think', size: 90, label: '' }) }),
+    h('div.big', mode === 'turbo' ? '⚡ ' + t('net.turbo') : t('net.quick')), mode === 'turbo' ? h('p.note', t('net.turboSub')) : null, status, h('p.faint', t('net.ghostNote')),
     h('button.btn.ghost.block', { style: { marginTop: '20px' }, on: { click: () => { net.send({ t: 'queue.leave' }); app.back(); } } }, t('common.cancel')));
   let off = null, alive = true;
   (async () => {
@@ -181,14 +183,16 @@ registerScreen('matchmaking', (app) => {
         if (m.t === 'match') { alive = false; off(); sfx.go(); buzz([20, 40, 20]); startMatch(m, { replace: true }); }
         if (m.t === 'queue.empty') { status.textContent = t('net.noPlayers'); }
       });
-      net.send({ t: 'queue' });
+      net.send({ t: 'queue', mode });
     } catch (e) { status.textContent = errText(e); }
   })();
   return { el, destroy: () => { alive = false; off?.(); net.send({ t: 'queue.leave' }); } };
 });
 
 function startMatch(m, extra = {}) {
-  const label = m.kind === 'room' ? t('net.roomMatch') : m.kind === 'ghost' ? t('net.vsGhost', { name: m.ghosts[0]?.name || '' }) : t('net.quick');
+  const tb = !!m.cfg?.turbo;
+  const label = (tb ? '⚡ ' : '') + (m.kind === 'room' ? t('net.roomMatch') : m.kind === 'ghost' ? t('net.vsGhost', { name: m.ghosts[0]?.name || '' }) : tb ? t('net.turbo') : t('net.quick'));
+  extra = { ...extra, turbo: tb };
   playOnline({ cfg: m.cfg, seed: m.seed, kind: m.kind, matchId: m.id, runId: m.runId, startAt: m.startAt, players: m.players, ghosts: m.ghosts.map((g) => ({ ...g, name: '👻 ' + g.name })), label, extra });
 }
 
@@ -236,11 +240,12 @@ registerScreen('room', (app, params) => {
         field(t('setup.difficulty'), seg(['easy', 'medium', 'hard', 'expert'].map((d) => [d, t('diff.' + d)]), s.diff, (v) => set('diff', v), t('setup.difficulty'))),
         field(t('setup.duration'), seg([30, 60, 90, 120].map((d) => [d, t('common.sec', { n: d })]), s.seconds, (v) => set('seconds', +v), t('setup.duration'))),
         field(t('net.roomMode'), seg([['race', t('net.race')], ['teams', t('net.teams')]], s.mode, (v) => set('mode', v), t('net.roomMode'))),
-        h('div.row', h('div.grow.t', t('net.specials')), h('button.switch', { role: 'switch', aria: { checked: String(s.specials), label: t('net.specials') }, on: { click: () => set('specials', !s.specials) } }))),
+        h('div.row', h('div.grow.t', t('net.specials')), h('button.switch', { role: 'switch', aria: { checked: String(s.specials), label: t('net.specials') }, on: { click: () => set('specials', !s.specials) } })),
+        h('div.row', h('div.grow', h('div.t', '⚡ ' + t('turbo.title')), h('div.d', t('turbo.sub'))), h('button.switch', { id: 'roomTurbo', role: 'switch', aria: { checked: String(!!s.turbo), label: t('turbo.title') }, on: { click: () => set('turbo', !s.turbo) } }))),
       h('button.btn.gold.block.lg', { id: 'startRoom', disabled: room.members.length < 2, on: { click: () => { sfx.tap(); net.send({ t: 'room.start' }); } } }, icon('play'), t('net.startRoom')),
       room.members.length < 2 ? h('p.note', { style: { textAlign: 'center' } }, t('net.needTwo')) : null);
     } else {
-      box.append(h('section.card', h('p.note', `${t('setup.difficulty')}: ${t('diff.' + s.diff)} · ${t('common.sec', { n: s.seconds })} · ${s.mode === 'teams' ? t('net.teams') : t('net.race')}`),
+      box.append(h('section.card', h('p.note', `${s.turbo ? '⚡ ' + t('turbo.title') + ' · ' : ''}${t('setup.difficulty')}: ${t('diff.' + s.diff)} · ${t('common.sec', { n: s.seconds })} · ${s.mode === 'teams' ? t('net.teams') : t('net.race')}`),
         h('p', { style: { fontWeight: 800, textAlign: 'center' } }, '⏳ ' + t('net.waitHost'))));
     }
     box.append(emoteBar());
@@ -525,12 +530,13 @@ registerScreen('onlineResult', (app, params) => {
   const reward = (score, valid) => {
     if (!valid || params._committed) return null;
     params._committed = true;
-    const rw = commitRound(app.data, { id: 'online-' + (params.runId || params.matchId), mode: 'online', score, correct: local.correct, answered: local.answered, bestStreak: local.bestStreak, perOp: local.perOp });
+    const rw = commitRound(app.data, { id: 'online-' + (params.runId || params.matchId), mode: 'online', score, correct: local.correct, answered: local.answered, bestStreak: local.bestStreak, perOp: local.perOp,
+      speedX: local.speedX || 1, fevers: local.fevers || 0, gifts: local.gifts || 0, turbo: !!params.extra?.turbo });
     app.save();
     return rw;
   };
   const buttons = (runId) => h('div.stack', { style: { marginTop: '16px' } },
-    params.kind === 'duel' || params.kind === 'ghost' ? h('button.btn.primary.block.lg', { id: 'againBtn', on: { click: () => app.go('matchmaking', {}, { replace: true }) } }, icon('refresh'), t('net.playAgain')) : null,
+    params.kind === 'duel' || params.kind === 'ghost' ? h('button.btn.primary.block.lg', { id: 'againBtn', on: { click: () => app.go('matchmaking', params.extra?.turbo ? { mode: 'turbo' } : {}, { replace: true }) } }, icon('refresh'), t('net.playAgain')) : null,
     params.kind === 'room' ? h('button.btn.primary.block.lg', { on: { click: () => app.back() } }, icon('users'), t('net.backToRoom')) : null,
     params.kind === 'tournament' ? h('button.btn.primary.block.lg', { on: { click: () => app.go('tournament', { id: params.extra.tid }, { replace: true }) } }, '🏆 ', t('net.tournament')) : null,
     params.kind === 'weekly' ? h('button.btn.primary.block.lg', { on: { click: () => { app.back(); setTimeout(() => document.getElementById('weeklyBtn')?.click(), 60); } } }, icon('refresh'), t('net.playAgain')) : null,

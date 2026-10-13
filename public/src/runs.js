@@ -7,13 +7,16 @@ import { commitRound, recordDaily, todayStr } from './core/progression.js';
 import { findPath, lessonKey } from './core/curriculum.js';
 import { parTime } from './core/questions.js';
 import { accuracyBonus } from './core/scoring.js';
-import { randomSeed } from './core/rng.js';
-import { rainConfig, customConfig, customRecordKey } from './core/rain.js';
+import { randomSeed, createRng } from './core/rng.js';
+import { rainConfig, customConfig, customRecordKey, turbo, speedTier } from './core/rain.js';
 import { journeyRain, evaluateRainJourney, dailyRain, stormConfig, survivalConfig } from './core/modes.js';
 import { t } from './i18n.js';
 
 export const PERSISTED = new Set(['practice', 'lesson']);
 export const RAIN_PERSISTED = new Set(['journey', 'time', 'survival', 'daily', 'custom']);
+export const TURBO_KINDS = new Set(['journey', 'time', 'survival']);
+/** مفتاح الرقم القياسي: جولات التيربو لها أرقامها الخاصة */
+const turboKey = (key, args) => (args.turbo ? key + ':turbo' : key);
 
 /* ---------- أسئلة الشرح التفاعلي (ثابتة وسهلة) ---------- */
 const N = (n) => ({ n });
@@ -206,12 +209,21 @@ export function buildRainRun(kind, args, data, seed = randomSeed()) {
       break;
     default: throw new Error('rain kind ' + kind);
   }
+  // التيربو ⚡ (اختيار اللاعب): الرحلة والوقت والبقاء
+  if (args.turbo && TURBO_KINDS.has(kind)) { cfg = turbo(cfg); meta.turbo = true; meta.label = '⚡ ' + meta.label; }
+  // الرقم الذي تطارده (خط الشبح في أعلى الشاشة)
+  if (kind === 'journey') { const v = data.journey?.best?.[args.level]; if (v) meta.chase = { value: v, by: 'score' }; }
+  else if (kind === 'time' || kind === 'survival' || kind === 'custom') {
+    const key = kind === 'custom' ? customRecordKey(args) : turboKey(kind === 'time' ? timeRecordKey(args.dur, args.diff) : survivalRecordKey(args.diff), args);
+    const v = data.records?.[key]?.value; if (v) meta.chase = { value: v, by: 'popped' };
+  }
   return { cfg, seed, meta, id: `${kind}-${typeof seed === 'string' ? seed : seed.toString(36)}-${Date.now().toString(36)}` };
 }
 
 export function finishRainRun(kind, args, run, sum, data, date = todayStr()) {
-  const base = { id: run.id, mode: kind, score: sum.score, correct: sum.correct, answered: sum.answered, bestStreak: sum.bestStreak, perOp: sum.perOp, activeMs: sum.activeMs };
-  const view = { engine: 'rain', kind, args, sum, stars: null, score: sum.score, record: null, notes: [], mood: 'happy', tip: tipFor({ ...sum, answers: sum.answers.filter((a) => a.ms != null || !a.correct) }, true) };
+  const base = { id: run.id, mode: kind, score: sum.score, correct: sum.correct, answered: sum.answered, bestStreak: sum.bestStreak, perOp: sum.perOp, activeMs: sum.activeMs,
+    speedX: sum.speedX || 1, fevers: sum.fevers || 0, gifts: sum.gifts || 0, turbo: !!args.turbo };
+  const view = { engine: 'rain', kind, args, sum, speed: { x: sum.speedX || 1, tier: speedTier(sum.speedX), prevBest: data.speedBest || 1 }, stars: null, score: sum.score, record: null, notes: [], mood: 'happy', tip: tipFor({ ...sum, answers: sum.answers.filter((a) => a.ms != null || !a.correct) }, true) };
   let round = base;
   if (kind === 'journey') {
     const { info } = journeyRain(args.level);
@@ -235,7 +247,7 @@ export function finishRainRun(kind, args, run, sum, data, date = todayStr()) {
     round = { ...base, recordKey: customRecordKey(args), recordValue: sum.popped };
     Object.assign(view, { title: t('cus.done', { n: sum.popped }), mood: sum.popped >= 15 ? 'cheer' : 'happy' });
   } else if (kind === 'time' || kind === 'survival') {
-    const key = kind === 'time' ? timeRecordKey(args.dur, args.diff) : survivalRecordKey(args.diff);
+    const key = turboKey(kind === 'time' ? timeRecordKey(args.dur, args.diff) : survivalRecordKey(args.diff), args);
     round = { ...base, recordKey: key, recordValue: sum.popped, duration: args.dur, diff: args.diff };
     Object.assign(view, { title: kind === 'time' ? t('res.timeUp') : t('res.survivalEnd', { n: sum.popped }), mood: sum.popped >= 15 ? 'cheer' : 'happy' });
   } else if (kind === 'daily') {
@@ -248,10 +260,43 @@ export function finishRainRun(kind, args, run, sum, data, date = todayStr()) {
     Object.assign(view, { title: t('res.dailyEnd'), score: finalScore, bonus, mood: 'cheer', official });
     view.notes.push(official ? t('res.official') : t('res.practiceRun'));
   }
+  const prevRec = round.recordKey ? data.records[round.recordKey] : null;
+  const prevValue = prevRec ? prevRec.value : null;
   const rewards = commitRound(data, round, date);
   if (rewards.records?.length && rewards.records[0].prev != null) view.record = { prev: rewards.records[0].prev };
   else if (rewards.records?.length && kind !== 'journey') view.firstRecord = true;
   if (view.record) view.celebrate = true;
+  // «كدت تكسر رقمك!» — الخسارة القريبة تدفع لمحاولة أخرى فورًا
+  const nm = nearMiss(round.recordValue, prevValue, rewards.records?.length > 0);
+  if (nm) view.nearMiss = nm;
+  if (kind === 'journey' && !view.passed && round.level) {
+    const target = journeyRain(args.level).info.target;
+    if (sum.popped >= target - 2 && sum.popped < target) view.nearMiss = { left: target - sum.popped, journey: true };
+  }
+  // أعلى سرعة بلغها اللاعب على الإطلاق
+  if ((sum.speedX || 1) > (data.speedBest || 1)) { data.speedBest = sum.speedX; view.speed.newBest = true; }
+  // القطرات الغامضة 🎁: مكافأة إضافية خارج اللعب (خبرة أو درع سلسلة) — حتمية من معرّف الجولة
+  if (rewards.applied && sum.gifts) view.giftRewards = openGifts(data, sum.gifts, run.id);
   view.rewards = rewards;
   return { view, rewards };
+}
+
+/** الفارق الصغير عن الرقم القياسي (٨٥٪ فأكثر من الرقم السابق دون كسره) */
+export function nearMiss(value, prev, broke) {
+  if (broke || prev == null || value == null || prev <= 0 || value >= prev) return null;
+  if (value / prev < 0.85 || prev - value > 6) return null;
+  return { left: prev - value + 1, prev };
+}
+
+export const MAX_SHIELDS = 3;
+/** يفتح الهدايا: ٦٠٪ +٢٥ خبرة، ٣٠٪ +٥٠ خبرة، ١٠٪ درع سلسلة 🛡️ (حتى ٣) */
+export function openGifts(data, n, id) {
+  const rng = createRng('gift:' + id);
+  const out = [];
+  for (let i = 0; i < Math.min(n, 10); i++) {
+    const r = rng.next();
+    if (r < 0.1 && (data.shields || 0) < MAX_SHIELDS) { data.shields = (data.shields || 0) + 1; out.push({ type: 'shield' }); }
+    else { const xp = r < 0.4 ? 50 : 25; data.xp += xp; out.push({ type: 'xp', xp }); }
+  }
+  return out;
 }
