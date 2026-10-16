@@ -112,6 +112,9 @@ export function startServer({ port = 0, dbPath = ':memory:', adminToken = '', no
   route('GET', '/api/friends', (req) => { const p = player(req); return { friends: svc.friends(p.id, rt.online()), code: p.code }; });
   route('POST', '/api/friends', async (req, _p, body, ip) => { const p = player(req); limit(ip, 'friend', 30, 600000); svc.addFriend(p.id, body.code); return { friends: svc.friends(p.id, rt.online()) }; });
   route('DELETE', '/api/friends/:id', (req, p) => { const pl = player(req); svc.removeFriend(pl.id, p.id); return { ok: true }; });
+  route('POST', '/api/me/progress', async (req, _p, body) => { const p = player(req); return svc.syncProgress(p.id, body); });
+  route('POST', '/api/friends/:id/challenge', async (req, p, body, ip) => { const pl = player(req); limit(ip, 'fchal', 30, 600000); return svc.sendFriendChallenge(pl.id, p.id, body); });
+  route('GET', '/api/inbox', (req) => { const p = player(req); return svc.inbox(p.id); });
   route('POST', '/api/challenges', async (req, _p, body) => { const p = player(req); return { id: svc.createChallenge(p.id, body.runId) }; });
   route('POST', '/api/challenges/local', async (req, _p, body, ip) => { const p = player(req); limit(ip, 'lchal', 20, 600000); return svc.createLocalChallenge(p.id, body); });
   route('GET', '/api/challenges/:id', (req, p) => ({ challenge: svc.getChallenge(p.id) }));

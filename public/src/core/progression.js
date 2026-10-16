@@ -42,6 +42,10 @@ export function newProfileData(lang = 'ar') {
     settings: defaultSettings(lang),
     xp: 0,
     shields: 0,          // دروع السلسلة اليومية 🛡️ (حتى ٣)
+    pearls: 0,           // اللآلئ 💎 (العملة الناعمة)
+    owned: {},           // ما اشتُري باللآلئ (مثل skin:ember)
+    boost: {},           // xp2: جولات متبقية بخبرة مضاعفة
+    pearlTokens: [],     // رموز الشراء التي مُنحت لآلئها
     speedBest: 1,        // أعلى معامل سرعة بلغه اللاعب
     journey: { unlocked: 1, stars: {}, best: {} },
     lessons: { done: {}, unlocked: {} },
@@ -75,7 +79,7 @@ export function normalizeData(d, lang = 'ar') {
   // مظهر من المتجر لم يعد مملوكًا (استرداد أو انتهاء موسم) ← نعود للافتراضي
   for (const cat of ['skin', 'acc', 'theme']) {
     const it = COSMETICS[cat].find((x) => x.id === out.cosmetics[cat]);
-    if (it?.need.ent && !out.ent[it.need.ent]) out.cosmetics[cat] = base.cosmetics[cat];
+    if (it?.need.ent && !out.ent[it.need.ent] && !out.owned?.[`${cat}:${it.id}`]) out.cosmetics[cat] = base.cosmetics[cat];
   }
   out.prefs = { ...base.prefs, ...(d.prefs || {}) };
   for (const k of Object.keys(base.prefs)) out.prefs[k] = { ...base.prefs[k], ...((d.prefs || {})[k] || {}) };
@@ -143,8 +147,8 @@ function checkBadges(data, round) {
   give('correct100', st.correct >= 100);
   give('correct1000', st.correct >= 1000);
   give('perfect', round && round.answered >= 10 && round.correct === round.answered);
-  give('speed20', round && round.mode === 'time' && round.duration === 60 && round.correct >= 20);
-  give('survive25', round && round.mode === 'survival' && round.correct >= 25);
+  give('speed20', round && round.mode === 'custom' && round.correct >= 20);
+  give('survive25', round && round.mode === 'custom' && round.endLives && round.correct >= 25);
   give('daily3', data.daily.streak >= 3);
   give('daily7', data.daily.streak >= 7);
   give('world1', data.journey.unlocked > 10 || !!data.journey.stars[10]);
@@ -209,10 +213,10 @@ function progressMissions(data, round, date) {
       case 'correct20': inc = round.correct || 0; break;
       case 'acc90': inc = round.answered >= 10 && round.correct / round.answered >= 0.9 ? 1 : 0; break;
       case 'streak8': inc = (round.bestStreak || 0) >= 8 ? 1 : 0; break;
-      case 'time1': inc = round.mode === 'time' ? 1 : 0; break;
+      case 'time1': inc = round.mode === 'custom' ? 1 : 0; break;            // «العب تحدّيك الخاص»
       case 'weak10': inc = (round.perOp?.[m.op]?.c) || 0; break;
       case 'daily1': inc = round.mode === 'daily' && round.official ? 1 : 0; break;
-      case 'survive10': inc = round.mode === 'survival' && round.correct >= 10 ? 1 : 0; break;
+      case 'survive10': inc = round.mode === 'online' ? 1 : 0; break;        // «مباراة أونلاين أو تحدي صديق»
       case 'rounds3': inc = round.mode === 'friend' ? 0 : 1; break;
     }
     if (inc > 0) {
@@ -242,14 +246,14 @@ export const COSMETICS = {
     { id: 'halo', need: { ent: 'skins' } }, { id: 'star', need: { ent: 'season' } },
   ],
 };
-export function isUnlocked(data, item) {
-  if (item.need.ent) return !!data.ent?.[item.need.ent];
+export function isUnlocked(data, item, cat = 'skin') {
+  if (item.need.ent) return !!data.ent?.[item.need.ent] || !!data.owned?.[`${cat}:${item.id}`];
   if (item.need.badge) return !!data.badges[item.need.badge];
   return levelFromXp(data.xp).level >= (item.need.level || 1);
 }
 export function unlockedCosmetics(data) {
   const out = [];
-  for (const [cat, items] of Object.entries(COSMETICS)) for (const it of items) if (isUnlocked(data, it)) out.push(`${cat}:${it.id}`);
+  for (const [cat, items] of Object.entries(COSMETICS)) for (const it of items) if (isUnlocked(data, it, cat)) out.push(`${cat}:${it.id}`);
   return out;
 }
 

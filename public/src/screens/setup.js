@@ -49,13 +49,8 @@ registerScreen('setupTime', (app) => {
   return { el };
 });
 
-/* ---------------- تحدّيك الخاص (لعب حر بالمطر) ---------------- */
-registerScreen('setupCustom', (app) => {
-  const pref = (app.data.prefs.custom ||= { ops: ['add', 'sub', 'mul'], level: 'medium', speed: 'fast', end: 't60', accel: true });
-  const el = h('main', topbar(t('mode.custom'), t('mode.customSub')));
-  const recBox = h('div.chip.gold');
-  const paintRec = () => { const r = app.data.records[customRecordKey(pref)]; recBox.textContent = r ? '🏆 ' + t('setup.record', { n: num(r.value) }) : t('setup.noRecord'); };
-  const save = () => { app.save(); paintRec(); };
+/** خانات «تحدّيك الخاص» (العمليات، صعوبة الأرقام، السرعة، النهاية، التسارع) — تُستخدم أيضًا في تحدي الصديق */
+export function customFields(pref, save) {
   // العمليات (اختيار متعدد)
   const opsBox = h('div.chips', { role: 'group', aria: { label: t('cus.ops') } });
   for (const o of CUSTOM_OPS) {
@@ -73,12 +68,24 @@ registerScreen('setupCustom', (app) => {
   const rangeHint = h('span', { id: 'rangeHint' }, t('cus.range.' + pref.level));
   const accelSw = h('button.switch', { role: 'switch', aria: { checked: String(!!pref.accel), label: t('cus.accel') } });
   accelSw.addEventListener('click', () => { sfx.tap(); pref.accel = !pref.accel; accelSw.setAttribute('aria-checked', String(pref.accel)); save(); });
-  el.append(h('section.card',
+  return [
     field(t('cus.ops'), opsBox),
     field(t('cus.level'), seg(CUSTOM_LEVELS.map((d) => [d, t('diff.' + d)]), pref.level, (v) => { pref.level = v; save(); rangeHint.textContent = t('cus.range.' + v); }, t('cus.level')), rangeHint),
     field(t('cus.speedLabel'), seg(Object.keys(CUSTOM_SPEEDS).map((s) => [s, t('cus.speed.' + s)]), pref.speed, (v) => { pref.speed = v; save(); }, t('cus.speedLabel'))),
     field(t('cus.end'), seg(CUSTOM_ENDS.map((e) => [e, t('cus.end.' + e)]), pref.end, (v) => { pref.end = v; save(); }, t('cus.end'))),
     h('div.row', { style: { marginTop: '8px' } }, h('div.grow', h('div.t', t('cus.accel')), h('div.d', t('cus.accelSub'))), accelSw),
+  ];
+}
+
+/* ---------------- تحدّيك الخاص (لعب حر بالمطر) ---------------- */
+registerScreen('setupCustom', (app) => {
+  const pref = (app.data.prefs.custom ||= { ops: ['add', 'sub', 'mul'], level: 'medium', speed: 'fast', end: 't60', accel: true });
+  const el = h('main', topbar(t('mode.custom'), t('mode.customSub')));
+  const recBox = h('div.chip.gold');
+  const paintRec = () => { const r = app.data.records[customRecordKey(pref)]; recBox.textContent = r ? '🏆 ' + t('setup.record', { n: num(r.value) }) : t('setup.noRecord'); };
+  const save = () => { app.save(); paintRec(); };
+  el.append(h('section.card',
+    ...customFields(pref, save),
     recBox),
   h('button.btn.primary.block.lg', { id: 'startCustom', style: { marginTop: '12px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'custom', args: { ...pref, ops: [...pref.ops] } }); } } }, icon('play'), t('common.start')));
   paintRec();

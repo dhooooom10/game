@@ -7,8 +7,9 @@ import { reducedMotion, toast } from '../ui/fx.js';
 import { t } from '../i18n.js';
 import { levelFromXp, dailyStatus, todayStr, shieldsNeeded } from '../core/progression.js';
 import { turboRow, turboOn } from '../ui/turbo.js';
+import { speedText } from './rain.js';
 import * as ads from '../net/ads.js';
-import { WORLDS, worldOf, DAILY_COUNT, timeRecordKey } from '../core/modes.js';
+import { WORLDS, worldOf, DAILY_COUNT } from '../core/modes.js';
 import { createSession } from '../core/session.js';
 import { isNativeApp, PLAY_URL } from '../config.js';
 import { flag, countryName } from '../core/country.js';
@@ -32,6 +33,7 @@ registerScreen('home', (app) => {
     h('div.who',
       h('div.name', name ? t('home.hello', { name }) : t('home.helloAnon')),
       h('div.lvl', h('span.lvl-badge', t('home.level', { n: lv.level })), h('div.bar.gold', { role: 'progressbar', aria: { valuenow: Math.round(lv.pct * 100), valuemin: 0, valuemax: 100, label: t('home.xp', { a: lv.into, b: lv.need }) } }, xpFill))),
+    h('button.pearl-chip', { id: 'homePearls', type: 'button', aria: { label: t('wal.balance') }, on: { click: () => { sfx.tap(); app.go('shop'); } } }, '💎 ', num(data.pearls || 0), h('span.plus', '+')),
     h('button.icon-btn', { aria: { label: t('nav.settings') }, 'data-go': 'settings', on: { click: () => { sfx.tap(); app.go('settings'); } } }, icon('gear'))));
 
   if (!app.store.persistent) el.appendChild(h('p.note.warn', { role: 'alert' }, '⚠️ ' + t('home.storageWarn')));
@@ -48,7 +50,7 @@ registerScreen('home', (app) => {
   const L = nextJourneyLevel(data);
   const w = WORLDS[worldOf(L)];
   const totalStars = Object.values(data.journey.stars).reduce((a, b) => a + b, 0);
-  const bestMin = data.records[timeRecordKey(60, 'medium')]?.value;
+  const bestSpeed = data.speedBest && data.speedBest > 1 ? data.speedBest : null;
   const ds = dailyStatus(data);
   const lines = [t('home.mascotLine1'), t('home.mascotLine2'), ds.done ? t('home.mascotLine2') : t('home.mascotLine3')];
   const rain = h('div.rainlines', { aria: { hidden: 'true' } });
@@ -65,10 +67,21 @@ registerScreen('home', (app) => {
     h('div.play-sub', playSub),
     h('div.hero-stats',
       h('div.hs', h('div.v', '★ ' + num(totalStars)), h('div.l', t('home.stars'))),
-      h('div.hs', h('div.v', bestMin != null ? num(bestMin) : '—'), h('div.l', t('home.bestTime'))),
+      h('div.hs', h('div.v', bestSpeed ? '⚡ ' + speedText(bestSpeed) : '—'), h('div.l', t('home.bestSpeed'))),
       h('div.hs', h('div.v', '🔥 ' + num(ds.streak)), h('div.l', t('home.streak'))))));
 
-  // التيربو ⚡: تسارع مرعب بأرقام سهلة — يسري على الرحلة والوقت والبقاء
+  // الأونلاين: قلب التطبيق — مباشرة تحت «العب الآن»
+  const onBtn = (id, emoji, title, sub, fn) => h('button.on-btn', { id, type: 'button', on: { click: () => { sfx.tap(); fn(); } } },
+    h('span.ob-ic', emoji), h('span.ob-t', title), h('span.ob-d', sub));
+  el.appendChild(h('section.online-hero.section', { aria: { label: t('online.title') } },
+    h('div.oh-top', h('span.oh-live', h('i'), t('home.onlineLive')), h('h2', t('online.title')),
+      h('button.link', { id: 'modeOnline', type: 'button', on: { click: () => { sfx.tap(); app.go('online'); } } }, t('home.onlineAll'), ' ›')),
+    h('div.oh-grid',
+      onBtn('homeQuick', '⚔️', t('net.quick'), t('home.quickSub'), () => app.go('matchmaking')),
+      onBtn('homeTurbo', '⚡', t('net.turbo'), t('home.turboSub'), () => app.go('matchmaking', { mode: 'turbo' })),
+      onBtn('homeFriends', '🤝', t('fh.title'), t('home.friendsSub'), () => app.go('friendsHub')))));
+
+  // التيربو ⚡: تسارع مرعب بأرقام سهلة — للرحلة
   el.appendChild(h('section.section', turboRow(app)));
 
   // بطاقات المناسبات والبطولات الجارية (تظهر عند توفر الاتصال فقط)
@@ -139,20 +152,14 @@ registerScreen('home', (app) => {
   el.appendChild(mbox);
 
   // الأنماط
-  const rec = (k) => data.records[k]?.value;
   const card = (id, ic, color, title, sub, recordText, onClick, wide = false) => h('button.mode-card' + (wide ? '.wide' : ''), { id, style: { '--mc': color }, on: { click: () => { sfx.tap(); onClick(); } } },
     h('span.mi', icon(ic)), h('div', { style: { flex: wide ? '1' : null } }, h('div.mn', title), h('div.md', sub)), recordText ? h('span.mr', recordText) : null);
-  const tRec = Math.max(...['easy', 'medium', 'hard'].map((d) => rec(timeRecordKey(60, d)) ?? -1));
-  const sRec = Math.max(...['easy', 'medium', 'hard'].map((d) => rec('survival:' + d) ?? -1));
   el.appendChild(h('section.section', h('h2.section-title', t('home.modes')),
     h('div.mode-grid',
       card('modeJourney', 'map', '#38D6F5', t('mode.journey'), t('mode.journeySub'), `★ ${num(totalStars)}/${num(300)}`, () => app.go('journey'), true),
-      card('modeTime', 'clock', '#FFC94A', t('mode.time'), t('mode.timeSub'), tRec >= 0 ? t('setup.record', { n: num(tRec) }) : null, () => app.go('setupTime')),
-      card('modeSurvival', 'shield', '#FF7BB0', t('mode.survival'), t('mode.survivalSub'), sRec >= 0 ? t('setup.record', { n: num(sRec) }) : null, () => app.go('setupSurvival')),
       card('modeCustom', 'bolt', '#FF9F5A', t('mode.custom'), t('mode.customSub'), null, () => app.go('setupCustom')),
-      card('modePractice', 'target', '#3DDC97', t('mode.practice'), t('mode.practiceSub'), null, () => app.go('practice')),
-      card('modeFriend', 'users', '#9B8CFF', t('mode.friend'), t('mode.friendSub'), null, () => app.go('friendSetup')),
-      card('modeOnline', 'users', '#FF7BB0', t('online.title'), t('online.sub'), null, () => app.go('online'), true))));
+      card('modeFriend', 'users', '#9B8CFF', t('fh.title'), t('fh.sub'), null, () => app.go('friendsHub')),
+      card('modePractice', 'target', '#3DDC97', t('mode.practice'), t('mode.practiceSub'), null, () => app.go('practice'), true))));
 
   return {
     el, nav: 'home',
@@ -169,6 +176,15 @@ registerScreen('home', (app) => {
           eventsSlot.appendChild(h('button.nat-chip', { id: 'natChip', on: { click: () => { sfx.tap(); app.go('nations'); } } },
             h('span.nat-f', flag(n.mine.country)), h('span.grow', h('b', countryName(n.mine.country, app.settings.lang)), ' · ',
               n.mine.rank ? t('nat.rank', { n: num(n.mine.rank) }) : t('nat.noRank')), h('small', t('nat.myPoints', { n: num(n.mine.myPoints) }))));
+        }).catch(() => {});
+      }
+      // تحديات الأصدقاء المنتظرة + مزامنة تقدّم الرحلة
+      if (data.online?.token && navigator.onLine !== false) {
+        import('./friendsHub.js').then((m) => m.syncProgress(app)).catch(() => {});
+        api('GET', '/api/inbox').then((ib) => {
+          if (!ib.pending) return;
+          const b = document.getElementById('homeFriends');
+          if (b) b.append(h('span.badge-count.floating', { id: 'friendsBadge' }, num(ib.pending)));
         }).catch(() => {});
       }
       const active = app.store.loadActive(app.pid);

@@ -6,6 +6,7 @@
    الاسترجاع: Google Play هو المرجع لملكية المنتجات الدائمة (يعمل بعد إعادة التثبيت).
    ========================================================================= */
 import { PRODUCTS, PRODUCT_IDS, grantsFrom } from '../core/products.js';
+import { grantPurchasePearls } from '../core/wallet.js';
 import { isNativeApp } from '../config.js';
 import { api, ensureIdentity, me } from './online.js';
 import { track } from './analytics.js';
@@ -24,7 +25,7 @@ export const available = () => !!getPlugin();
 /** يطبّق الصلاحيات على بيانات اللاعب (دمج: لا نسحب ما مُنح سابقًا إلا عبر الاسترجاع الصريح) */
 export function applyEntitlements(app, ent, { replace = false } = {}) {
   const cur = app.data.ent || {};
-  const next = replace ? { ...ent } : { noAds: cur.noAds || ent.noAds, skins: cur.skins || ent.skins, pro: cur.pro || ent.pro, season: ent.season !== undefined ? ent.season : cur.season || null };
+  const next = replace ? { ...ent } : { noAds: cur.noAds || ent.noAds, skins: cur.skins || ent.skins, pro: cur.pro || ent.pro, starter: cur.starter || ent.starter, season: ent.season !== undefined ? ent.season : cur.season || null };
   app.data.ent = next;
   app.save();
   return next;
@@ -68,13 +69,25 @@ async function finishPurchase(app, productId, pur) {
     if (!(await checkServer())) throw Object.assign(new Error('billing_disabled'), { code: 'billing_disabled' });
     const ent = await serverVerify(app, productId, pur.token);
     track('purchase');
-    return { ok: true, status: 'ok', entitlements: applyEntitlements(app, ent) };
+    const entitlements = applyEntitlements(app, ent);
+    const pearls = grantPurchasePearls(app.data, productId, pur.token); app.save();
+    return { ok: true, status: 'ok', entitlements, pearls };
   } catch (e) {
-    if (e.code === 'billing_disabled' && !PRODUCTS[productId].consumable) {
+    const prod = PRODUCTS[productId];
+    if (e.code === 'billing_disabled' && !prod.consumable) {
       // الخادم لا يتحقق بعد: نُقرّ من الجهاز (وإلا تسترد Google المبلغ بعد ٣ أيام)
       if (!pur.acknowledged) await getPlugin().acknowledge({ token: pur.token }).catch(() => {});
       track('purchase');
-      return { ok: true, status: 'ok', entitlements: applyEntitlements(app, grantsFrom([productId])) };
+      const entitlements = applyEntitlements(app, grantsFrom([productId]));
+      const pearls = grantPurchasePearls(app.data, productId, pur.token); app.save();
+      return { ok: true, status: 'ok', entitlements, pearls };
+    }
+    if (e.code === 'billing_disabled' && prod.consumable && prod.pearls) {
+      // حزم اللآلئ قبل تفعيل الخادم: نستهلك من الجهاز ثم نمنح (مرة واحدة لكل رمز)
+      await getPlugin().consume({ token: pur.token });
+      track('purchase');
+      const pearls = grantPurchasePearls(app.data, productId, pur.token); app.save();
+      return { ok: true, status: 'ok', entitlements: app.data.ent || {}, pearls };
     }
     // سيُعاد التحقق عند الاسترجاع التالي (Google تحتفظ بالشراء)
     return { ok: false, status: e.code || 'error' };
@@ -94,6 +107,7 @@ export async function restore(app) {
       if (PRODUCTS[id].consumable) { await finishPurchase(app, id, pur).catch(() => {}); continue; } // تذكرة لم تُستهلك بعد
       owned.push(id);
       if (!pur.acknowledged) await finishPurchase(app, id, pur).catch(() => {});
+      else grantPurchasePearls(app.data, id, pur.token); // لآلئ عرض البداية/الحزمة الكاملة (مرة لكل رمز)
     }
   }
   // Google Play هو المرجع للمنتجات الدائمة (يلغي ما استُرد مبلغه)؛ التذكرة من الخادم

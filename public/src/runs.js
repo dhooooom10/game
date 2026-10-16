@@ -8,6 +8,7 @@ import { findPath, lessonKey } from './core/curriculum.js';
 import { parTime } from './core/questions.js';
 import { accuracyBonus } from './core/scoring.js';
 import { randomSeed, createRng } from './core/rng.js';
+import { MAX_SHIELDS, addPearls, applyBoost } from './core/wallet.js';
 import { rainConfig, customConfig, customRecordKey, turbo, speedTier } from './core/rain.js';
 import { journeyRain, evaluateRainJourney, dailyRain, stormConfig, survivalConfig } from './core/modes.js';
 import { t } from './i18n.js';
@@ -244,7 +245,7 @@ export function finishRainRun(kind, args, run, sum, data, date = todayStr()) {
     });
     if (!ev.passed) view.notes.push(info.kind === 'sprint' ? t('rain.ruleSprint', { n: info.target }) : t('rain.ruleClassic', { n: info.target }));
   } else if (kind === 'custom') {
-    round = { ...base, recordKey: customRecordKey(args), recordValue: sum.popped };
+    round = { ...base, recordKey: customRecordKey(args), recordValue: sum.popped, endLives: args.end === 'lives' };
     Object.assign(view, { title: t('cus.done', { n: sum.popped }), mood: sum.popped >= 15 ? 'cheer' : 'happy' });
   } else if (kind === 'time' || kind === 'survival') {
     const key = turboKey(kind === 'time' ? timeRecordKey(args.dur, args.diff) : survivalRecordKey(args.diff), args);
@@ -277,6 +278,14 @@ export function finishRainRun(kind, args, run, sum, data, date = todayStr()) {
   if ((sum.speedX || 1) > (data.speedBest || 1)) { data.speedBest = sum.speedX; view.speed.newBest = true; }
   // القطرات الغامضة 🎁: مكافأة إضافية خارج اللعب (خبرة أو درع سلسلة) — حتمية من معرّف الجولة
   if (rewards.applied && sum.gifts) view.giftRewards = openGifts(data, sum.gifts, run.id);
+  // لآلئ مكتسبة باللعب: مهمة مكتملة، أو أول ٣ نجوم لمرحلة
+  if (rewards.applied) {
+    let earned = (rewards.missions?.length || 0) * PEARLS_MISSION;
+    if (kind === 'journey' && view.stars === 3 && round.starsGained > 0) earned += PEARLS_3STARS;
+    if (earned) { addPearls(data, earned); view.pearlsEarned = earned; }
+    const boosted = applyBoost(data, rewards.xp);
+    if (boosted) view.boosted = boosted;
+  }
   view.rewards = rewards;
   return { view, rewards };
 }
@@ -288,15 +297,17 @@ export function nearMiss(value, prev, broke) {
   return { left: prev - value + 1, prev };
 }
 
-export const MAX_SHIELDS = 3;
-/** يفتح الهدايا: ٦٠٪ +٢٥ خبرة، ٣٠٪ +٥٠ خبرة، ١٠٪ درع سلسلة 🛡️ (حتى ٣) */
+export { MAX_SHIELDS };
+/** يفتح الهدايا: ١٠٪ درع سلسلة 🛡️ (حتى ٣)، ٢٥٪ +١٠ لآلئ 💎، ٢٥٪ +٥٠ خبرة، والباقي +٢٥ خبرة */
 export function openGifts(data, n, id) {
   const rng = createRng('gift:' + id);
   const out = [];
   for (let i = 0; i < Math.min(n, 10); i++) {
     const r = rng.next();
     if (r < 0.1 && (data.shields || 0) < MAX_SHIELDS) { data.shields = (data.shields || 0) + 1; out.push({ type: 'shield' }); }
-    else { const xp = r < 0.4 ? 50 : 25; data.xp += xp; out.push({ type: 'xp', xp }); }
+    else if (r < 0.35) { addPearls(data, 10); out.push({ type: 'pearls', n: 10 }); }
+    else { const xp = r < 0.6 ? 50 : 25; data.xp += xp; out.push({ type: 'xp', xp }); }
   }
   return out;
 }
+export const PEARLS_MISSION = 5, PEARLS_3STARS = 5;

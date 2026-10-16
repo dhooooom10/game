@@ -115,7 +115,7 @@ export const app = {
     const items = [['home', 'home', 'nav.home'], ['journey', 'map', 'nav.journey'], ['online', 'users', 'nav.online'], ['progress', 'chart', 'nav.progress'], ['locker', 'trophy', 'nav.locker']];
     const inner = h('div.inner');
     for (const [name, ic, key] of items) {
-      inner.appendChild(h('button', {
+      inner.appendChild(h('button' + (name === 'online' ? '.nav-hero' : ''), {
         aria: { current: active === name ? 'page' : null }, 'data-nav': name,
         on: { click: () => { sfx.tap(); if (active !== name || this.stack.length > 1) this.go(name, {}, { root: true }); } },
       }, icon(ic), h('span', t(key))));

@@ -110,7 +110,7 @@ registerScreen('online', (app) => {
       bigBtn('tourBtn', '🏆', '#FFC94A', t('net.tournaments'), t('net.tournamentsSub'), () => app.go('tournaments')),
       bigBtn('weeklyBtn', '🌧️', '#3DDC97', t('net.weekly'), t('net.weeklySub'), () => startWeekly()),
       bigBtn('lbBtn', '📊', '#FF9F5A', t('net.leaderboards'), t('net.leaderboardsSub'), () => app.go('leaderboards')),
-      bigBtn('friendsBtn', '🤝', '#FF7BB0', t('net.friends'), t('net.friendsSub'), () => app.go('friends')),
+      bigBtn('friendsBtn', '🤝', '#FF7BB0', t('fh.title'), t('fh.sub'), () => app.go('friendsHub')),
       bigBtn('nationsBtn', '🌍', '#5AD1A0', t('nat.title'), t('nat.sub'), () => app.go('nations')),
       bigBtn('clubsBtn', '🏫', '#38D6F5', t('club.title'), t('club.sub'), () => app.go('clubs'))));
     if (pgs.available() && pgs.signedIn()) {
@@ -593,3 +593,5 @@ export async function uploadDaily(app, date, log, endTick) {
   if (!app.data.online?.token) return;
   try { net.useIdentity(app.data); await net.api('POST', '/api/daily/submit', { date, log, endTick }); } catch { /* بلا اتصال: تبقى النتيجة المحلية */ }
 }
+
+export { guard, errText, drop, share, offlineCard };

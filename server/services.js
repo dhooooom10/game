@@ -111,7 +111,7 @@ export function createServices(db, { now = () => Date.now(), play = null } = {})
   S.deleteAccount = (pid) => db.tx(() => {
     for (const c of db.all('SELECT id FROM clubs WHERE owner=?', pid)) { db.run('DELETE FROM club_members WHERE club_id=?', c.id); db.run('DELETE FROM clubs WHERE id=?', c.id); }
     for (const sql of ['DELETE FROM runs WHERE player_id=?', 'DELETE FROM purchases WHERE player_id=?', 'DELETE FROM player_tokens WHERE player_id=?', 'DELETE FROM club_members WHERE player_id=?', 'DELETE FROM friends WHERE a=? OR b=?', 'DELETE FROM season_ratings WHERE player_id=?',
-      'DELETE FROM rewards WHERE player_id=?', 'DELETE FROM challenges WHERE creator=?', 'DELETE FROM players WHERE id=?']) {
+      'DELETE FROM rewards WHERE player_id=?', 'DELETE FROM challenges WHERE creator=? OR target=?', 'DELETE FROM players WHERE id=?']) {
       const n = (sql.match(/\?/g) || []).length;
       db.run(sql, ...Array(n).fill(pid));
     }
@@ -520,10 +520,56 @@ export function createServices(db, { now = () => Date.now(), play = null } = {})
     return f.id;
   };
   S.removeFriend = (pid, fid) => { db.run('DELETE FROM friends WHERE (a=? AND b=?) OR (a=? AND b=?)', pid, fid, fid, pid); };
-  S.friends = (pid, onlineSet = new Set()) => db.all(`
-    SELECT p.id, p.name, p.skin, p.code, (SELECT MAX(score) FROM runs r WHERE r.player_id=p.id AND r.kind='weekly' AND r.week=? AND r.valid=1) AS weekly
+  S.friends = (pid, onlineSet = new Set()) => {
+    const h2h = S.headToHead(pid);
+    return db.all(`
+    SELECT p.id, p.name, p.skin, p.code, p.jstars, p.jlevel, p.xp, (SELECT MAX(score) FROM runs r WHERE r.player_id=p.id AND r.kind='weekly' AND r.week=? AND r.valid=1) AS weekly
     FROM friends f JOIN players p ON p.id=f.b WHERE f.a=? AND p.banned=0 ORDER BY p.name`, isoWeek(now()), pid)
-    .map((f) => ({ ...f, online: onlineSet.has(f.id) }));
+      .map((f) => ({ ...f, jstars: f.jstars || 0, jlevel: f.jlevel || 1, xp: f.xp || 0, online: onlineSet.has(f.id), h2h: h2h[f.id] || { w: 0, l: 0, d: 0 } }));
+  };
+  /** تقدّم الرحلة (يرسله الجهاز) — للمقارنة بين الأصدقاء فقط، لا يدخل أي ترتيب عام */
+  S.syncProgress = (pid, { stars, level, xp } = {}) => {
+    const n = (v, lo, hi) => (Number.isFinite(+v) ? Math.max(lo, Math.min(hi, Math.round(+v))) : null);
+    db.run('UPDATE players SET jstars=COALESCE(?, jstars), jlevel=COALESCE(?, jlevel), xp=COALESCE(?, xp) WHERE id=?', n(stars, 0, 300), n(level, 1, 100), n(xp, 0, 1e8), pid);
+    return { ok: true };
+  };
+
+  /* ---------------- تحدّي صديق (من قائمة الأصدقاء) ---------------- */
+  const bestOn = (cid, pid) => db.get("SELECT MAX(score) AS s FROM runs WHERE kind='challenge' AND ref=? AND player_id=? AND valid=1", cid, pid)?.s ?? null;
+  const cleanMeta = (m = {}) => ({
+    kind: m.kind === 'level' ? 'level' : 'custom',
+    level: Number.isInteger(m.level) && m.level >= 1 && m.level <= 100 ? m.level : null,
+    label: typeof m.label === 'string' ? m.label.slice(0, 80) : '',
+  });
+  S.sendFriendChallenge = (pid, fid, body = {}) => {
+    if (!S.friendIds(pid).includes(fid)) throw new HttpError(403, 'not_friend');
+    const pending = db.get('SELECT COUNT(*) AS n FROM challenges WHERE creator=? AND target=? AND expires>?', pid, fid, now()).n;
+    if (pending >= 20) throw new HttpError(429, 'too_many');
+    const r = S.createLocalChallenge(pid, body);
+    db.run('UPDATE challenges SET target=?, meta=? WHERE id=?', fid, JSON.stringify(cleanMeta(body.meta)), r.id);
+    return r;
+  };
+  /** صندوق التحديات: ما وصلني من أصدقائي وما أرسلته، مع النتائج */
+  S.inbox = (pid) => {
+    const rows = (sql) => db.all(sql, pid, now());
+    const received = rows(`SELECT c.id, c.score, c.meta, c.created, c.creator AS other, p.name FROM challenges c JOIN players p ON p.id=c.creator
+      WHERE c.target=? AND c.expires>? ORDER BY c.created DESC LIMIT 50`).map((c) => ({ id: c.id, from: c.name, fromId: c.other, target: c.score, mine: bestOn(c.id, pid), meta: JSON.parse(c.meta || '{}'), created: c.created }));
+    const sent = rows(`SELECT c.id, c.score, c.meta, c.created, c.target AS other, p.name FROM challenges c JOIN players p ON p.id=c.target
+      WHERE c.creator=? AND c.expires>? ORDER BY c.created DESC LIMIT 50`).map((c) => ({ id: c.id, to: c.name, toId: c.other, score: c.score, theirs: bestOn(c.id, c.other), meta: JSON.parse(c.meta || '{}'), created: c.created }));
+    return { received, sent, pending: received.filter((c) => c.mine == null).length };
+  };
+  /** الحصيلة بيني وبين كل صديق: فوز/خسارة/تعادل في التحديات المكتملة */
+  S.headToHead = (pid) => {
+    const out = {};
+    const add = (fid, mine, theirs) => {
+      if (mine == null || theirs == null) return;
+      const o = (out[fid] ||= { w: 0, l: 0, d: 0 });
+      if (mine > theirs) o.w++; else if (mine < theirs) o.l++; else o.d++;
+    };
+    for (const c of db.all('SELECT id, score, target FROM challenges WHERE creator=? AND target IS NOT NULL', pid)) add(c.target, c.score, bestOn(c.id, c.target));
+    for (const c of db.all('SELECT id, score, creator FROM challenges WHERE target=?', pid)) add(c.creator, bestOn(c.id, pid), c.score);
+    return out;
+  };
 
   /* ---------------- التحدي بالرابط ---------------- */
   S.createChallenge = (pid, runId) => {

@@ -8,7 +8,7 @@ let S, browser;
 before(async () => { S = await startServer({ registerLimit: 1000 }); browser = await launch(); });
 after(async () => { await browser.close(); await S.close(); });
 
-test('turbo switch on home applies to time attack: ⚡ label, capped numbers, speed chip, separate record', async () => {
+test('turbo switch on home applies to the journey: ⚡ label, single-digit numbers, speed chip', async () => {
   const p = await newPage(browser);
   await p.goto(S.url + '/?e2e=1');
   await waitScreen(p, 'home');
@@ -16,14 +16,11 @@ test('turbo switch on home applies to time attack: ⚡ label, capped numbers, sp
   await p.click('.turbo-row');
   assert.equal(await p.evaluate(() => window.__mc.data.prefs.turbo.on), true);
   assert.equal(await p.getAttribute('.turbo-row', 'data-on'), 'true');
-  await p.click('#modeTime');
-  await waitScreen(p, 'setupTime');
-  assert.equal(await p.getAttribute('.turbo-row', 'data-on'), 'true', 'same switch state on the setup screen');
-  await p.click('#startTime');
+  await p.click('#playNow');
   await waitScreen(p, 'rainPlay');
   const cfg = await p.evaluate(() => window.__mc.current.rain().cfg);
   assert.equal(cfg.turbo, true); assert.ok(cfg.accel >= 0.14);
-  assert.ok(Object.values(cfg.tiers).every((t) => t <= 3));
+  assert.ok(Object.values(cfg.tiers).every((t) => t <= 2));
   await p.waitForSelector('.hud-sub .label:has-text("⚡")');
   await p.waitForSelector('.speed-chip:not([hidden])');
   // نقفز في المحرك: الحمّى عبر ١٠ إصابات متتالية، ثم التسارع

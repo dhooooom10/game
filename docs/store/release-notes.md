@@ -1,5 +1,25 @@
 # ما الجديد — نص جاهز لحقل «ملاحظات الإصدار» في Google Play
 
+## الإصدار 1.2.0 (رقم البناء 7)
+
+### العربية (ar)
+```
+🤝 تحدّي الأصدقاء: أضف أصدقاءك بالرمز وتحدَّهم بتحدٍّ خاص أو بمرحلة
+📥 صندوق تحديات + حصيلة الفوز بينك وبين كل صديق + سباق الرحلة
+🌐 الأونلاين صار في الواجهة مباشرة تحت «العب الآن»
+💎 اللآلئ: اكسبها باللعب واستخدمها لدرع السلسلة والفرصة الثانية والمظاهر
+🎁 حزمة البداية وحزم لآلئ جديدة في المتجر
+```
+
+### English (en-US)
+```
+🤝 Friends challenge: add friends by code, send custom or level challenges
+📥 Challenge inbox, head-to-head record with each friend, journey race
+🌐 Online is now right under Play on the home screen
+💎 Pearls: earn them by playing, use them for streak shields, second chances and skins
+🎁 Starter pack and new pearl packs in the shop
+```
+
 ## الإصدار 1.1.1 (رقم البناء 6)
 
 ### العربية (ar)

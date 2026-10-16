@@ -18,6 +18,8 @@ import { streakMultiplier } from '../core/scoring.js';
 import { buildRainRun, finishRainRun } from '../runs.js';
 import { buildDrop, sizeDrop, dropDefsSVG, popBurst, groundSplash } from '../ui/drop.js';
 import * as ads from '../net/ads.js';
+import { pearls, spend } from '../core/wallet.js';
+import { PEARL_PRICES } from '../core/products.js';
 
 
 /** «×١٫٤» معزولة الاتجاه حتى لا تنقلب في الواجهة العربية */
@@ -369,14 +371,18 @@ registerScreen('rainPlay', (app, params) => {
 
   /* ---------- فرصة ثانية بإعلان بمكافأة (اختياري، مرة واحدة، أنماط فردية فقط) ---------- */
   function canRevive() {
-    return !online && !meta.tutorial && ['journey', 'survival', 'custom'].includes(kind) && R.state.endReason === 'lives' && !revived && ads.rewardedReady();
+    // تحدي صديق: لا فرصة ثانية (الخادم لا يقبل الجولات المُنعشة)
+    return !online && !meta.tutorial && !params.args?.sendTo && ['journey', 'survival', 'custom'].includes(kind) && R.state.endReason === 'lives' && !revived
+      && (ads.rewardedReady() || pearls(data) >= PEARL_PRICES.revive);
   }
   function offerRevive() {
     offering = true; paused = true;
     sky.classList.add('veiled');
-    const done = async (watch) => {
+    const done = async (how) => {
       overlay?.remove(); overlay = null; sky.classList.remove('veiled');
-      if (watch && (await ads.showRewarded()) && R.revive()) {
+      const paid = how === 'ad' ? await ads.showRewarded() : how === 'pearls' ? spend(data, PEARL_PRICES.revive) : false;
+      if (paid && R.revive()) {
+        if (how === 'pearls') app.save();
         revived = true;
         for (const d of R.state.drops) if (d.cleared) { const de = dropEls.get(d.id); if (de) { de.classList.add('popped'); setTimeout(() => de.remove(), 260); dropEls.delete(d.id); } }
         sfx.reward(); paintHud(true);
@@ -388,8 +394,11 @@ registerScreen('rainPlay', (app, params) => {
     overlay = h('div.overlay', { role: 'dialog', aria: { modal: 'true', label: t('ads.reviveTitle') } }, h('div.panel',
       h('div', { style: { fontSize: '2.4rem' } }, '💧'),
       h('h2', t('ads.reviveTitle')), h('p.note', t('ads.reviveBody')),
-      h('div.stack', h('button.btn.gold.block.lg', { id: 'reviveYes', 'data-autofocus': true, on: { click: () => done(true) } }, '🎬 ', t('ads.reviveYes')),
-        h('button.btn.ghost.block', { id: 'reviveNo', on: { click: () => done(false) } }, t('ads.reviveNo')))));
+      h('div.stack',
+        ads.rewardedReady() ? h('button.btn.gold.block.lg', { id: 'reviveYes', 'data-autofocus': true, on: { click: () => done('ad') } }, '🎬 ', t('ads.reviveYes')) : null,
+        pearls(data) >= PEARL_PRICES.revive ? h('button.btn.primary.block' + (ads.rewardedReady() ? '' : '.lg'), { id: 'revivePearls', 'data-autofocus': ads.rewardedReady() ? null : true, on: { click: () => done('pearls') } },
+          '💎 ', t('wal.reviveBtn', { n: num(PEARL_PRICES.revive), b: num(pearls(data)) })) : null,
+        h('button.btn.ghost.block', { id: 'reviveNo', on: { click: () => done(null) } }, t('ads.reviveNo')))));
     document.body.appendChild(overlay);
     overlay.querySelector('[data-autofocus]').focus();
   }

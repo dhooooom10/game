@@ -38,7 +38,7 @@ registerScreen('locker', (app, params) => {
     for (const cat of ['theme', 'skin', 'acc']) {
       const grid = h('div.cos-grid', { role: 'group', aria: { label: t('lock.' + cat) } });
       for (const it of COSMETICS[cat]) {
-        const unlocked = isUnlocked(data, it);
+        const unlocked = isUnlocked(data, it, cat);
         const sel = cos[cat] === it.id;
         let visual;
         if (cat === 'theme') { const [a, b] = THEME_SWATCH[it.id]; visual = h('span.sw', { style: { background: `linear-gradient(135deg, ${a} 55%, ${b} 55%)` } }); }

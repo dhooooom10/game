@@ -1,6 +1,6 @@
 /* شاشة نهاية الجولة: النتيجة، النجوم، الدقة، التقدّم، المكافآت، ونصيحة للتحسّن. */
 import { app, registerScreen } from '../app.js';
-import { h, icon, num } from '../ui/dom.js';
+import { h, icon, num, clear } from '../ui/dom.js';
 import { mascotSVG } from '../ui/mascot.js';
 import { sfx, buzz } from '../ui/audio.js';
 import { countUp, confetti, reducedMotion } from '../ui/fx.js';
@@ -48,8 +48,11 @@ registerScreen('results', (app, { view }) => {
   }
   // القطرات الغامضة
   if (view.giftRewards?.length) {
-    el.appendChild(h('div.gift-list', ...view.giftRewards.map((g) => h('span.chip' + (g.type === 'shield' ? '.ok' : '.gold'), g.type === 'shield' ? '🎁 🛡️ ' + t('shield.one') : '🎁 \u2066+' + num(g.xp) + ' XP\u2069'))));
+    el.appendChild(h('div.gift-list', ...view.giftRewards.map((g) => h('span.chip' + (g.type === 'shield' ? '.ok' : '.gold'), g.type === 'shield' ? '🎁 🛡️ ' + t('shield.one') : g.type === 'pearls' ? '🎁 \u2066+' + num(g.n) + ' 💎\u2069' : '🎁 \u2066+' + num(g.xp) + ' XP\u2069'))));
   }
+  if (view.pearlsEarned || view.boosted) el.appendChild(h('div.gift-list',
+    view.pearlsEarned ? h('span.chip.gold', { id: 'pearlsEarned' }, '\u2066+' + num(view.pearlsEarned) + ' 💎\u2069 ', t('wal.earned')) : null,
+    view.boosted ? h('span.chip.ok', '🚀 ', t('wal.boosted', { n: num(view.boosted) })) : null));
   for (const n of view.notes) el.appendChild(h('p.note', { style: { textAlign: 'center', margin: '6px 0 0' } }, n));
 
   // الإحصاءات
@@ -113,11 +116,33 @@ registerScreen('results', (app, { view }) => {
     el.appendChild(tipCard);
   }
 
+  // تحدٍّ لصديق من القائمة: نرسل الجولة تلقائيًا (الخادم يعيد تشغيلها) ونعرض الحالة
+  const sendTo = view.args?.sendTo;
+  if (sendTo) {
+    const st = h('section.card.send-card', { id: 'sendStatus' }, h('span.spinner'), ' ', t('fh.sending', { name: sendTo.name }));
+    el.appendChild(st);
+    const meta = view.kind === 'journey' ? { kind: 'level', level: view.args.level } : { kind: 'custom', label: [view.args.ops?.map((o) => t('op.' + o)).join(' '), t('diff.' + view.args.level), t('cus.speed.' + view.args.speed)].filter(Boolean).join(' · ') };
+    (async () => {
+      try {
+        if (!view.replay) throw Object.assign(new Error('x'), { code: 'run_invalid' });
+        const net = await import('../net/online.js');
+        await net.ensureIdentity(app);
+        const r = await net.api('POST', `/api/friends/${sendTo.id}/challenge`, { ...view.replay, meta });
+        track('share_challenge');
+        clear(st).append('✅ ', t('fh.sent1', { name: sendTo.name, n: num(r.score) }));
+        st.classList.add('ok');
+      } catch (e) {
+        clear(st).append('⚠️ ', t('fh.sendFail'));
+        st.classList.add('bad');
+      }
+    })();
+  }
+
   // الأزرار: إعادة اللعب مباشرة دائمًا متاحة
   const btns = h('div.stack', { style: { marginTop: '18px' } });
   const replayBtn = (label, primary = true) => h('button.btn.block.lg' + (primary ? '.primary' : ''), { id: 'replayBtn', on: { click: () => {
     sfx.tap();
-    if (view.engine === 'rain') return app.go('rainPlay', { kind: view.kind, args: view.kind === 'daily' ? { ...view.args, official: false } : view.args }, { replace: true });
+    if (view.engine === 'rain') { const { sendTo: _s, ...args } = view.args || {}; return app.go('rainPlay', { kind: view.kind, args: view.kind === 'daily' ? { ...args, official: false } : args }, { replace: true }); }
     app.go('play', { kind: view.kind, args: view.kind === 'daily' ? { ...view.args, official: false } : view.args }, { replace: true });
   } } }, icon('refresh'), label);
   if (view.kind === 'journey') {

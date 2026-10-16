@@ -66,6 +66,12 @@ export function openDb(path = ':memory:') {
   if (!cols.includes('country')) db.exec('ALTER TABLE players ADD COLUMN country TEXT');
   if (!cols.includes('country_set')) db.exec('ALTER TABLE players ADD COLUMN country_set INTEGER');
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS players_pgs ON players(pgs_id) WHERE pgs_id IS NOT NULL');
+  // ترقية: تقدّم الرحلة (لسباق الأصدقاء) وتحديات موجّهة لصديق
+  for (const [c, type] of [['jstars', 'INTEGER'], ['jlevel', 'INTEGER'], ['xp', 'INTEGER']]) if (!cols.includes(c)) db.exec(`ALTER TABLE players ADD COLUMN ${c} ${type}`);
+  const ccols = db.prepare('PRAGMA table_info(challenges)').all().map((c) => c.name);
+  if (!ccols.includes('target')) db.exec('ALTER TABLE challenges ADD COLUMN target TEXT');
+  if (!ccols.includes('meta')) db.exec('ALTER TABLE challenges ADD COLUMN meta TEXT');
+  db.exec('CREATE INDEX IF NOT EXISTS challenges_target ON challenges(target) WHERE target IS NOT NULL');
   const cache = new Map();
   const q = (sql) => { let s = cache.get(sql); if (!s) { s = db.prepare(sql); cache.set(sql, s); } return s; };
   return {

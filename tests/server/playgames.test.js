@@ -246,3 +246,52 @@ test('purchases: disabled without a service account', async () => {
     assert.equal((await s.api('GET', '/api/me/entitlements', null, a.token)).billing, false);
   } finally { await s.close(); }
 });
+
+test('friends: progress sync, challenge a friend (custom or level), inbox both ways, head-to-head', async () => {
+  const { customConfig, TICK_MS } = await import('../../public/src/core/rain.js');
+  const { journeyRain } = await import('../../public/src/core/modes.js');
+  const { playBot } = await import('./helpers.js');
+  const s = await boot();
+  try {
+    const a = await s.api('POST', '/api/register', { name: 'Ali' });
+    const b = await s.api('POST', '/api/register', { name: 'Badr' });
+    const c = await s.api('POST', '/api/register', { name: 'Cara' });
+    assert.equal((await s.api('POST', '/api/friends', { code: b.code }, a.token)).status, 200);
+    assert.equal((await s.api('POST', '/api/me/progress', { stars: 57, level: 22, xp: 4000 }, b.token)).status, 200);
+    let fr = await s.api('GET', '/api/friends', null, a.token);
+    assert.equal(fr.friends[0].jstars, 57); assert.equal(fr.friends[0].jlevel, 22);
+    // تحدٍّ مخصص لصديق
+    const cfg = customConfig({ ops: ['add', 'sub'], level: 'easy', speed: 'fast', end: 't60', accel: true });
+    const run = playBot(cfg, 777, { think: 40 });
+    const sent = await s.api('POST', `/api/friends/${b.id}/challenge`, { cfg, seed: 777, log: run.log, endTick: run.endTick, meta: { kind: 'custom', label: 'x' } }, a.token);
+    assert.equal(sent.status, 200); assert.equal(sent.score, run.summary.score);
+    // ليس صديقًا ← مرفوض
+    assert.equal((await s.api('POST', `/api/friends/${c.id}/challenge`, { cfg, seed: 777, log: run.log, endTick: run.endTick }, a.token)).status, 403);
+    // تحدي مرحلة
+    const j = journeyRain(5);
+    const jr = playBot(j.cfg, 55, { think: 40 });
+    assert.equal((await s.api('POST', `/api/friends/${b.id}/challenge`, { cfg: j.cfg, seed: 55, log: jr.log, endTick: jr.endTick, meta: { kind: 'level', level: 5 } }, a.token)).status, 200);
+    let ib = await s.api('GET', '/api/inbox', null, b.token);
+    assert.equal(ib.received.length, 2); assert.equal(ib.pending, 2);
+    const lvl = ib.received.find((x) => x.meta.kind === 'level');
+    assert.equal(lvl.meta.level, 5); assert.equal(lvl.from, 'Ali');
+    // الصديق يلعب التحدي المخصص (أبطأ قليلًا) ويخسر
+    const cust = ib.received.find((x) => x.meta.kind === 'custom');
+    const st = await s.api('POST', `/api/challenges/${cust.id}/run`, null, b.token);
+    const brun = playBot(st.cfg, st.seed, { think: 70 });
+    s.clock.t += brun.endTick * TICK_MS + 1000;
+    const sub = await s.api('POST', `/api/runs/${st.runId}/submit`, { log: brun.log, endTick: brun.endTick }, b.token);
+    assert.equal(sub.valid, true);
+    ib = await s.api('GET', '/api/inbox', null, b.token);
+    assert.equal(ib.pending, 1);
+    assert.equal(ib.received.find((x) => x.id === cust.id).mine, sub.score);
+    const ia = await s.api('GET', '/api/inbox', null, a.token);
+    assert.equal(ia.sent.find((x) => x.id === cust.id).theirs, sub.score);
+    fr = await s.api('GET', '/api/friends', null, a.token);
+    const expect = sent.score > sub.score ? { w: 1, l: 0, d: 0 } : sent.score < sub.score ? { w: 0, l: 1, d: 0 } : { w: 0, l: 0, d: 1 };
+    assert.deepEqual(fr.friends[0].h2h, expect);
+    // حذف الحساب يزيل التحديات الموجّهة
+    await s.api('DELETE', '/api/me', null, b.token);
+    assert.equal((await s.api('GET', '/api/inbox', null, a.token)).sent.length, 0);
+  } finally { await s.close(); }
+});
