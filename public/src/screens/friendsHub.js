@@ -14,6 +14,7 @@ import { track } from '../net/analytics.js';
 import { topbar, seg, customFields } from './setup.js';
 import { guard, errText, drop, share, playOnline } from './online.js';
 import { TOTAL_LEVELS } from '../core/modes.js';
+import { normalizeChallenge } from '../core/challenge.js';
 
 const totalStars = (d) => Object.values(d.journey.stars).reduce((a, b) => a + b, 0);
 
@@ -126,7 +127,9 @@ registerScreen('friendsHub', (app) => {
 /* ---------------- تحدٍّ جديد لصديق: مخصص (نفس خانات «تحدّيك الخاص») أو مرحلة ---------------- */
 registerScreen('friendChallenge', (app, { friend }) => {
   const data = app.data;
-  const pref = (data.prefs.friendChallenge ||= { tab: 'custom', ops: ['add', 'sub'], level: 'easy', speed: 'fast', end: 't60', accel: true, jlevel: 1 });
+  const fc = (data.prefs.friendChallenge ||= {});
+  // نفس قواعد «تخصيص» في «تحدّيك الخاص» (تحوّل الصيغ القديمة تلقائيًا)
+  const pref = Object.assign(fc, normalizeChallenge({ mode: 'custom', ...fc }), { tab: fc.tab === 'level' ? 'level' : 'custom', jlevel: fc.jlevel || 1 });
   const el = h('main', topbar(t('fh.newTitle', { name: friend.name }), t('fh.newSub')));
   const body = h('div', { style: { marginTop: '12px' } });
   el.append(seg([['custom', '⚔️ ' + t('fh.tabCustom')], ['level', '🗺️ ' + t('fh.tabLevel')]], pref.tab, (v) => { pref.tab = v; app.save(); paint(); }, t('fh.newSub')), body);
@@ -138,7 +141,7 @@ registerScreen('friendChallenge', (app, { friend }) => {
         h('p.note', t('fh.howCustom', { name: friend.name })),
         h('button.btn.gold.block.lg', { id: 'startFriendChallenge', type: 'button', on: { click: () => {
           sfx.tap();
-          const args = { ops: [...pref.ops], level: pref.level, speed: pref.speed, end: pref.end, accel: pref.accel, sendTo };
+          const args = { ...normalizeChallenge({ ...pref, mode: 'custom' }), sendTo };
           app.go('rainPlay', { kind: 'custom', args });
         } } }, icon('play'), t('fh.playSend')));
     } else {
@@ -156,5 +159,36 @@ registerScreen('friendChallenge', (app, { friend }) => {
     }
   }
   paint();
+  return { el };
+});
+
+/* =========================================================================
+   مركز الإشعارات (من الخادم): تحدٍّ جديد، صديقك لعب تحدّيك، أضافك صديق، تغيّرت رتبتك.
+   كل إشعار يفتح مكانه الصحيح مباشرة.
+   ========================================================================= */
+const NOTIF_ICON = { challenge: '⚔️', challenge_result: '🏁', friend_added: '🤝', rank_up: '⬆️', rank_down: '⬇️' };
+export function notifText(n) {
+  const d = n.data || {};
+  if (n.kind === 'challenge') return t('notif.challenge', { name: d.name, n: num(d.score) });
+  if (n.kind === 'challenge_result') return t(d.theirs > d.mine ? 'notif.resultLost' : d.theirs < d.mine ? 'notif.resultWon' : 'notif.resultDraw', { name: d.name, a: num(d.mine), b: num(d.theirs) });
+  if (n.kind === 'friend_added') return t('notif.friendAdded', { name: d.name });
+  if (n.kind === 'rank_up' || n.kind === 'rank_down') return t('rank.change.' + (n.kind === 'rank_up' ? 'up' : 'down'), { r: t('rank.' + d.rank) });
+  return '';
+}
+registerScreen('notifications', (app) => {
+  const el = h('main', topbar(t('notif.title')));
+  const box = h('div'); el.append(box);
+  guard(box, async () => {
+    const r = await net.api('GET', '/api/notifications');
+    clear(box);
+    if (!r.list.length) box.append(h('section.card.empty-state', h('div', { style: { fontSize: '2.4rem' } }, '🔔'), h('p.note', t('notif.empty'))));
+    for (const n of r.list) {
+      box.append(h('button.notif-row' + (n.read ? '' : '.unread'), { type: 'button', 'data-kind': n.kind, on: { click: () => {
+        sfx.tap();
+        app.go(n.kind.startsWith('rank') ? 'online' : 'friendsHub');
+      } } }, h('span.ni', NOTIF_ICON[n.kind] || '🔔'), h('span.grow', notifText(n)), n.read ? null : h('i.dot.on')));
+    }
+    if (r.unread) net.api('POST', '/api/notifications/read').catch(() => {});
+  });
   return { el };
 });

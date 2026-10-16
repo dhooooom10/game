@@ -6,6 +6,8 @@
 
 const meta = typeof document !== 'undefined' ? document.querySelector('meta[name="mc-server"]') : null;
 export const SERVER = (meta && meta.content) || (typeof location !== 'undefined' ? location.origin : '');
+/** الأونلاين متاح في هذا الإصدار؟ (نسخة التجربة تُبنى بخادم .invalid حتى يُنشر الخادم) */
+export const onlineAvailable = () => !!SERVER && !/\.invalid(?=[:/]|$)/.test(SERVER);
 
 let ws = null, wsReady = false, wsWanted = false, backoff = 500, offset = 0;
 const listeners = new Set();

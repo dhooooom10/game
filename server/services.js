@@ -6,6 +6,7 @@
    ========================================================================= */
 import { randomBytes, createHash } from 'node:crypto';
 import { PRODUCTS, grantsFrom } from '../public/src/core/products.js';
+import { rankOf } from '../public/src/core/ranks.js';
 import { replayRain, plausible, stormConfig, survivalConfig, rainConfig, TICK_MS, COMPETITIVE_ACCEL } from '../public/src/core/rain.js';
 
 export const OCCASIONS = {
@@ -111,7 +112,7 @@ export function createServices(db, { now = () => Date.now(), play = null } = {})
   S.deleteAccount = (pid) => db.tx(() => {
     for (const c of db.all('SELECT id FROM clubs WHERE owner=?', pid)) { db.run('DELETE FROM club_members WHERE club_id=?', c.id); db.run('DELETE FROM clubs WHERE id=?', c.id); }
     for (const sql of ['DELETE FROM runs WHERE player_id=?', 'DELETE FROM purchases WHERE player_id=?', 'DELETE FROM player_tokens WHERE player_id=?', 'DELETE FROM club_members WHERE player_id=?', 'DELETE FROM friends WHERE a=? OR b=?', 'DELETE FROM season_ratings WHERE player_id=?',
-      'DELETE FROM rewards WHERE player_id=?', 'DELETE FROM challenges WHERE creator=? OR target=?', 'DELETE FROM players WHERE id=?']) {
+      'DELETE FROM rewards WHERE player_id=?', 'DELETE FROM challenges WHERE creator=? OR target=?', 'DELETE FROM notifications WHERE player_id=?', 'DELETE FROM season_claims WHERE player_id=?', 'DELETE FROM players WHERE id=?']) {
       const n = (sql.match(/\?/g) || []).length;
       db.run(sql, ...Array(n).fill(pid));
     }
@@ -338,9 +339,12 @@ export function createServices(db, { now = () => Date.now(), play = null } = {})
     for (const x of standings) {
       const before = R[x.id], after = Math.max(100, Math.round(before + delta[x.id]));
       const won = standings.every((o) => o.id === x.id || x.score > o.score) ? 1 : 0;
+      const prevRow = S.rating(x.id);
       db.run(`INSERT INTO season_ratings(season_id, player_id, rating, games, wins) VALUES (?,?,?,1,?)
         ON CONFLICT(season_id, player_id) DO UPDATE SET rating=excluded.rating, games=games+1, wins=wins+excluded.wins`, s.id, x.id, after, won);
-      out[x.id] = { before, after };
+      const rb = rankOf(before, prevRow.games), ra = rankOf(after, prevRow.games + 1);
+      out[x.id] = { before, after, rank: ra.id, placed: ra.placed, rankChange: ra.placed && (!rb.placed || rb.id !== ra.id) ? (ra.min > rb.min || !rb.placed ? 'up' : 'down') : null };
+      if (out[x.id].rankChange) S.notify(x.id, 'rank_' + out[x.id].rankChange, { rank: ra.id });
     }
     return out;
   };
@@ -381,6 +385,11 @@ export function createServices(db, { now = () => Date.now(), play = null } = {})
     }
     db.run('UPDATE runs SET submitted=?, score=?, popped=?, accuracy=?, ticks=?, valid=?, timeline=? WHERE id=?',
       now(), summary.score, summary.popped, summary.accuracy, summary.ticks, valid, JSON.stringify(timeline.slice(-400)), runId);
+    // صاحب التحدّي يعرف أن صديقه لعب تحدّيه
+    if (valid && run.kind === 'challenge') {
+      const c = db.get('SELECT creator, score FROM challenges WHERE id=?', run.ref);
+      if (c && c.creator !== pid) S.notify(c.creator, 'challenge_result', { id: run.ref, name: db.get('SELECT name FROM players WHERE id=?', pid)?.name, theirs: summary.score, mine: c.score });
+    }
     return { score: summary.score, popped: summary.popped, accuracy: summary.accuracy, ticks: summary.ticks, valid: !!valid, summary };
   };
 
@@ -516,7 +525,8 @@ export function createServices(db, { now = () => Date.now(), play = null } = {})
     if (f.id === pid) throw new HttpError(400, 'self');
     if (S.friendIds(pid).length >= 200) throw new HttpError(409, 'too_many');
     db.run('INSERT OR IGNORE INTO friends(a,b,created) VALUES (?,?,?)', pid, f.id, now());
-    db.run('INSERT OR IGNORE INTO friends(a,b,created) VALUES (?,?,?)', f.id, pid, now());
+    const fresh = db.run('INSERT OR IGNORE INTO friends(a,b,created) VALUES (?,?,?)', f.id, pid, now()).changes;
+    if (fresh) S.notify(f.id, 'friend_added', { name: db.get('SELECT name FROM players WHERE id=?', pid)?.name });
     return f.id;
   };
   S.removeFriend = (pid, fid) => { db.run('DELETE FROM friends WHERE (a=? AND b=?) OR (a=? AND b=?)', pid, fid, fid, pid); };
@@ -527,6 +537,37 @@ export function createServices(db, { now = () => Date.now(), play = null } = {})
     FROM friends f JOIN players p ON p.id=f.b WHERE f.a=? AND p.banned=0 ORDER BY p.name`, isoWeek(now()), pid)
       .map((f) => ({ ...f, jstars: f.jstars || 0, jlevel: f.jlevel || 1, xp: f.xp || 0, online: onlineSet.has(f.id), h2h: h2h[f.id] || { w: 0, l: 0, d: 0 } }));
   };
+  /* ---------------- الإشعارات داخل التطبيق ---------------- */
+  S.notify = (pid, kind, data = {}) => {
+    db.run('INSERT INTO notifications(player_id, kind, data, created) VALUES (?,?,?,?)', pid, kind, JSON.stringify(data), now());
+    db.run('DELETE FROM notifications WHERE player_id=? AND id NOT IN (SELECT id FROM notifications WHERE player_id=? ORDER BY id DESC LIMIT 100)', pid, pid);
+  };
+  S.notifications = (pid) => {
+    const list = db.all('SELECT id, kind, data, created, read FROM notifications WHERE player_id=? ORDER BY id DESC LIMIT 30', pid)
+      .map((n) => ({ ...n, data: JSON.parse(n.data || '{}'), read: !!n.read }));
+    return { list, unread: db.get('SELECT COUNT(*) AS n FROM notifications WHERE player_id=? AND read=0', pid).n };
+  };
+  S.readNotifications = (pid) => { db.run('UPDATE notifications SET read=1 WHERE player_id=? AND read=0', pid); return { ok: true }; };
+
+  /* ---------------- مكافأة نهاية الموسم (حسب الرتبة النهائية، مرة واحدة) ---------------- */
+  S.lastEndedSeason = () => db.get('SELECT * FROM seasons WHERE ends IS NOT NULL AND ends<=? ORDER BY ends DESC, starts DESC LIMIT 1', now());
+  S.seasonReward = (pid) => {
+    const s = S.lastEndedSeason();
+    if (!s) return { available: false };
+    const r = db.get('SELECT rating, games FROM season_ratings WHERE season_id=? AND player_id=?', s.id, pid);
+    if (!r) return { available: false };
+    const rk = rankOf(r.rating, r.games);
+    const claimed = db.get('SELECT pearls FROM season_claims WHERE season_id=? AND player_id=?', s.id, pid);
+    return { available: rk.placed && !claimed, claimed: !!claimed, placed: rk.placed, season: { id: s.id, name_ar: s.name_ar, name_en: s.name_en }, rank: rk.id, pearls: rk.pearls };
+  };
+  S.claimSeasonReward = (pid) => {
+    const st = S.seasonReward(pid);
+    if (!st.season || !st.placed) throw new HttpError(404, 'no_reward');
+    const ins = db.run('INSERT OR IGNORE INTO season_claims(season_id, player_id, rank, pearls, created) VALUES (?,?,?,?,?)', st.season.id, pid, st.rank, st.pearls, now()).changes;
+    // token ثابت للموسم: الجهاز يمنح اللآلئ مرة واحدة لكل token حتى لو كرّر الطلب
+    return { token: 'season:' + st.season.id, rank: st.rank, pearls: st.pearls, already: !ins };
+  };
+
   /** تقدّم الرحلة (يرسله الجهاز) — للمقارنة بين الأصدقاء فقط، لا يدخل أي ترتيب عام */
   S.syncProgress = (pid, { stars, level, xp } = {}) => {
     const n = (v, lo, hi) => (Number.isFinite(+v) ? Math.max(lo, Math.min(hi, Math.round(+v))) : null);
@@ -546,7 +587,9 @@ export function createServices(db, { now = () => Date.now(), play = null } = {})
     const pending = db.get('SELECT COUNT(*) AS n FROM challenges WHERE creator=? AND target=? AND expires>?', pid, fid, now()).n;
     if (pending >= 20) throw new HttpError(429, 'too_many');
     const r = S.createLocalChallenge(pid, body);
-    db.run('UPDATE challenges SET target=?, meta=? WHERE id=?', fid, JSON.stringify(cleanMeta(body.meta)), r.id);
+    const meta = cleanMeta(body.meta);
+    db.run('UPDATE challenges SET target=?, meta=? WHERE id=?', fid, JSON.stringify(meta), r.id);
+    S.notify(fid, 'challenge', { id: r.id, name: db.get('SELECT name FROM players WHERE id=?', pid)?.name, score: r.score, meta });
     return r;
   };
   /** صندوق التحديات: ما وصلني من أصدقائي وما أرسلته، مع النتائج */

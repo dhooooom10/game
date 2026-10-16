@@ -304,17 +304,7 @@ export const CUSTOM_SPEEDS = {
   veryfast: { travel: 4.4, spawn: 1.3, maxDrops: 4, fair: 0.7, minTravel: 2 },
   insane: { travel: 3.2, spawn: 0.95, maxDrops: 4, fair: 0.55, minTravel: 1.7 },
 };
-export const CUSTOM_ENDS = ['t60', 't120', 'lives'];
-const LEVEL_TIER = { easy: [2, 1], medium: [3, 2], hard: [4, 3], expert: [6, 4] }; // [جمع/طرح, ضرب/قسمة]
-export function customConfig({ ops = ['add', 'sub'], level = 'medium', speed = 'fast', end = 't60', accel = true } = {}) {
-  const valid = ops.filter((o) => CUSTOM_OPS.includes(o));
-  const list = valid.length ? valid : ['add'];
-  const [as, md] = LEVEL_TIER[level] || LEVEL_TIER.medium;
-  const tiers = Object.fromEntries(list.map((o) => [o, o === 'add' || o === 'sub' ? as : md]));
-  const sp = CUSTOM_SPEEDS[speed] || CUSTOM_SPEEDS.fast;
-  return rainConfig({ tiers, ...sp, specials: true, lives: end === 'lives' ? 3 : null, timeLimit: end === 't120' ? 120 : end === 't60' ? 60 : null, accel: accel ? 0.08 : null });
-}
-export const customRecordKey = (o) => `custom:${[...o.ops].sort().join('')}:${o.level}:${o.speed}:${o.end}:${o.accel ? 1 : 0}`;
+/* بناء إعدادات «تحدّيك الخاص» وأرقامه القياسية في core/challenge.js (مصدر واحد للقواعد) */
 
 /* ---------------- التيربو ⚡: تسارع مرعب بأرقام سهلة ----------------
    الصعوبة من السرعة لا من الحساب: المستويات تُحدّ بـ٢ (أرقام آحاد ١–٩، ضرب حتى ٥×١٠)،

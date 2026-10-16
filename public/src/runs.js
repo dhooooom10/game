@@ -1,23 +1,39 @@
 /* =========================================================================
    تشغيل الجولات: بناء مواصفة كل نمط، وتقييم النتيجة، وتطبيق المكافآت مرة واحدة.
    ========================================================================= */
-import { journeySpec, evaluateJourney, levelInfo, timeSpec, survivalSpec, practiceSpec, lessonSpec, evaluateLesson,
-  dailySpec, evaluateDaily, timeRecordKey, survivalRecordKey, TOTAL_LEVELS, WORLDS, worldOf } from './core/modes.js';
+import { journeySpec, evaluateJourney, levelInfo, practiceSpec, lessonSpec, evaluateLesson,
+  dailySpec, evaluateDaily, TOTAL_LEVELS, WORLDS, worldOf } from './core/modes.js';
 import { commitRound, recordDaily, todayStr } from './core/progression.js';
 import { findPath, lessonKey } from './core/curriculum.js';
 import { parTime } from './core/questions.js';
 import { accuracyBonus } from './core/scoring.js';
 import { randomSeed, createRng } from './core/rng.js';
 import { MAX_SHIELDS, addPearls, applyBoost } from './core/wallet.js';
-import { rainConfig, customConfig, customRecordKey, turbo, speedTier } from './core/rain.js';
-import { journeyRain, evaluateRainJourney, dailyRain, stormConfig, survivalConfig } from './core/modes.js';
+import { rainConfig, turbo, speedTier } from './core/rain.js';
+import { journeyRain, evaluateRainJourney, dailyRain } from './core/modes.js';
+import { normalizeChallenge, challengeConfig, challengeRecordKey, isCompleted, evaluateBadges, COMPLETE_MIN_CORRECT } from './core/challenge.js';
 import { t } from './i18n.js';
 
 export const PERSISTED = new Set(['practice', 'lesson']);
-export const RAIN_PERSISTED = new Set(['journey', 'time', 'survival', 'daily', 'custom']);
-export const TURBO_KINDS = new Set(['journey', 'time', 'survival']);
-/** مفتاح الرقم القياسي: جولات التيربو لها أرقامها الخاصة */
-const turboKey = (key, args) => (args.turbo ? key + ':turbo' : key);
+export const RAIN_PERSISTED = new Set(['journey', 'daily', 'custom']);
+/** التيربو ⚡ للرحلة فقط (لا يُطبَّق على «تحدّيك الخاص» حتى لا تتراكب زيادات السرعة) */
+export const TURBO_KINDS = new Set(['journey']);
+
+/**
+ * جولة محفوظة من إصدار قديم (نمطا «time» و«survival» المستقلان) ← «تحدّيك الخاص» بالخيار نفسه.
+ * الإعدادات الناتجة مطابقة تمامًا، فتُستأنف الجولة كما هي. جولات التيربو القديمة فيها لا تُستأنف (قواعد أُلغيت).
+ */
+export function migrateActiveRun(active) {
+  if (!active || active.engine !== 'rain' || !['time', 'survival'].includes(active.kind)) return active;
+  if (active.args?.turbo) return null;
+  return { ...active, kind: 'custom', args: { mode: active.kind, dur: active.args?.dur, diff: active.args?.diff } };
+}
+/** وصف قصير لخيار «تحدّيك الخاص» */
+export function challengeLabel(a) {
+  if (a.mode === 'time') return `${t('mode.time')} · ${t('common.sec', { n: a.dur })} · ${t('diff.' + a.diff)}`;
+  if (a.mode === 'survival') return `${t('mode.survival')} · ${t('diff.' + a.diff)}`;
+  return `${t('ch.custom')} · ${t('diff.' + a.level)} · ${t('cus.speed.' + a.speed)}`;
+}
 
 /* ---------- أسئلة الشرح التفاعلي (ثابتة وسهلة) ---------- */
 const N = (n) => ({ n });
@@ -45,16 +61,6 @@ export function buildRun(kind, args, data, seed = randomSeed()) {
       meta.goalLabel = info.kind === 'sprint' ? t('jr.kind.sprint', { g: info.goal, s: info.timeLimitMs / 1000 }) : null;
       break;
     }
-    case 'time':
-      spec = timeSpec(args.dur, args.diff, { seed });
-      meta.label = `${t('mode.time')} · ${t('common.sec', { n: args.dur })} · ${t('diff.' + args.diff)}`;
-      meta.timed = true;
-      break;
-    case 'survival':
-      spec = survivalSpec(args.diff, { seed });
-      meta.label = `${t('mode.survival')} · ${t('diff.' + args.diff)}`;
-      meta.timed = true;
-      break;
     case 'practice':
       spec = practiceSpec(args.opts, data.skill, { seed });
       meta.label = `${t('mode.practice')} · ${args.opts.topics.map((x) => t('op.' + x)).join('، ')}`;
@@ -108,7 +114,7 @@ export function tipFor(sum, timed) {
 export function finishRun(kind, args, spec, sum, data, date = todayStr()) {
   const base = { id: sum.id || spec.id, mode: kind === 'lesson' ? 'lesson' : kind, score: sum.score, correct: sum.correct, answered: sum.answered,
     bestStreak: sum.bestStreak, perOp: sum.perOp, activeMs: sum.activeMs };
-  const view = { kind, args, sum, stars: null, score: sum.score, record: null, notes: [], mood: 'happy', tip: tipFor(sum, ['time', 'survival', 'daily'].includes(kind)) };
+  const view = { kind, args, sum, stars: null, score: sum.score, record: null, notes: [], mood: 'happy', tip: tipFor(sum, kind === 'daily') };
   let round = base;
 
   if (kind === 'journey') {
@@ -130,10 +136,6 @@ export function finishRun(kind, args, spec, sum, data, date = todayStr()) {
       celebrate: ev.passed && (ev.stars === 3 || info.kind === 'boss' || (ev.stars > old && old === 0 && info.world >= 5)),
     });
     if (!ev.passed) view.notes.push(info.kind === 'sprint' ? t('res.sprintRule', { n: info.goal }) : info.kind === 'boss' ? t('res.bossRule') : t('res.passRule'));
-  } else if (kind === 'time' || kind === 'survival') {
-    const key = kind === 'time' ? timeRecordKey(args.dur, args.diff) : survivalRecordKey(args.diff);
-    round = { ...base, recordKey: key, recordValue: sum.correct, duration: args.dur, diff: args.diff };
-    Object.assign(view, { title: kind === 'time' ? t('res.timeUp') : t('res.survivalEnd', { n: sum.correct }), mood: sum.correct >= 10 ? 'cheer' : 'happy', recordKey: key });
   } else if (kind === 'practice') {
     Object.assign(view, { title: t('res.practiceEnd'), mood: sum.accuracy >= 0.8 ? 'cheer' : 'happy' });
   } else if (kind === 'lesson') {
@@ -194,9 +196,12 @@ export function buildRainRun(kind, args, data, seed = randomSeed()) {
       meta.tint = w.color; meta.info = j.info;
       break;
     }
-    case 'time': cfg = stormConfig(args.diff, args.dur, true); meta.label = `${t('mode.time')} · ${t('diff.' + args.diff)}`; break;
-    case 'survival': cfg = survivalConfig(args.diff); meta.label = `${t('mode.survival')} · ${t('diff.' + args.diff)}`; break;
-    case 'custom': cfg = customConfig(args); meta.label = `${t('mode.custom')} · ${t('cus.speed.' + args.speed)}`; meta.tint = '#FF9F5A'; break;
+    case 'custom': {
+      const a = normalizeChallenge(args);
+      cfg = challengeConfig(a); meta.challenge = a;
+      meta.label = challengeLabel(a); meta.tint = a.mode === 'time' ? '#FFC94A' : a.mode === 'survival' ? '#FF7BB0' : '#FF9F5A';
+      break;
+    }
     case 'daily': {
       const d = dailyRain(args.date); cfg = d.cfg; seed = d.seed;
       meta.realtime = true;
@@ -210,20 +215,18 @@ export function buildRainRun(kind, args, data, seed = randomSeed()) {
       break;
     default: throw new Error('rain kind ' + kind);
   }
-  // التيربو ⚡ (اختيار اللاعب): الرحلة والوقت والبقاء
+  // التيربو ⚡ (اختيار اللاعب): الرحلة فقط
   if (args.turbo && TURBO_KINDS.has(kind)) { cfg = turbo(cfg); meta.turbo = true; meta.label = '⚡ ' + meta.label; }
   // الرقم الذي تطارده (خط الشبح في أعلى الشاشة)
   if (kind === 'journey') { const v = data.journey?.best?.[args.level]; if (v) meta.chase = { value: v, by: 'score' }; }
-  else if (kind === 'time' || kind === 'survival' || kind === 'custom') {
-    const key = kind === 'custom' ? customRecordKey(args) : turboKey(kind === 'time' ? timeRecordKey(args.dur, args.diff) : survivalRecordKey(args.diff), args);
-    const v = data.records?.[key]?.value; if (v) meta.chase = { value: v, by: 'popped' };
-  }
+  else if (kind === 'custom') { const v = data.records?.[challengeRecordKey(meta.challenge)]?.value; if (v) meta.chase = { value: v, by: 'popped' }; }
   return { cfg, seed, meta, id: `${kind}-${typeof seed === 'string' ? seed : seed.toString(36)}-${Date.now().toString(36)}` };
 }
 
 export function finishRainRun(kind, args, run, sum, data, date = todayStr()) {
   const base = { id: run.id, mode: kind, score: sum.score, correct: sum.correct, answered: sum.answered, bestStreak: sum.bestStreak, perOp: sum.perOp, activeMs: sum.activeMs,
-    speedX: sum.speedX || 1, fevers: sum.fevers || 0, gifts: sum.gifts || 0, turbo: !!args.turbo };
+    speedX: sum.speedX || 1, fevers: sum.fevers || 0, gifts: sum.gifts || 0, turbo: !!args.turbo && TURBO_KINDS.has(kind),
+    revived: !!run.revived, endReason: sum.endReason };
   const view = { engine: 'rain', kind, args, sum, speed: { x: sum.speedX || 1, tier: speedTier(sum.speedX), prevBest: data.speedBest || 1 }, stars: null, score: sum.score, record: null, notes: [], mood: 'happy', tip: tipFor({ ...sum, answers: sum.answers.filter((a) => a.ms != null || !a.correct) }, true) };
   let round = base;
   if (kind === 'journey') {
@@ -236,7 +239,7 @@ export function finishRainRun(kind, args, run, sum, data, date = todayStr()) {
     }
     const prevBest = data.journey.best[args.level] || 0;
     if (ev.finalScore > prevBest) data.journey.best[args.level] = ev.finalScore;
-    round = { ...base, score: ev.finalScore, passed: ev.passed, stars: ev.stars, starsGained: Math.max(0, ev.stars - old), level: args.level };
+    round = { ...base, score: ev.finalScore, passed: ev.passed, stars: ev.stars, starsGained: Math.max(0, ev.stars - old), level: args.level, boss: info.kind === 'boss', completed: ev.passed };
     Object.assign(view, {
       title: ev.passed ? (info.kind === 'boss' ? t('res.bossPassed') : t('res.levelPassed', { n: args.level })) : t('res.levelFailed'),
       stars: ev.stars, score: ev.finalScore, passed: ev.passed, mood: ev.passed ? (ev.stars === 3 ? 'cheer' : 'happy') : 'sad', bonus: ev.bonus, info,
@@ -245,12 +248,19 @@ export function finishRainRun(kind, args, run, sum, data, date = todayStr()) {
     });
     if (!ev.passed) view.notes.push(info.kind === 'sprint' ? t('rain.ruleSprint', { n: info.target }) : t('rain.ruleClassic', { n: info.target }));
   } else if (kind === 'custom') {
-    round = { ...base, recordKey: customRecordKey(args), recordValue: sum.popped, endLives: args.end === 'lives' };
-    Object.assign(view, { title: t('cus.done', { n: sum.popped }), mood: sum.popped >= 15 ? 'cheer' : 'happy' });
-  } else if (kind === 'time' || kind === 'survival') {
-    const key = turboKey(kind === 'time' ? timeRecordKey(args.dur, args.diff) : survivalRecordKey(args.diff), args);
-    round = { ...base, recordKey: key, recordValue: sum.popped, duration: args.dur, diff: args.diff };
-    Object.assign(view, { title: kind === 'time' ? t('res.timeUp') : t('res.survivalEnd', { n: sum.popped }), mood: sum.popped >= 15 ? 'cheer' : 'happy' });
+    // «تحدّيك الخاص»: نحفظ مع الجولة نمطها وإعداداتها وحالة اكتمالها وما يلزم للتحقق من المهام والشارات
+    const a = normalizeChallenge(args);
+    const completed = isCompleted(sum);
+    const key = challengeRecordKey(a);
+    round = { ...base, sub: a.mode, challenge: a, completed, avgMs: sum.avgMs,
+      // الفرصة الثانية تضيف محاولة: لا تُحتسب الجولة في الرقم القياسي
+      recordKey: run.revived ? null : key, recordValue: sum.popped,
+      badgeEval: evaluateBadges(a, sum, { revived: !!run.revived }) };
+    view.challenge = a; view.recordKey = key; view.badgeEval = round.badgeEval;
+    view.title = a.mode === 'time' ? t('res.timeUp') : a.mode === 'survival' ? t('res.survivalEnd', { n: sum.popped }) : t('cus.done', { n: sum.popped });
+    view.mood = sum.popped >= 15 ? 'cheer' : 'happy';
+    if (run.revived) view.notes.push(t('ch.revivedNote'));
+    if (!completed) view.notes.push(t('ch.notCompleted', { n: COMPLETE_MIN_CORRECT }));
   } else if (kind === 'daily') {
     const bonus = accuracyBonus(sum.correct, sum.answered);
     const finalScore = sum.score + bonus;
@@ -280,9 +290,11 @@ export function finishRainRun(kind, args, run, sum, data, date = todayStr()) {
   if (rewards.applied && sum.gifts) view.giftRewards = openGifts(data, sum.gifts, run.id);
   // لآلئ مكتسبة باللعب: مهمة مكتملة، أو أول ٣ نجوم لمرحلة
   if (rewards.applied) {
-    let earned = (rewards.missions?.length || 0) * PEARLS_MISSION;
-    if (kind === 'journey' && view.stars === 3 && round.starsGained > 0) earned += PEARLS_3STARS;
-    if (earned) { addPearls(data, earned); view.pearlsEarned = earned; }
+    // لآلئ المهام تُمنح داخل commitRound (rewards.pearls)؛ هنا فقط أول ٣ نجوم لمرحلة
+    const stars3 = kind === 'journey' && view.stars === 3 && round.starsGained > 0 ? PEARLS_3STARS : 0;
+    if (stars3) addPearls(data, stars3);
+    const earned = (rewards.pearls || 0) + stars3;
+    if (earned) view.pearlsEarned = earned;
     const boosted = applyBoost(data, rewards.xp);
     if (boosted) view.boosted = boosted;
   }
@@ -310,4 +322,4 @@ export function openGifts(data, n, id) {
   }
   return out;
 }
-export const PEARLS_MISSION = 5, PEARLS_3STARS = 5;
+export const PEARLS_3STARS = 5;   // لآلئ المهام: MISSION_PEARLS في progression.js

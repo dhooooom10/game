@@ -5,7 +5,7 @@ import { mascotSVG } from '../ui/mascot.js';
 import { sfx, buzz } from '../ui/audio.js';
 import { countUp, confetti, reducedMotion } from '../ui/fx.js';
 import { t } from '../i18n.js';
-import { levelFromXp, xpForLevel, BADGES } from '../core/progression.js';
+import { levelFromXp, xpForLevel, BADGES, recordEvent } from '../core/progression.js';
 import { TOTAL_LEVELS, WORLDS, worldOf } from '../core/modes.js';
 import { findPath } from '../core/curriculum.js';
 import { dailyShareText, shareText, shareUrl } from '../ui/share.js';
@@ -13,6 +13,7 @@ import { toast } from '../ui/fx.js';
 import { track } from '../net/analytics.js';
 import * as ads from '../net/ads.js';
 import { speedText } from './rain.js';
+import { BADGE_RULES } from '../core/challenge.js';
 
 registerScreen('results', (app, { view }) => {
   const data = app.data;
@@ -106,6 +107,22 @@ registerScreen('results', (app, { view }) => {
     }
   }
 
+  // التقدّم المتبقي: مهام اليوم غير المكتملة، والبرق/الصامد إن كانت الجولة مؤهلة
+  {
+    const left = (data.missions.list || []).filter((m) => !m.done);
+    const be = rw?.applied ? view.badgeEval : null;
+    const rows = [];
+    for (const m of left) rows.push(h('div.left-row', h('span', '🎯'), h('span.grow', t('m.' + m.id, { g: m.goal, op: m.op ? t('op.' + m.op) : '' })), h('b', `${num(m.progress)}/${num(m.goal)}`)));
+    if (be) for (const id of ['speed20', 'survive25']) {
+      if (data.badges[id] || !be[id]?.eligible) continue;
+      const p = be[id].progress, R = BADGE_RULES[id];
+      rows.push(h('div.left-row', h('span', id === 'speed20' ? '⚡' : '🛡️'), h('span.grow', t('badge.' + id), ' — ', id === 'speed20'
+        ? t('lock.prog.speed20', { a: num(p.answered), n: num(R.minAnswered), acc: num(Math.round(p.acc * 100)), s: num(((p.avgMs || 0) / 1000).toFixed(1)) })
+        : t('lock.prog.survive25', { a: num(p.correct), n: num(R.minCorrect) }))));
+    }
+    if (rows.length) el.appendChild(h('section.card.section.left-box', { id: 'progressLeft' }, h('h2.section-title', t('res.leftTitle')), ...rows));
+  }
+
   // نصيحة التحسّن
   if (view.tip && view.kind !== 'tutorial') {
     const tipText = t(view.tip.key, { op: view.tip.op ? t('op.' + view.tip.op) : '' });
@@ -129,6 +146,10 @@ registerScreen('results', (app, { view }) => {
         await net.ensureIdentity(app);
         const r = await net.api('POST', `/api/friends/${sendTo.id}/challenge`, { ...view.replay, meta });
         track('share_challenge');
+        // مهمة «أكمل تحدّي صديق»: بعد قبول الخادم فقط، ومرة واحدة لكل تحدٍّ
+        const ev = recordEvent(data, { id: 'fc:' + r.id, type: 'friendSent' });
+        app.save();
+        if (ev.missions?.length) st.after(h('div.gift-list', ...ev.missions.map((m) => h('span.chip.ok', '✅ ', t('m.' + m.id, { g: m.goal, op: '' }))), h('span.chip.gold', '\u2066+' + num(ev.pearls) + ' 💎\u2069')));
         clear(st).append('✅ ', t('fh.sent1', { name: sendTo.name, n: num(r.score) }));
         st.classList.add('ok');
       } catch (e) {

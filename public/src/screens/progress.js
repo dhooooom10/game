@@ -5,7 +5,7 @@ import { mascotSVG } from '../ui/mascot.js';
 import { sfx } from '../ui/audio.js';
 import { t, isRtl } from '../i18n.js';
 import { metrics, recommendation, STAT_OPS } from '../core/progression.js';
-import { DIFFICULTIES, TIME_DURATIONS, timeRecordKey, survivalRecordKey } from '../core/modes.js';
+import { CH_DIFFS, TIME_DURATIONS, challengeRecordKey } from '../core/challenge.js';
 
 registerScreen('progress', (app) => {
   const data = app.data;
@@ -35,7 +35,7 @@ registerScreen('progress', (app) => {
   const recCard = h('section.card.section.tip', h('span.ti', icon('sparkle')), h('div', h('div', { style: { fontWeight: 800 } }, t('prog.rec')), h('div.note', recText)));
   if (rec.op) recCard.lastChild.appendChild(h('button.btn.sm.primary', { style: { marginTop: '8px' }, on: { click: () => {
     sfx.tap();
-    if (rec.key === 'rec.speed') app.go('setupTime');
+    if (rec.key === 'rec.speed') app.go('setupCustom', { mode: 'time' });
     else app.go('play', { kind: 'practice', args: { opts: { topics: [rec.op], level: rec.key === 'rec.levelUp' ? Math.min(10, Math.floor(data.skill[rec.op]?.r || 1) + 1) : 'auto', format: 'mixed', timer: false, length: 10 } } });
   } } }, icon('target'), t('prog.practiceBtn')));
   el.appendChild(recCard);
@@ -62,11 +62,13 @@ registerScreen('progress', (app) => {
   const row = (label, value) => bests.appendChild(h('div.row', h('div.grow.t', label), h('span.chip.gold', value)));
   const stars = Object.values(data.journey.stars).reduce((a, b) => a + b, 0);
   row(t('prog.journeyStars'), `★ ${num(stars)}/${num(300)}`);
-  for (const d of TIME_DURATIONS) for (const df of DIFFICULTIES) {
-    const r = data.records[timeRecordKey(d, df)];
+  for (const d of TIME_DURATIONS) for (const df of CH_DIFFS) {
+    const r = data.records[challengeRecordKey({ mode: 'time', dur: d, diff: df })];
     if (r) row(t('prog.recordTime', { d, diff: t('diff.' + df) }), `${t('prog.correctUnit', { n: num(r.value) })} · ${t('prog.scoreUnit', { n: num(r.score) })}`);
   }
-  for (const df of DIFFICULTIES) { const r = data.records[survivalRecordKey(df)]; if (r) row(t('prog.recordSurv', { diff: t('diff.' + df) }), t('prog.correctUnit', { n: num(r.value) })); }
+  for (const df of CH_DIFFS) { const r = data.records[challengeRecordKey({ mode: 'survival', diff: df })]; if (r) row(t('prog.recordSurv', { diff: t('diff.' + df) }), t('prog.correctUnit', { n: num(r.value) })); }
+  const customBest = Object.entries(data.records).filter(([k]) => k.startsWith('custom2:')).sort((a, b) => b[1].value - a[1].value)[0];
+  if (customBest) row(t('prog.recordCustom'), t('prog.correctUnit', { n: num(customBest[1].value) }));
   for (const df of ['easy', 'medium', 'hard', 'expert']) { const r = data.records['rain:' + df]; if (r) row(t('prog.recordRain', { diff: t('diff.' + df) }), t('prog.scoreUnit', { n: num(r.value) })); }
   if (data.daily.best) row(t('prog.recordDaily'), t('prog.scoreUnit', { n: num(data.daily.best) }));
   row(t('prog.bestStreak'), num(m.bestStreak));

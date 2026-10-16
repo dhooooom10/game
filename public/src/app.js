@@ -2,12 +2,13 @@
    تطبيق قطرة — الحالة العامة، التنقل بين الشاشات، الحفظ، والنوافذ.
    ========================================================================= */
 import { createBackend, createStore, verifyPass } from './core/storage.js';
-import { ensureMissions, todayStr, levelFromXp } from './core/progression.js';
+import { ensureMissions, todayStr, levelFromXp, setFeatures } from './core/progression.js';
 import { setLocale, t, LANGS, detectLang, isRtl, loadLang, isLoaded } from './i18n.js';
 import { h, clear, icon } from './ui/dom.js';
 import { setLevels, setHaptics, sfx, unlockAudio, startMusic, pauseAll, resumeAll } from './ui/audio.js';
 import { setMotion, toast } from './ui/fx.js';
-import { useIdentity } from './net/online.js';
+import { useIdentity, onlineAvailable } from './net/online.js';
+import * as notify from './net/notify.js';
 import * as pgs from './net/playgames.js';
 import * as analytics from './net/analytics.js';
 
@@ -40,6 +41,7 @@ export const app = {
   },
 
   loadProfile(id) {
+    setFeatures({ online: onlineAvailable() });
     this.pid = id;
     this.data = this.store.load(id);
     useIdentity(this.data);
@@ -261,7 +263,7 @@ export async function boot() {
   }
 
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { pauseAll(); app.current?.onHide?.(); }
+    if (document.hidden) { pauseAll(); app.current?.onHide?.(); notify.reschedule(app); }
     else { resumeAll(); app.current?.onShow?.(); }
   });
   window.addEventListener('pagehide', () => { app.current?.onHide?.(); app.save(); });

@@ -1,5 +1,6 @@
 /* الإعدادات والملفات الشخصية. */
 import * as analytics from '../net/analytics.js';
+import * as notify from '../net/notify.js';
 import * as ads from '../net/ads.js';
 import { app, registerScreen, VERSION } from '../app.js';
 import { h, icon, clear } from '../ui/dom.js';
@@ -50,6 +51,11 @@ registerScreen('settings', (app) => {
     row(t('set.bigText'), null, sw(s.bigText, t('set.bigText'), (v) => { s.bigText = v; app.save(); app.applyLook(); })),
     row(t('set.autoSubmit'), t('set.autoSubmitSub'), sw(s.autoSubmit !== false, t('set.autoSubmit'), (v) => { s.autoSubmit = v; app.save(); })),
     row(t('set.analytics'), t('set.analyticsSub'), sw(s.analytics !== false, t('set.analytics'), (v) => { analytics.setEnabled(app, v); })),
+    // تذكيرات الجهاز (السلسلة اليومية وتحديات الأصدقاء) — داخل التطبيق فقط
+    notify.available() ? row(t('set.notify'), t('set.notifySub'), sw(s.notify !== false, t('set.notify'), async (v) => {
+      s.notify = v; app.save();
+      if (v && !(await notify.requestPermission())) toast(t('set.notifyDenied'));
+    })) : null,
     h('button.btn.block', { id: 'settingsShop', style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('shop'); } } }, '🛍️ ', t('shop.title') + ' · ' + t('shop.restore')),
     ads.privacyOptionsRequired() ? h('button.btn.block', { style: { marginTop: '10px' }, on: { click: () => ads.showPrivacyOptions() } }, t('ads.privacy')) : null,
     h('button.btn.block', { style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'tutorial', args: {} }); } } }, icon('book'), t('set.tutorial'))));

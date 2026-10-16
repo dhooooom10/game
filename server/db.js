@@ -49,6 +49,13 @@ CREATE TABLE IF NOT EXISTS challenges (
 CREATE TABLE IF NOT EXISTS matches (
   id TEXT PRIMARY KEY, kind TEXT NOT NULL, seed TEXT NOT NULL, cfg TEXT NOT NULL, created INTEGER NOT NULL, start_at INTEGER NOT NULL, ended INTEGER, result TEXT
 );
+CREATE TABLE IF NOT EXISTS season_claims (
+  season_id TEXT NOT NULL, player_id TEXT NOT NULL, rank TEXT NOT NULL, pearls INTEGER NOT NULL, created INTEGER NOT NULL, PRIMARY KEY (season_id, player_id)
+);
+CREATE TABLE IF NOT EXISTS notifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, player_id TEXT NOT NULL, kind TEXT NOT NULL, data TEXT, created INTEGER NOT NULL, read INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS notifications_player ON notifications(player_id, id);
 CREATE TABLE IF NOT EXISTS rewards (
   player_id TEXT NOT NULL, tournament_id TEXT NOT NULL, rank INTEGER NOT NULL, label_ar TEXT, label_en TEXT, icon TEXT, created INTEGER NOT NULL,
   PRIMARY KEY (player_id, tournament_id)

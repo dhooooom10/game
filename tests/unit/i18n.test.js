@@ -25,7 +25,12 @@ test('dynamic key families are complete', async () => {
   const { WORLDS } = await import('../../public/src/core/modes.js');
   const need = [
     ...BADGES.flatMap((b) => [`badge.${b.id}`, `badge.${b.id}D`]),
-    ...MISSION_POOL.map((m) => `m.${m.id}`),
+    ...MISSION_POOL.flatMap((m) => [`m.${m.id}`, `mr.${m.id}`]),
+    ...['time', 'survival', 'custom'].flatMap((m) => [`ch.${m}`, `ch.${m}Sub`, `ch.rules.${m}`]),
+    ...['revived', 'level', 'speed', 'rules'].map((r) => `ch.notEligible.${r}`),
+    ...(await import('../../public/src/core/ranks.js')).RANKS.map((r) => `rank.${r.id}`),
+    ...['up', 'down'].map((d) => `rank.change.${d}`),
+    ...['resultWon', 'resultLost', 'resultDraw'].map((k) => `notif.${k}`),
     ...Object.entries(COSMETICS).flatMap(([c, items]) => items.map((i) => `${c}.${i.id}`)),
     ...WORLDS.flatMap((w) => [`world.${w.key}`, `world.${w.key}t`]),
     ...['add', 'sub', 'mul', 'div', 'order', 'frac', 'percent', 'power'].map((o) => `op.${o}`),

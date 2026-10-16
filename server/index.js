@@ -3,6 +3,7 @@
    التشغيل:  ADMIN_TOKEN=سر-طويل  DB_PATH=./data/mc.db  PORT=8080  node server/index.js
    ========================================================================= */
 import { createServer as createHttp } from 'node:http';
+import { rankOf } from '../public/src/core/ranks.js';
 import { readFile, stat } from 'node:fs/promises';
 import { join, extname, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -72,7 +73,10 @@ export function startServer({ port = 0, dbPath = ':memory:', adminToken = '', no
     const v = await pgs.verify(body.authCode);
     return svc.linkPlayGames(v.playerId, v.displayName, cur?.id || null);
   });
-  route('GET', '/api/me', (req) => { const p = player(req); return { player: svc.publicPlayer(p), rating: svc.rating(p.id), rewards: svc.rewards(p.id) }; });
+  route('GET', '/api/me', (req) => { const p = player(req); const rating = svc.rating(p.id); return { player: svc.publicPlayer(p), rating, rank: rankOf(rating.rating, rating.games), rewards: svc.rewards(p.id), seasonReward: svc.seasonReward(p.id) }; });
+  route('GET', '/api/notifications', (req) => { const p = player(req); return svc.notifications(p.id); });
+  route('POST', '/api/notifications/read', (req) => { const p = player(req); return svc.readNotifications(p.id); });
+  route('POST', '/api/me/season-reward', (req) => { const p = player(req); return svc.claimSeasonReward(p.id); });
   route('DELETE', '/api/me', (req) => { const p = player(req); svc.deleteAccount(p.id); return { ok: true }; });
   route('POST', '/api/me/name', async (req, _p, body) => { const p = player(req); return { name: svc.rename(p, body.name) }; });
   route('POST', '/api/me/country', async (req, _p, body) => { const p = player(req); return { country: svc.setCountry(p, body.country) }; });

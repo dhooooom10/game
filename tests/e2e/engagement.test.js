@@ -44,7 +44,7 @@ test('ghost line chases your record live; results show near miss and speed badge
   await p.evaluate(() => {
     const d = window.__mc.data; d.settings.tutorialDone = true; d.prefs.turbo = { on: false };
     d.records['time:60:easy'] = { value: 3, score: 100, correct: 3, date: '2026-01-01' };
-    window.__mc.go('rainPlay', { kind: 'time', args: { dur: 60, diff: 'easy' } });
+    window.__mc.go('rainPlay', { kind: 'custom', args: { mode: 'time', dur: 60, diff: 'easy' } });
   });
   await waitScreen(p, 'rainPlay');
   await p.waitForSelector('.chase');
@@ -62,7 +62,7 @@ test('ghost line chases your record live; results show near miss and speed badge
   // شاشة النتائج: «كدت تكسرها» وشارة السرعة
   await p.evaluate(() => {
     const sum = { score: 300, popped: 18, correct: 18, answered: 19, accuracy: 0.95, skipped: 0, bestStreak: 12, avgMs: 1200, answers: [], speedX: 2.1, fevers: 1, gifts: 0 };
-    window.__mc.go('results', { view: { engine: 'rain', kind: 'time', args: { dur: 60, diff: 'easy' }, sum, score: 300, title: 'x', notes: [], mood: 'happy',
+    window.__mc.go('results', { view: { engine: 'rain', kind: 'custom', args: { mode: 'time', dur: 60, diff: 'easy' }, sum, score: 300, title: 'x', notes: [], mood: 'happy',
       nearMiss: { left: 2, prev: 19 }, speed: { x: 2.1, tier: 2, prevBest: 1.4, newBest: true } } });
   });
   await waitScreen(p, 'results');
@@ -99,7 +99,7 @@ test('water level rises with every drop that lands; custom setup shows the numbe
   const p = await newPage(browser);
   await p.goto(S.url + '/?e2e=1');
   await waitScreen(p, 'home');
-  await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.go('rainPlay', { kind: 'survival', args: { diff: 'easy' } }); });
+  await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.go('rainPlay', { kind: 'custom', args: { mode: 'survival', diff: 'easy' } }); });
   await waitScreen(p, 'rainPlay');
   await p.waitForFunction(() => window.__mc.current.rain().state.tick > 10, null, { timeout: 8000 });
   const h0 = await p.evaluate(() => document.querySelector('.sky .ground').getBoundingClientRect().height);
@@ -108,7 +108,8 @@ test('water level rises with every drop that lands; custom setup shows the numbe
   await p.waitForFunction((h) => document.querySelector('.sky .ground').getBoundingClientRect().height > h + 60, h0, { timeout: 8000 });
   await p.evaluate(() => window.__mc.go('setupCustom'));
   await waitScreen(p, 'setupCustom');
-  await p.click('text=سهل');
+  await p.click('#ch-custom');
+  await p.click('.custom-fields >> text=سهل');
   assert.match(await p.textContent('#rangeHint'), /[1١].*[9٩]/);
   assert.deepEqual(p.errors, []);
 });

@@ -149,8 +149,9 @@ test('revive: continues after losing lives, recorded in log, replay honours it o
 });
 
 test('accel: drops get faster every 10 s, deterministic replay, speedup events; custom config', async () => {
-  const { createRain, replayRain, customConfig, stormConfig, COMPETITIVE_ACCEL } = await import('../../public/src/core/rain.js');
-  const cfg = customConfig({ ops: ['add', 'mul'], level: 'hard', speed: 'insane', end: 't60', accel: true });
+  const { createRain, replayRain, stormConfig, COMPETITIVE_ACCEL } = await import('../../public/src/core/rain.js');
+  const { challengeConfig } = await import('../../public/src/core/challenge.js');
+  const cfg = challengeConfig({ mode: 'custom', ops: ['add', 'mul'], level: 'hard', speed: 'insane', dur: 60, lives: 0, accel: true });
   assert.equal(cfg.timeLimit, 60); assert.equal(cfg.lives, null); assert.equal(cfg.accel, 0.08);
   assert.deepEqual(Object.keys(cfg.tiers).sort(), ['add', 'mul']);
   const R = createRain(cfg, 7);

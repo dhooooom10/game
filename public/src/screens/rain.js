@@ -372,7 +372,7 @@ registerScreen('rainPlay', (app, params) => {
   /* ---------- فرصة ثانية بإعلان بمكافأة (اختياري، مرة واحدة، أنماط فردية فقط) ---------- */
   function canRevive() {
     // تحدي صديق: لا فرصة ثانية (الخادم لا يقبل الجولات المُنعشة)
-    return !online && !meta.tutorial && !params.args?.sendTo && ['journey', 'survival', 'custom'].includes(kind) && R.state.endReason === 'lives' && !revived
+    return !online && !meta.tutorial && !params.args?.sendTo && ['journey', 'custom'].includes(kind) && R.state.endReason === 'lives' && !revived
       && (ads.rewardedReady() || pearls(data) >= PEARL_PRICES.revive);
   }
   function offerRevive() {
@@ -409,19 +409,21 @@ registerScreen('rainPlay', (app, params) => {
     if (!skipRevive && canRevive()) return offerRevive();
     ended = true; cleanup();
     const sum = R.summary();
-    if (persist) app.store.clearActive(app.pid);
     if (online) return online.finish({ log: R.state.log, endTick: R.state.tick, summary: sum, timeline: R.state.timeline });
     if (meta.tutorial) {
       data.settings.tutorialDone = true; app.save(); sfx.win(); confetti({ count: 60 });
       return app.go('rainPlay', { kind: 'journey', args: { level: 1 } }, { replace: true });
     }
-    const { view } = finishRainRun(kind, params.args || {}, { id: built.id, seed }, sum, data);
+    // المكافآت تُطبَّق مرة واحدة لكل معرّف جولة (commitRound)؛ نحفظ قبل حذف الجولة المعلّقة،
+    // فإن أُغلق التطبيق بينهما تُستأنف الجولة وتنتهي بالمعرّف نفسه بلا مكافأة مكررة
+    const { view } = finishRainRun(kind, params.args || {}, { id: built.id, seed, revived }, sum, data);
     // لتحويل الجولة إلى تحدٍّ لصديق (يعيد الخادم تشغيلها للتحقق)
     // جولة استُخدمت فيها فرصة ثانية لا تتحول إلى تحدٍّ (الخادم لا يقبل الفرص الإعلانية)
     view.replay = revived ? null : { cfg: built.cfg, seed, log: R.state.log.slice(), endTick: R.state.tick };
     view.revived = revived;
     if (kind === 'daily' && view.official) import('./online.js').then((m) => m.uploadDaily(app, params.args.date, R.state.log, R.state.tick)).catch(() => {});
     app.save();
+    if (persist) app.store.clearActive(app.pid);
     app.go('results', { view }, { replace: true });
   }
 

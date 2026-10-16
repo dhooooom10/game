@@ -37,7 +37,7 @@ test('challenge a friend from an offline round; the link opens the same drops fo
   const p = await page();
   await p.goto(S.url + '/?e2e=1');
   await waitScreen(p, 'home');
-  await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.go('rainPlay', { kind: 'time', args: { dur: 30, diff: 'easy' } }); });
+  await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.go('rainPlay', { kind: 'custom', args: { mode: 'time', dur: 30, diff: 'easy' } }); });
   // نلعب بإدخال الإجابات الصحيحة حتى تنتهي الجولة (أو نُسرّع المحرك)
   await p.waitForFunction(() => window.__mc.current?.rain?.()?.state?.tick > 0, null, { timeout: 8000 });
   for (let i = 0; i < 80; i++) {
@@ -127,8 +127,9 @@ test('custom challenge: pick ops/speed/accel, play, wrong answer flashes red, sp
   await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; });
   await p.click('#modeCustom');
   await waitScreen(p, 'setupCustom');
+  await p.click('#ch-custom');
   await p.click('text=جنونية');
-  await p.click('#startCustom');
+  await p.click('#startChallenge');
   await waitScreen(p, 'rainPlay');
   const cfg = await p.evaluate(() => window.__mc.current.rain().cfg);
   assert.equal(cfg.travel, 3.2); assert.equal(cfg.accel, 0.08);

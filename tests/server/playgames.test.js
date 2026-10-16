@@ -248,7 +248,8 @@ test('purchases: disabled without a service account', async () => {
 });
 
 test('friends: progress sync, challenge a friend (custom or level), inbox both ways, head-to-head', async () => {
-  const { customConfig, TICK_MS } = await import('../../public/src/core/rain.js');
+  const { TICK_MS } = await import('../../public/src/core/rain.js');
+  const { challengeConfig } = await import('../../public/src/core/challenge.js');
   const { journeyRain } = await import('../../public/src/core/modes.js');
   const { playBot } = await import('./helpers.js');
   const s = await boot();
@@ -261,7 +262,7 @@ test('friends: progress sync, challenge a friend (custom or level), inbox both w
     let fr = await s.api('GET', '/api/friends', null, a.token);
     assert.equal(fr.friends[0].jstars, 57); assert.equal(fr.friends[0].jlevel, 22);
     // تحدٍّ مخصص لصديق
-    const cfg = customConfig({ ops: ['add', 'sub'], level: 'easy', speed: 'fast', end: 't60', accel: true });
+    const cfg = challengeConfig({ mode: 'custom', ops: ['add', 'sub'], level: 'easy', speed: 'fast', dur: 60, lives: 0, accel: true });
     const run = playBot(cfg, 777, { think: 40 });
     const sent = await s.api('POST', `/api/friends/${b.id}/challenge`, { cfg, seed: 777, log: run.log, endTick: run.endTick, meta: { kind: 'custom', label: 'x' } }, a.token);
     assert.equal(sent.status, 200); assert.equal(sent.score, run.summary.score);
@@ -293,5 +294,56 @@ test('friends: progress sync, challenge a friend (custom or level), inbox both w
     // حذف الحساب يزيل التحديات الموجّهة
     await s.api('DELETE', '/api/me', null, b.token);
     assert.equal((await s.api('GET', '/api/inbox', null, a.token)).sent.length, 0);
+  } finally { await s.close(); }
+});
+
+test('ranks, in-app notifications and end-of-season reward (claimed once)', async () => {
+  const { rankOf, PLACEMENT_GAMES } = await import('../../public/src/core/ranks.js');
+  const { ADMIN } = await import('./helpers.js');
+  const { challengeConfig } = await import('../../public/src/core/challenge.js');
+  const { playBot } = await import('./helpers.js');
+  assert.equal(rankOf(1000, 0).placed, false);
+  assert.equal(rankOf(1000, PLACEMENT_GAMES).id, 'bronze');
+  assert.equal(rankOf(1260, 9).id, 'gold');
+  assert.equal(rankOf(1800, 9).id, 'legend');
+  const s = await boot();
+  try {
+    const a = await s.api('POST', '/api/register', { name: 'Ana' });
+    const b = await s.api('POST', '/api/register', { name: 'Ben' });
+    await s.api('POST', '/api/friends', { code: b.code }, a.token);
+    let nb = await s.api('GET', '/api/notifications', null, b.token);
+    assert.equal(nb.unread, 1); assert.equal(nb.list[0].kind, 'friend_added'); assert.equal(nb.list[0].data.name, 'Ana');
+    const cfg = challengeConfig({ mode: 'time', dur: 30, diff: 'easy' });
+    const run = playBot(cfg, 9, { think: 40 });
+    await s.api('POST', `/api/friends/${b.id}/challenge`, { cfg, seed: 9, log: run.log, endTick: run.endTick, meta: { kind: 'custom' } }, a.token);
+    nb = await s.api('GET', '/api/notifications', null, b.token);
+    assert.equal(nb.list[0].kind, 'challenge'); assert.equal(nb.unread, 2);
+    await s.api('POST', '/api/notifications/read', null, b.token);
+    assert.equal((await s.api('GET', '/api/notifications', null, b.token)).unread, 0);
+    // مكافأة الموسم: لا شيء قبل نهاية موسم، ولا لمن لم يُكمل مباريات تحديد المستوى
+    let me = await s.api('GET', '/api/me', null, a.token);
+    assert.equal(me.rank.placed, false); assert.equal(me.seasonReward.available, false);
+    await s.api('GET', '/api/leaderboard/season'); // ينشئ الموسم الأول
+    await s.api('POST', '/api/admin/seasons', { name_ar: 'الثاني' }, ADMIN);
+    assert.equal((await s.api('POST', '/api/me/season-reward', null, a.token)).status, 404, 'not placed → no reward');
+    // لاعب أكمل التحديد في الموسم الحالي برتبة ذهبية، ثم ينتهي الموسم
+    s.clock.t += 10;
+    const season2 = s.svc.currentSeason();
+    assert.equal(season2.name_ar, 'الثاني');
+    s.db.run('INSERT INTO season_ratings(season_id, player_id, rating, games, wins) VALUES (?,?,?,?,?)', season2.id, a.id, 1300, 8, 6);
+    // تغيّر الرتبة بعد مباراة حقيقية ← إشعار
+    s.db.run('INSERT INTO season_ratings(season_id, player_id, rating, games, wins) VALUES (?,?,?,?,?)', season2.id, b.id, 1095, 4, 2);
+    const elo = s.svc.applyElo([{ id: b.id, score: 900, rank: 1 }, { id: a.id, score: 100, rank: 2 }]);
+    assert.equal(elo[b.id].placed, true); assert.equal(elo[b.id].rankChange, 'up');
+    assert.ok((await s.api('GET', '/api/notifications', null, b.token)).list.some((n) => n.kind === 'rank_up'));
+    s.clock.t += 1000;
+    await s.api('POST', '/api/admin/seasons', { name_ar: 'الثالث' }, ADMIN);
+    me = await s.api('GET', '/api/me', null, a.token);
+    assert.equal(me.seasonReward.available, true); assert.equal(me.seasonReward.rank, rankOf(elo[a.id].after, 9).id);
+    const c1 = await s.api('POST', '/api/me/season-reward', null, a.token);
+    assert.equal(c1.already, false); assert.ok(c1.pearls > 0); assert.equal(c1.token, 'season:' + season2.id);
+    const c2 = await s.api('POST', '/api/me/season-reward', null, a.token);
+    assert.equal(c2.already, true, 'second claim is a no-op'); assert.equal(c2.token, c1.token);
+    assert.equal((await s.api('GET', '/api/me', null, a.token)).seasonReward.available, false);
   } finally { await s.close(); }
 });

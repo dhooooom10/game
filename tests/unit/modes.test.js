@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { levelInfo, journeySpec, evaluateJourney, dailyQuestions, dailySpec, friendTemplates, friendSpec, friendWinner, timeSpec, survivalSpec, survivalPerQuestionMs, practiceSpec, lessonSpec, evaluateLesson, TOTAL_LEVELS } from '../../public/src/core/modes.js';
+import { levelInfo, journeySpec, evaluateJourney, dailyQuestions, dailySpec, friendTemplates, friendSpec, friendWinner, practiceSpec, lessonSpec, evaluateLesson, TOTAL_LEVELS } from '../../public/src/core/modes.js';
 import { createSession } from '../../public/src/core/session.js';
 import { PATHS } from '../../public/src/core/curriculum.js';
 
@@ -81,16 +81,6 @@ test('friend mode: both players get equivalent (same op/tier/format) but differe
   assert.equal(friendWinner({ score: 10, correct: 1, activeMs: 5 }, { score: 9, correct: 9, activeMs: 1 }), 0);
   assert.equal(friendWinner({ score: 10, correct: 1, activeMs: 5 }, { score: 10, correct: 1, activeMs: 3 }), 1);
   assert.equal(friendWinner({ score: 10, correct: 1, activeMs: 5 }, { score: 10, correct: 1, activeMs: 5 }), -1);
-});
-
-test('time attack ends at limit; survival ends on lives', () => {
-  const t = play(timeSpec(30, 'medium', { seed: 5 }), { step: 2000 });
-  assert.equal(t.endReason, 'time');
-  assert.ok(t.correct >= 10 && t.correct <= 16);
-  const s = play(survivalSpec('easy', { seed: 6 }), { correctEvery: 4 });
-  assert.equal(s.endReason, 'lives');
-  assert.equal(survivalPerQuestionMs('medium', 0), 12000);
-  assert.equal(survivalPerQuestionMs('medium', 1000), 5000);
 });
 
 test('practice respects chosen topics and fixed level', () => {

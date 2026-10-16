@@ -10,6 +10,8 @@ import { sfx, buzz } from '../ui/audio.js';
 import { toast, confetti, reducedMotion } from '../ui/fx.js';
 import { t, locale } from '../i18n.js';
 import { commitRound } from '../core/progression.js';
+import { rankOf, rankById } from '../core/ranks.js';
+import { grantOnce } from '../core/wallet.js';
 import * as pgs from '../net/playgames.js';
 import * as net from '../net/online.js';
 import { shareText, shareUrl } from '../ui/share.js';
@@ -99,6 +101,10 @@ registerScreen('online', (app) => {
       h('div.grow', h('div.t', nameEl), h('div.d', `${t('net.season')}: ${L(cfg.season, 'name')} · ${t('net.rating')} ${num(meRes.rating.rating)}`),
         h('div.d', t('net.myCode'), ' ', h('b.code', { dir: 'ltr' }, id.code))),
       h('button.icon-btn', { aria: { label: t('net.rename') }, on: { click: () => rename(nameEl) } }, icon('user'))));
+    // الرتبة التنافسية في هذا الموسم
+    box.append(rankCard(meRes.rating));
+    // مكافأة نهاية الموسم الماضي (مرة واحدة)
+    if (meRes.seasonReward?.available) box.append(seasonRewardCard(meRes.seasonReward));
     // الإعلانات والمناسبة
     for (const a of cfg.announcements) box.append(h('div.announce', '📢 ', L(a, 'text')));
     for (const ev of cfg.events) box.append(eventCard(ev));
@@ -134,6 +140,43 @@ registerScreen('online', (app) => {
   });
   return { el, nav: 'online' };
 });
+
+/** بطاقة الرتبة: الرتبة الحالية، التقدّم نحو التالية، أو مباريات تحديد المستوى المتبقية */
+function rankCard(rating) {
+  const r = rankOf(rating.rating, rating.games);
+  const fill = h('i', { style: { width: Math.round(r.progress * 100) + '%', background: r.color } });
+  return h('section.card.rank-card', { id: 'rankCard', style: { '--rc': r.color } },
+    h('span.rc-ic', r.placed ? r.icon : '🎯'),
+    h('div.grow',
+      h('div.t', r.placed ? t('rank.' + r.id) : t('rank.placement')),
+      h('div.d', r.placed ? (r.next ? t('rank.toNext', { n: num(r.toNext), r: t('rank.' + r.next) }) : t('rank.top')) : t('rank.placementLeft', { n: num(r.placementLeft) })),
+      h('div.bar', fill),
+      h('div.d.faint', t('rank.how'))));
+}
+function seasonRewardCard(sr) {
+  const btn = h('button.btn.gold', { id: 'claimSeason', type: 'button', on: { click: async () => {
+    btn.disabled = true;
+    try {
+      const r = await net.api('POST', '/api/me/season-reward');
+      const got = grantOnce(app.data, r.token, r.pearls); app.save();
+      sfx.fanfare(); confetti({ count: 60 });
+      toast(got ? t('rank.claimed', { n: num(got) }) : t('rank.alreadyClaimed'));
+      card.remove();
+    } catch (e) { toast(errText(e)); btn.disabled = false; }
+  } } }, t('rank.claim', { n: num(sr.pearls) }));
+  const card = h('section.card.season-reward', h('span.rc-ic', rankById(sr.rank).icon),
+    h('div.grow', h('div.t', t('rank.seasonEnd', { s: L(sr.season, 'name') })), h('div.d', t('rank.finalRank', { r: t('rank.' + sr.rank) }))), btn);
+  return card;
+}
+
+/** المهام والشارات التي اكتملت بهذه المباراة */
+function rewardChips(rw) {
+  if (!rw?.applied || !(rw.missions?.length || rw.badges?.length)) return null;
+  return h('div.gift-list', { id: 'onlineRewards' },
+    ...rw.missions.map((m) => h('span.chip.ok', '✅ ', t('m.' + m.id, { g: m.goal, op: '' }))),
+    ...rw.badges.map((b) => h('span.chip.gold', '🏅 ', t('badge.' + b))),
+    rw.pearls ? h('span.chip.gold', '\u2066+' + num(rw.pearls) + ' 💎\u2069') : null);
+}
 
 const bigBtn = (id, emoji, color, title, sub, fn, wide = false) => h('button.mode-card' + (wide ? '.wide' : ''), { id, style: { '--mc': color }, on: { click: () => { sfx.tap(); fn(); } } },
   h('span.mi', { style: { fontSize: '1.5rem' } }, emoji), h('div', { style: { flex: wide ? '1' : null } }, h('div.mn', title), h('div.md', sub)));
@@ -315,11 +358,13 @@ registerScreen('tournament', (app, { id }) => {
   return { el };
 });
 
-function lbList(lb, title) {
+function lbList(lb, title, { ranks = false } = {}) {
   const sec = h('section.card.section', h('h2.section-title', title));
   if (!lb.list.length) sec.append(h('p.note', t('net.lbEmpty')));
   const medal = (r) => r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '🥉' : num(r);
-  for (const r of lb.list) sec.append(h('div.lb-row' + (r.me ? '.me' : ''), h('span.rk', medal(r.rank)), drop(r.skin), h('span.nm', r.name + (r.me ? ` (${t('net.you')})` : ''), r.pass ? h('span.pass-mark', { title: t('shop.passHolder'), aria: { label: t('shop.passHolder') } }, ' ✦') : null), h('b', num(r.score))));
+  // لوحة الموسم: أيقونة الرتبة بجانب التصنيف
+  const rk = (r) => (ranks ? h('span.lb-rank', { title: t('rank.' + rankOf(r.score, r.games ?? 99).id) }, rankOf(r.score, r.games ?? 99).icon) : null);
+  for (const r of lb.list) sec.append(h('div.lb-row' + (r.me ? '.me' : ''), h('span.rk', medal(r.rank)), drop(r.skin), h('span.nm', r.name + (r.me ? ` (${t('net.you')})` : ''), r.pass ? h('span.pass-mark', { title: t('shop.passHolder'), aria: { label: t('shop.passHolder') } }, ' ✦') : null), rk(r), h('b', num(r.score))));
   if (lb.mine && !lb.list.some((x) => x.me)) sec.append(h('div.lb-row.me', h('span.rk', num(lb.mine.rank)), drop(app.data.cosmetics.skin), h('span.nm', `${lb.mine.name} (${t('net.you')})`), h('b', num(lb.mine.score))));
   return sec;
 }
@@ -335,7 +380,7 @@ registerScreen('leaderboards', (app, params) => {
     (v) => { board = v; app.stack[app.stack.length - 1].params = { board: v }; load(); }, t('net.leaderboards')), box);
   const load = () => guard(box, async () => {
     const lb = await net.api('GET', `/api/leaderboard/${board}`);
-    clear(box).append(h('p.note', t('net.lbDesc.' + board)), lbList(lb, t('net.lb.' + board)));
+    clear(box).append(h('p.note', t('net.lbDesc.' + board)), lbList(lb, t('net.lb.' + board), { ranks: board === 'season' }));
   });
   load();
   return { el };
@@ -531,7 +576,9 @@ registerScreen('onlineResult', (app, params) => {
     if (!valid || params._committed) return null;
     params._committed = true;
     const rw = commitRound(app.data, { id: 'online-' + (params.runId || params.matchId), mode: 'online', score, correct: local.correct, answered: local.answered, bestStreak: local.bestStreak, perOp: local.perOp,
-      speedX: local.speedX || 1, fevers: local.fevers || 0, gifts: local.gifts || 0, turbo: !!params.extra?.turbo });
+      // نوع المباراة والتحقق من الخادم: «الشبح» لا يُحتسب مهمة أونلاين، و«challenge» = تحدّي صديق
+      onlineKind: params.kind, valid: true,
+      speedX: local.speedX || 1, fevers: local.fevers || 0, gifts: local.gifts || 0 });
     app.save();
     return rw;
   };
@@ -561,10 +608,12 @@ registerScreen('onlineResult', (app, params) => {
       const rw = reward(mine?.score || 0, mine?.valid);
       clear(box).append(head(title, won || teamWon ? 'cheer' : 'happy'), h('div.big-score', { style: { textAlign: 'center' } }, num(mine?.score || 0)),
         m.rating ? h('div.chip.gold', { style: { margin: '6px auto', display: 'flex', width: 'max-content' } }, `${t('net.rating')} ${num(m.rating.before)} → ${num(m.rating.after)}`) : null,
+        m.rating?.rankChange ? h('div.rank-change.' + m.rating.rankChange, { id: 'rankChange' }, rankById(m.rating.rank).icon, ' ', t('rank.change.' + m.rating.rankChange, { r: t('rank.' + m.rating.rank) })) : null,
         mine && !mine.valid ? h('p.note.warn', t('net.invalid')) : null,
         m.teams ? h('div.vs-table', ...m.teams.map((tm, i) => [i === 1 ? h('strong', t('fr.vs')) : null, h('div.pl' + (tm.score === Math.max(...m.teams.map((x) => x.score)) ? '.win' : ''), h('div.pn', tm.team ? t('net.teamRed') : t('net.teamBlue')), h('div.ps', num(tm.score)))]).flat()) : null,
         lbList({ list: m.standings.map((s) => ({ ...s, me: s.id === myId, name: (s.ghost ? '👻 ' : '') + s.name + (s.dnf ? ' — ' + t('net.dnf') : '') })) }, t('net.standings')),
         rw?.xp ? h('div.chip.ok', { style: { margin: '10px auto', display: 'flex', width: 'max-content' } }, t('res.xp', { n: rw.xp })) : null,
+        rewardChips(rw),
         emoteBar(), buttons(mine?.valid ? params.runId : null));
       if (won || teamWon) { sfx.fanfare(); confetti(); } else sfx.win();
     });
@@ -579,6 +628,7 @@ registerScreen('onlineResult', (app, params) => {
         !r.valid ? h('p.note.warn', t('net.invalid')) : null,
         r.board ? h('div.chip.gold', { style: { margin: '8px auto', display: 'flex', width: 'max-content' } }, t('net.yourRank', { n: num(r.board.rank) })) : null,
         rw?.xp ? h('div.chip.ok', { style: { margin: '8px auto', display: 'flex', width: 'max-content' } }, t('res.xp', { n: rw.xp })) : null,
+        rewardChips(rw),
         buttons(params.runId));
       if (r.valid) { sfx.win(); if (params.kind === 'challenge' && r.score > params.extra.target) confetti(); }
     }).catch((e) => {

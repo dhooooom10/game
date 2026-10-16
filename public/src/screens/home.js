@@ -14,7 +14,8 @@ import { createSession } from '../core/session.js';
 import { isNativeApp, PLAY_URL } from '../config.js';
 import { flag, countryName } from '../core/country.js';
 import { track } from '../net/analytics.js';
-import { nextJourneyLevel, buildRun, finishRun, PERSISTED, RAIN_PERSISTED, buildRainRun, finishRainRun, MAX_SHIELDS } from '../runs.js';
+import { nextJourneyLevel, buildRun, finishRun, PERSISTED, RAIN_PERSISTED, buildRainRun, finishRainRun, MAX_SHIELDS, migrateActiveRun, challengeLabel } from '../runs.js';
+import { normalizeChallenge, COMPLETE_MIN_CORRECT } from '../core/challenge.js';
 import { replayRain } from '../core/rain.js';
 import { loadConfig, api } from '../net/online.js';
 import { eventCard } from './online.js';
@@ -33,6 +34,7 @@ registerScreen('home', (app) => {
     h('div.who',
       h('div.name', name ? t('home.hello', { name }) : t('home.helloAnon')),
       h('div.lvl', h('span.lvl-badge', t('home.level', { n: lv.level })), h('div.bar.gold', { role: 'progressbar', aria: { valuenow: Math.round(lv.pct * 100), valuemin: 0, valuemax: 100, label: t('home.xp', { a: lv.into, b: lv.need }) } }, xpFill))),
+    data.online?.token ? h('button.icon-btn.bell', { id: 'homeBell', type: 'button', aria: { label: t('notif.title') }, on: { click: () => { sfx.tap(); app.go('notifications'); } } }, '🔔') : null,
     h('button.pearl-chip', { id: 'homePearls', type: 'button', aria: { label: t('wal.balance') }, on: { click: () => { sfx.tap(); app.go('shop'); } } }, '💎 ', num(data.pearls || 0), h('span.plus', '+')),
     h('button.icon-btn', { aria: { label: t('nav.settings') }, 'data-go': 'settings', on: { click: () => { sfx.tap(); app.go('settings'); } } }, icon('gear'))));
 
@@ -144,12 +146,30 @@ registerScreen('home', (app) => {
   const mbox = h('section.card.section', { aria: { label: t('home.missions') } }, h('h2.section-title', t('home.missions'), h('small', allDone ? t('home.missionsDone') : `${num(ms.filter((m) => m.done).length)}/${num(ms.length)}`)));
   for (const m of ms) {
     const fill = h('i', { style: { width: (m.progress / m.goal) * 100 + '%' } });
-    mbox.appendChild(h('div.mission' + (m.done ? '.done' : ''),
+    // المهمة زر يفتح نمطها الصحيح بالإعداد المناسب مباشرة
+    mbox.appendChild(h('button.mission' + (m.done ? '.done' : ''), { type: 'button', 'data-mission': m.id, disabled: m.done,
+      aria: { label: t('m.' + m.id, { g: m.goal, op: m.op ? t('op.' + m.op) : '' }) + (m.done ? ' ✓' : '') },
+      on: { click: () => { sfx.tap(); goMission(m); } } },
       h('span.mi', m.done ? icon('check') : icon('target')),
-      h('div.mt', t('m.' + m.id, { g: m.goal, op: m.op ? t('op.' + m.op) : '' }), h('div.bar.ok', { role: 'progressbar', aria: { valuenow: m.progress, valuemax: m.goal, valuemin: 0 } }, fill)),
+      h('div.mt', t('m.' + m.id, { g: m.goal, op: m.op ? t('op.' + m.op) : '' }), h('div.md', t('mr.' + m.id, { n: COMPLETE_MIN_CORRECT })),
+        h('div.bar.ok', { role: 'progressbar', aria: { valuenow: m.progress, valuemax: m.goal, valuemin: 0 } }, fill)),
       h('span.mx', m.done ? '✓' : `${num(m.progress)}/${num(m.goal)}`)));
   }
   el.appendChild(mbox);
+  function goMission(m) {
+    const ch = (mode) => app.go('setupCustom', { mode });
+    switch (m.id) {
+      case 'time1': return ch('time');
+      case 'survive1': return ch('survival');
+      case 'custom1': return ch('custom');
+      case 'daily1': return openDaily();
+      case 'online1': return app.go('online');
+      case 'friend1': return app.go('friendsHub');
+      case 'weak10': return app.go('play', { kind: 'practice', args: { opts: { topics: [m.op || 'add'], level: 'auto', format: 'mixed', timer: false, length: 10 } } });
+      case 'acc90': case 'streak8': case 'correct20': return ch('time');
+      default: return playNow();
+    }
+  }
 
   // الأنماط
   const card = (id, ic, color, title, sub, recordText, onClick, wide = false) => h('button.mode-card' + (wide ? '.wide' : ''), { id, style: { '--mc': color }, on: { click: () => { sfx.tap(); onClick(); } } },
@@ -181,13 +201,21 @@ registerScreen('home', (app) => {
       // تحديات الأصدقاء المنتظرة + مزامنة تقدّم الرحلة
       if (data.online?.token && navigator.onLine !== false) {
         import('./friendsHub.js').then((m) => m.syncProgress(app)).catch(() => {});
+        api('GET', '/api/notifications').then((n) => {
+          const b = document.getElementById('homeBell');
+          if (b && n.unread) b.append(h('span.badge-count.floating', { id: 'bellBadge' }, num(n.unread)));
+        }).catch(() => {});
         api('GET', '/api/inbox').then((ib) => {
+          app._pendingChallenges = ib.pending || 0;   // لتذكير الجهاز عند مغادرة التطبيق
           if (!ib.pending) return;
           const b = document.getElementById('homeFriends');
           if (b) b.append(h('span.badge-count.floating', { id: 'friendsBadge' }, num(ib.pending)));
         }).catch(() => {});
       }
-      const active = app.store.loadActive(app.pid);
+      // جولة محفوظة من إصدار قديم (الوقت/البقاء المستقلان) ← «تحدّيك الخاص» بنفس القواعد، أو تُلغى إن تعذّر ذلك
+      let active = app.store.loadActive(app.pid);
+      const migrated = migrateActiveRun(active);
+      if (migrated !== active) { if (migrated) app.store.saveActive(app.pid, migrated); else app.store.clearActive(app.pid); active = migrated; }
       if (active && active.engine === 'rain' && RAIN_PERSISTED.has(active.kind)) offerResume(active);
       else if (active && PERSISTED.has(active.kind) && active.snap) offerResume(active);
     },
@@ -196,7 +224,7 @@ registerScreen('home', (app) => {
 
 function offerResume(active) {
   const official = active.kind === 'daily' && active.args?.official;
-  const modeName = active.kind === 'lesson' ? t('mode.lesson') : t('mode.' + active.kind);
+  const modeName = active.kind === 'lesson' ? t('mode.lesson') : active.kind === 'custom' ? challengeLabel(normalizeChallenge(active.args)) : t('mode.' + active.kind);
   app.modal((box, close) => {
     box.append(h('h2', t('game.resumeTitle')), h('p.note', t('game.resumeBody', { mode: modeName })),
       official ? h('p.note', t('game.quitDaily')) : null,

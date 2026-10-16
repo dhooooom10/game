@@ -49,11 +49,12 @@ test('friends: add by code, send a custom challenge (same fields as your challen
   await B.fill('.fh-add input', codeA);
   await B.click('#addFriend');
   await B.waitForSelector('[data-challenge]');
+  await B.evaluate(() => { const d = window.__mc.data; d.missions.list = ['friend1', 'survive1'].map((id) => ({ id, goal: 1, progress: 0, done: false, claimed: false })); window.__mc.save(); });
   await B.click('[data-challenge]');
   await waitScreen(B, 'friendChallenge');
   await B.waitForSelector('#rangeHint');
   await B.click('text=جنونية');
-  await B.click('text=3 قلوب').catch(() => B.click('text=٣ قلوب'));
+  await B.click('.custom-fields button[role=radio][data-v="3"]:has-text("محاولات")');
   await B.click('#startFriendChallenge');
   await waitScreen(B, 'rainPlay');
   assert.equal(await B.evaluate(() => window.__mc.current.rain().cfg.lives), 3);
@@ -70,6 +71,9 @@ test('friends: add by code, send a custom challenge (same fields as your challen
   await waitScreen(B, 'results', 60000);
   assert.equal(await B.locator('#reviveYes, #revivePearls').count(), 0, 'no second chance in friend challenges');
   await B.waitForSelector('#sendStatus.ok', { timeout: 10000 });
+  // «أكمل تحدّي صديق» بعد قبول الخادم فقط، وليس «بقاء» رغم المحاولات المحدودة
+  await B.waitForFunction(() => window.__mc.data.missions.list.find((m) => m.id === 'friend1').done);
+  assert.equal(await B.evaluate(() => window.__mc.data.missions.list.find((m) => m.id === 'survive1').done), false);
   // الصديق A يرى التحدي في صندوقه
   await A.evaluate(() => window.__mc.go('friendsHub', {}, { replace: true }));
   await A.waitForSelector('[data-ch]', { timeout: 10000 });

@@ -37,7 +37,10 @@ const api = async (method, path, body, token) => (await fetch(S.url + path, { me
 
 test('quick match: two browsers are paired, see each other live, results + rating + XP', async () => {
   const A = await player('ريم'), B = await player('Omar');
+  // مهام اليوم: مباراة أونلاين حقيقية تُحتسب «أونلاين» فقط (لا بقاء ولا تحدّي صديق)
+  for (const P of [A, B]) await P.evaluate(() => { const d = window.__mc.data; d.missions.list = ['online1', 'survive1', 'friend1'].map((id) => ({ id, goal: 1, progress: 0, done: false, claimed: false })); window.__mc.save(); });
   for (const P of [A, B]) { await P.click('#nav [data-nav="online"]'); await P.waitForSelector('#qmBtn'); }
+  await A.waitForSelector('#rankCard');
   const code = await A.evaluate(() => window.__mc.data.online.code);
   assert.match(code, /^[0-9A-F]{6}$/);
   await A.click('#qmBtn'); await B.click('#qmBtn');
@@ -55,6 +58,8 @@ test('quick match: two browsers are paired, see each other live, results + ratin
   const d = await A.evaluate(() => window.__mc.data);
   assert.ok(d.xp > 0, 'online XP applied locally');
   assert.equal(d.stats.modes.online, 1);
+  const ms = Object.fromEntries(d.missions.list.map((m) => [m.id, m.done]));
+  assert.deepEqual(ms, { online1: true, survive1: false, friend1: false }, 'server-validated duel counts as online only');
   const season = await api('GET', '/api/leaderboard/season');
   assert.equal(season.list[0].name, 'ريم');
   assert.deepEqual([...A.errors, ...B.errors], []);

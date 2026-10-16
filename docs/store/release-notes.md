@@ -1,5 +1,25 @@
 # ما الجديد — نص جاهز لحقل «ملاحظات الإصدار» في Google Play
 
+## الإصدار 1.3.0 (رقم البناء 8)
+
+### العربية (ar)
+```
+🎛️ «تحدّيك الخاص» صار ثلاثة خيارات: تحدّي الوقت · البقاء · تخصيص
+🏅 رتب تنافسية في الأونلاين: من برونزي حتى أسطورة، ومكافأة نهاية الموسم
+🔔 إشعارات: تحديات أصدقائك ونتائجها وتذكير سلسلتك اليومية
+🎯 مهام يومية أوضح تفتح نمطها مباشرة
+⚡ شارتا البرق والصامد بشروط واضحة وتقدّم ظاهر
+```
+
+### English (en-US)
+```
+🎛️ "Your challenge" now has three options: Time · Survival · Custom
+🏅 Online ranks from Bronze to Legend, with end-of-season rewards
+🔔 Notifications: friend challenges, their results and daily streak reminders
+🎯 Clearer daily missions that open the right mode
+⚡ Lightning and Survivor badges with clear rules and visible progress
+```
+
 ## الإصدار 1.2.0 (رقم البناء 7)
 
 ### العربية (ar)

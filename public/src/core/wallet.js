@@ -23,6 +23,13 @@ export function grantPurchasePearls(d, productId, token) {
   return n;
 }
 
+/** لآلئ مكافأة (مثل نهاية الموسم) مرة واحدة لكل رمز */
+export function grantOnce(d, token, n) {
+  if (!token || !(n > 0)) return 0;
+  d.pearlTokens = Array.isArray(d.pearlTokens) ? d.pearlTokens : [];
+  if (d.pearlTokens.includes(token)) return 0;
+  d.pearlTokens.push(token); addPearls(d, n); return n;
+}
 export function buyShield(d) {
   if ((d.shields || 0) >= MAX_SHIELDS || !spend(d, PEARL_PRICES.shield)) return false;
   d.shields = (d.shields || 0) + 1; return true;

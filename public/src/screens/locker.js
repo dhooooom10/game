@@ -6,6 +6,7 @@ import { sfx } from '../ui/audio.js';
 import { toast } from '../ui/fx.js';
 import { t } from '../i18n.js';
 import { BADGES, COSMETICS, isUnlocked, levelFromXp } from '../core/progression.js';
+import { BADGE_RULES, PRESETS } from '../core/challenge.js';
 import { seg } from './setup.js';
 
 const THEME_SWATCH = { rain: ['#0A1230', '#38D6F5'], dawn: ['#EEF4FF', '#0E9BD8'], oasis: ['#062824', '#3DDC97'], sunset: ['#2A0F2E', '#FF9F5A'], aurora: ['#07142A', '#7CF0D0'], gold: ['#1B1405', '#FFC94A'] };
@@ -26,8 +27,13 @@ registerScreen('locker', (app, params) => {
       const grid = h('div.badge-grid');
       for (const b of BADGES) {
         const on = !!data.badges[b.id];
-        grid.appendChild(h('div.badge' + (on ? '' : '.locked'), { role: 'img', aria: { label: `${t('badge.' + b.id)}: ${t('badge.' + b.id + 'D')}${on ? '' : ' — ' + t('common.locked')}` } },
-          h('span.bi', b.icon), h('span.bn', t('badge.' + b.id)), h('span.bd', on ? t('lock.earned', { d: data.badges[b.id] }) : t('badge.' + b.id + 'D'))));
+        const prog = !on && BADGE_RULES[b.id] ? badgeProgressText(b.id) : null;
+        const tag = BADGE_RULES[b.id] && !on ? 'button.badge.locked.goal' : 'div.badge' + (on ? '' : '.locked');
+        grid.appendChild(h(tag, { 'data-badge': b.id, role: BADGE_RULES[b.id] && !on ? null : 'img', type: BADGE_RULES[b.id] && !on ? 'button' : null,
+          aria: { label: `${t('badge.' + b.id)}: ${t('badge.' + b.id + 'D')}${on ? '' : ' — ' + t('common.locked')}${prog ? ' — ' + prog : ''}` },
+          on: BADGE_RULES[b.id] && !on ? { click: () => { sfx.tap(); app.go('setupCustom', { preset: PRESETS[b.id] }); } } : {} },
+        h('span.bi', b.icon), h('span.bn', t('badge.' + b.id)), h('span.bd', on ? t('lock.earned', { d: data.badges[b.id] }) : t('badge.' + b.id + 'D')),
+        prog ? h('span.bp', prog) : null));
       }
       body.append(grid);
       return;
@@ -56,6 +62,13 @@ registerScreen('locker', (app, params) => {
       }
       body.append(h('section.section', h('h2.section-title', t('lock.' + cat)), grid));
     }
+  }
+  /** تقدّم اللاعب نحو البرق/الصامد (أفضل محاولة مؤهلة) */
+  function badgeProgressText(id) {
+    const p = data.badgeProgress?.[id];
+    const r = BADGE_RULES[id];
+    if (id === 'speed20') return p ? t('lock.prog.speed20', { a: num(p.answered), n: num(r.minAnswered), acc: num(Math.round(p.acc * 100)), s: num(((p.avgMs || 0) / 1000).toFixed(1)) }) : t('lock.prog.none');
+    return p ? t('lock.prog.survive25', { a: num(p.correct), n: num(r.minCorrect) }) : t('lock.prog.none');
   }
   paint();
   return { el, nav: 'locker' };

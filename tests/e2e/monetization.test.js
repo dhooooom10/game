@@ -76,7 +76,7 @@ test('app: rewarded second chance in survival, double XP, interstitial respects 
   const p = await nativePage();
   await p.goto(S.url + '/?e2e=1');
   await waitScreen(p, 'home');
-  await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.go('rainPlay', { kind: 'survival', args: { diff: 'expert' } }); });
+  await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.go('rainPlay', { kind: 'custom', args: { mode: 'survival', diff: 'hard' } }); });
   // لا نجيب: تنفد القلوب فيظهر عرض الفرصة الثانية
   await p.waitForSelector('#reviveYes', { timeout: 90000 });
   await p.click('#reviveYes');

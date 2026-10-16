@@ -4,13 +4,13 @@ import { h, icon, num, clear } from '../ui/dom.js';
 import { sfx } from '../ui/audio.js';
 import { toast } from '../ui/fx.js';
 import { t } from '../i18n.js';
-import { TIME_DURATIONS, DIFFICULTIES, timeRecordKey, survivalRecordKey, PRACTICE_TOPICS, survivalPerQuestionMs } from '../core/modes.js';
+import { PRACTICE_TOPICS } from '../core/modes.js';
 import { tierPolicy } from '../core/questions.js';
 import { tierFromSkill } from '../core/adaptive.js';
 import { STAGES, PATHS, lessonKey, pathOpen, lessonUnlocked, findPath } from '../core/curriculum.js';
 import { pick } from '../runs.js';
-import { turboRow, turboOn } from '../ui/turbo.js';
-import { CUSTOM_OPS, CUSTOM_LEVELS, CUSTOM_SPEEDS, CUSTOM_ENDS, customRecordKey } from '../core/rain.js';
+import { CH_MODES, CH_DIFFS, TIME_DURATIONS, CUSTOM_OPS, CUSTOM_LEVELS, CUSTOM_SPEEDS, CUSTOM_DURS, CUSTOM_LIVES, SURVIVAL_LIVES, COMPLETE_MIN_CORRECT,
+  BADGE_RULES, badgeEligibility, normalizeChallenge, challengeRecordKey } from '../core/challenge.js';
 
 export const topbar = (title, sub) => h('header.topbar',
   h('button.icon-btn.back', { aria: { label: t('common.back') }, on: { click: () => { sfx.tap(); app.back(); } } }, icon('back')),
@@ -28,89 +28,125 @@ export function seg(options, value, onChange, label) {
 }
 export const field = (label, control, hint) => h('div.field', h('div.label', label), control, hint ? h('div.hint', hint) : null);
 
-/* ---------------- تحدي الوقت ---------------- */
-registerScreen('setupTime', (app) => {
-  const pref = app.data.prefs.time;
-  const el = h('main', topbar(t('mode.time'), t('mode.timeSub')));
-  const recBox = h('div.chip.gold');
-  const paintRec = () => {
-    const r = app.data.records[timeRecordKey(pref.dur, pref.diff) + (turboOn(app.data) ? ':turbo' : '')];
-    recBox.textContent = r ? '🏆 ' + t('setup.record', { n: num(r.value) }) + ' · ' + t('prog.scoreUnit', { n: num(r.score) }) : t('setup.noRecord');
-  };
-  el.append(h('section.card',
-    field(t('setup.duration'), seg(TIME_DURATIONS.map((d) => [d, t('common.sec', { n: d })]), pref.dur, (v) => { pref.dur = +v; app.save(); paintRec(); }, t('setup.duration'))),
-    field(t('setup.difficulty'), seg(DIFFICULTIES.map((d) => [d, t('diff.' + d)]), pref.diff, (v) => { pref.diff = v; app.save(); paintRec(); }, t('setup.difficulty'))),
-    recBox),
-  h('div.section', turboRow(app, { onChange: () => paintRec() })),
-  h('p.note', { style: { marginTop: '12px' } }, t('rain.timeRules')),
-  h('p.note', t('rain.specials')),
-  h('button.btn.primary.block.lg', { id: 'startTime', style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'time', args: { dur: pref.dur, diff: pref.diff, turbo: turboOn(app.data) } }); } } }, icon('play'), t('common.start')));
-  paintRec();
-  return { el };
-});
+/* =========================================================================
+   «تحدّيك الخاص»: ثلاثة خيارات واضحة على محرّك واحد (قواعدها في core/challenge.js)
+   • تحدّي الوقت  • البقاء  • تخصيص
+   ========================================================================= */
+const CH_ICON = { time: '⏱️', survival: '❤️', custom: '🎛️' };
 
-/** خانات «تحدّيك الخاص» (العمليات، صعوبة الأرقام، السرعة، النهاية، التسارع) — تُستخدم أيضًا في تحدي الصديق */
+/**
+ * خانات «تخصيص» (تُستخدم أيضًا في تحدّي الصديق). تمنع الإعدادات المتعارضة:
+ * بلا حد زمني + محاولات غير محدودة = جولة لا تنتهي ← لا يُسمح بها.
+ */
 export function customFields(pref, save) {
-  // العمليات (اختيار متعدد)
-  const opsBox = h('div.chips', { role: 'group', aria: { label: t('cus.ops') } });
-  for (const o of CUSTOM_OPS) {
-    const b = h('button.chip-toggle', { type: 'button', aria: { pressed: String(pref.ops.includes(o)) } }, t('op.' + o));
-    b.addEventListener('click', () => {
-      sfx.tap();
-      const on = pref.ops.includes(o);
-      if (on && pref.ops.length === 1) return toast(t('cus.oneOp'));
-      pref.ops = on ? pref.ops.filter((x) => x !== o) : [...pref.ops, o];
-      b.setAttribute('aria-pressed', String(!on)); save();
-    });
-    opsBox.appendChild(b);
-  }
-  // مدى الأرقام لكل مستوى (السهل = أرقام آحاد ١–٩) حتى يعرف اللاعب ما سيأتيه
-  const rangeHint = h('span', { id: 'rangeHint' }, t('cus.range.' + pref.level));
-  const accelSw = h('button.switch', { role: 'switch', aria: { checked: String(!!pref.accel), label: t('cus.accel') } });
-  accelSw.addEventListener('click', () => { sfx.tap(); pref.accel = !pref.accel; accelSw.setAttribute('aria-checked', String(pref.accel)); save(); });
-  return [
-    field(t('cus.ops'), opsBox),
-    field(t('cus.level'), seg(CUSTOM_LEVELS.map((d) => [d, t('diff.' + d)]), pref.level, (v) => { pref.level = v; save(); rangeHint.textContent = t('cus.range.' + v); }, t('cus.level')), rangeHint),
-    field(t('cus.speedLabel'), seg(Object.keys(CUSTOM_SPEEDS).map((s) => [s, t('cus.speed.' + s)]), pref.speed, (v) => { pref.speed = v; save(); }, t('cus.speedLabel'))),
-    field(t('cus.end'), seg(CUSTOM_ENDS.map((e) => [e, t('cus.end.' + e)]), pref.end, (v) => { pref.end = v; save(); }, t('cus.end'))),
-    h('div.row', { style: { marginTop: '8px' } }, h('div.grow', h('div.t', t('cus.accel')), h('div.d', t('cus.accelSub'))), accelSw),
-  ];
+  const wrap = h('div.custom-fields');
+  const build = () => {
+    clear(wrap);
+    const opsBox = h('div.chips', { role: 'group', aria: { label: t('cus.ops') } });
+    for (const o of CUSTOM_OPS) {
+      const b = h('button.chip-toggle', { type: 'button', aria: { pressed: String(pref.ops.includes(o)) } }, t('op.' + o));
+      b.addEventListener('click', () => {
+        sfx.tap();
+        const on = pref.ops.includes(o);
+        if (on && pref.ops.length === 1) return toast(t('cus.oneOp'));
+        pref.ops = on ? pref.ops.filter((x) => x !== o) : [...pref.ops, o];
+        b.setAttribute('aria-pressed', String(!on)); save();
+      });
+      opsBox.appendChild(b);
+    }
+    // مدى الأرقام لكل مستوى (السهل = أرقام آحاد ١–٩)
+    const rangeHint = h('span', { id: 'rangeHint' }, t('cus.range.' + pref.level));
+    const accelSw = h('button.switch', { type: 'button', role: 'switch', aria: { checked: String(!!pref.accel), label: t('cus.accel') } });
+    accelSw.addEventListener('click', () => { sfx.tap(); pref.accel = !pref.accel; accelSw.setAttribute('aria-checked', String(pref.accel)); save(); });
+    const durLabel = (d) => (d ? t('common.sec', { n: d }) : t('ch.noLimit'));
+    const livesLabel = (n) => (n ? t('ch.livesN', { n }) : t('ch.unlimited'));
+    const durSeg = seg(CUSTOM_DURS.map((d) => [d, durLabel(d)]), pref.dur, (v) => {
+      pref.dur = +v;
+      if (!pref.dur && !pref.lives) { pref.lives = 3; toast(t('ch.conflictFixed')); }
+      save(); build();
+    }, t('ch.duration'));
+    const livesSeg = seg(CUSTOM_LIVES.map((n) => [n, livesLabel(n)]), pref.lives, (v) => {
+      pref.lives = +v;
+      if (!pref.dur && !pref.lives) { pref.dur = 60; toast(t('ch.conflictFixed')); }
+      save(); build();
+    }, t('ch.lives'));
+    // الخيار الذي يصنع جولة بلا نهاية معطّل (بلا مدة + محاولات غير محدودة)
+    if (!pref.dur) livesSeg.querySelector('[data-v="0"]')?.setAttribute('disabled', '');
+    if (!pref.lives) durSeg.querySelector('[data-v="0"]')?.setAttribute('disabled', '');
+    wrap.append(
+      field(t('cus.ops'), opsBox),
+      field(t('cus.level'), seg(CUSTOM_LEVELS.map((d) => [d, t('diff.' + d)]), pref.level, (v) => { pref.level = v; save(); rangeHint.textContent = t('cus.range.' + v); }, t('cus.level')), rangeHint),
+      field(t('cus.speedLabel'), seg(Object.keys(CUSTOM_SPEEDS).map((x) => [x, t('cus.speed.' + x)]), pref.speed, (v) => { pref.speed = v; save(); }, t('cus.speedLabel')), t('ch.speedHint')),
+      field(t('ch.duration'), durSeg, t('ch.durationHint')),
+      field(t('ch.lives'), livesSeg, t('ch.livesHint')),
+      h('div.row', { style: { marginTop: '8px' } }, h('div.grow', h('div.t', t('cus.accel')), h('div.d', t('cus.accelSub'))), accelSw));
+  };
+  build();
+  return [wrap];
 }
 
-/* ---------------- تحدّيك الخاص (لعب حر بالمطر) ---------------- */
-registerScreen('setupCustom', (app) => {
-  const pref = (app.data.prefs.custom ||= { ops: ['add', 'sub', 'mul'], level: 'medium', speed: 'fast', end: 't60', accel: true });
+registerScreen('setupCustom', (app, params = {}) => {
+  const data = app.data;
+  const P = data.prefs.challenge;
+  if (params.preset) { const a = normalizeChallenge(params.preset); P.mode = a.mode; P[a.mode] = a; app.save(); }
+  else if (params.mode && P[params.mode]) { P.mode = params.mode; app.save(); }
   const el = h('main', topbar(t('mode.custom'), t('mode.customSub')));
-  const recBox = h('div.chip.gold');
-  const paintRec = () => { const r = app.data.records[customRecordKey(pref)]; recBox.textContent = r ? '🏆 ' + t('setup.record', { n: num(r.value) }) : t('setup.noRecord'); };
-  const save = () => { app.save(); paintRec(); };
-  el.append(h('section.card',
-    ...customFields(pref, save),
-    recBox),
-  h('button.btn.primary.block.lg', { id: 'startCustom', style: { marginTop: '12px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'custom', args: { ...pref, ops: [...pref.ops] } }); } } }, icon('play'), t('common.start')));
-  paintRec();
-  return { el };
-});
+  const tiles = h('div.ch-tiles', { role: 'radiogroup', aria: { label: t('mode.custom') } });
+  const body = h('div');
+  el.append(tiles, body);
 
-/* ---------------- البقاء ---------------- */
-registerScreen('setupSurvival', (app) => {
-  const pref = app.data.prefs.survival;
-  const el = h('main', topbar(t('mode.survival'), t('mode.survivalSub')));
-  const recBox = h('div.chip.gold');
-  const rules = h('p.note');
-  const paint = () => {
-    const r = app.data.records[survivalRecordKey(pref.diff) + (turboOn(app.data) ? ':turbo' : '')];
-    recBox.textContent = r ? '🏆 ' + t('setup.record', { n: num(r.value) }) : t('setup.noRecord');
-    rules.textContent = t('rain.survRules');
+  const paintTiles = () => {
+    clear(tiles);
+    for (const m of CH_MODES) {
+      tiles.append(h('button.ch-tile' + (P.mode === m ? '.on' : ''), { type: 'button', role: 'radio', 'aria-checked': String(P.mode === m), id: 'ch-' + m,
+        on: { click: () => { sfx.tap(); P.mode = m; app.save(); paintTiles(); paint(); } } },
+      h('span.ct-ic', CH_ICON[m]), h('span.ct-t', t('ch.' + m)), h('span.ct-d', t('ch.' + m + 'Sub'))));
+    }
   };
-  el.append(h('section.card',
-    field(t('setup.difficulty'), seg(DIFFICULTIES.map((d) => [d, t('diff.' + d)]), pref.diff, (v) => { pref.diff = v; app.save(); paint(); }, t('setup.difficulty'))),
-    recBox),
-  h('div.section', turboRow(app, { onChange: () => paint() })),
-  h('div', { style: { marginTop: '12px' } }, rules),
-  h('p.note', t('rain.specials')),
-  h('button.btn.primary.block.lg', { id: 'startSurvival', style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'survival', args: { diff: pref.diff, turbo: turboOn(app.data) } }); } } }, icon('play'), t('common.start')));
-  paint();
+
+  function badgeLine(id, a) {
+    const why = badgeEligibility(id, a);
+    const r = BADGE_RULES[id];
+    const rule = id === 'speed20' ? t('ch.rule.speed20', { n: r.minAnswered, acc: Math.round(r.minAccuracy * 100), s: (r.maxAvgMs / 1000).toFixed(1) }) : t('ch.rule.survive25', { n: r.minCorrect });
+    const owned = !!data.badges[id];
+    return h('div.ch-badge' + (why ? '.no' : '.ok'), h('span', id === 'speed20' ? '⚡' : '🛡️'),
+      h('div.grow', h('b', t('badge.' + id)), ' — ', rule, h('div.d', owned ? t('ch.badgeOwned') : why ? t('ch.notEligible.' + why) : t('ch.eligible'))));
+  }
+
+  function paint() {
+    clear(body);
+    const mode = P.mode;
+    const a = P[mode];
+    const save = () => { Object.assign(a, normalizeChallenge({ ...a, mode })); P[mode] = a; app.save(); paintInfo(); };
+    const card = h('section.card');
+    if (mode === 'time') {
+      card.append(field(t('setup.duration'), seg(TIME_DURATIONS.map((d) => [d, t('common.sec', { n: d })]), a.dur, (v) => { a.dur = +v; save(); }, t('setup.duration'))),
+        field(t('setup.difficulty'), seg(CH_DIFFS.map((d) => [d, t('diff.' + d)]), a.diff, (v) => { a.diff = v; save(); }, t('setup.difficulty'))));
+    } else if (mode === 'survival') {
+      card.append(field(t('setup.difficulty'), seg(CH_DIFFS.map((d) => [d, t('diff.' + d)]), a.diff, (v) => { a.diff = v; save(); }, t('setup.difficulty'))));
+    } else {
+      card.append(...customFields(a, save));
+    }
+    const info = h('div');
+    const paintInfo = () => {
+      const n = normalizeChallenge({ ...a, mode });
+      const r = data.records[challengeRecordKey(n)];
+      clear(info).append(
+        h('p.note.ch-rules', '📜 ', t('ch.rules.' + mode, { s: n.dur || 0, n: n.lives || SURVIVAL_LIVES })),
+        h('p.note', t('rain.specials')),
+        h('div.ch-rec', h('span.chip.gold', { id: 'chRecord' }, r ? '🏆 ' + t('setup.record', { n: num(r.value) }) : t('setup.noRecord')), h('span.faint', t('ch.recordRule'))),
+        h('div.ch-rewards', h('div.label', '🎯 ', t('ch.rewardsTitle')), h('p.note', t('ch.missionRule', { n: COMPLETE_MIN_CORRECT })),
+          mode !== 'survival' ? badgeLine('speed20', n) : null, mode !== 'time' ? badgeLine('survive25', n) : null));
+    };
+    paintInfo();
+    body.append(card, info,
+      h('details.ch-help', h('summary', '❔ ', t('ch.helpTitle')), h('ul', ...t('ch.help').split('|').map((x) => h('li', x)))),
+      h('button.btn.primary.block.lg', { id: 'startChallenge', type: 'button', style: { marginTop: '12px' }, on: { click: () => {
+        sfx.tap();
+        app.go('rainPlay', { kind: 'custom', args: normalizeChallenge({ ...a, mode }) });
+      } } }, icon('play'), t('ch.start', { m: t('ch.' + mode) })));
+  }
+  paintTiles(); paint();
   return { el };
 });
 

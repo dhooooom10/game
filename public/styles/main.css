@@ -898,3 +898,54 @@ details.card summary { cursor: pointer; font-weight: 800; }
 .pk-tag { position: absolute; top: -9px; padding: 2px 10px; border-radius: 99px; font-size: .68rem; font-weight: 900; background: #7CF0FF; color: #002A33; }
 .pk-tag.bonus { background: #3DDC97; color: #00261A; }
 .starter-card .btn, .shop-item .btn, .spend-item .btn { white-space: nowrap; flex: none; }
+
+/* ===================== «تحدّيك الخاص»: ثلاثة خيارات ===================== */
+.ch-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 14px; }
+.ch-tile { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 6px 12px; border-radius: 20px; border: 1px solid var(--line-strong);
+  background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; text-align: center; transition: transform .15s, border-color .2s, background .2s; }
+.ch-tile:active { transform: scale(.97); }
+.ch-tile .ct-ic { font-size: 1.7rem; }
+.ch-tile .ct-t { font-weight: 900; font-size: .95rem; }
+.ch-tile .ct-d { font-size: .7rem; color: var(--muted); line-height: 1.35; }
+.ch-tile.on { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 16%, var(--surface)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 50%, transparent); }
+#ch-time.on { border-color: #FFC94A; background: color-mix(in srgb, #FFC94A 14%, var(--surface)); }
+#ch-survival.on { border-color: #FF7BB0; background: color-mix(in srgb, #FF7BB0 14%, var(--surface)); }
+#ch-custom.on { border-color: #FF9F5A; background: color-mix(in srgb, #FF9F5A 14%, var(--surface)); }
+.ch-rules { margin: 12px 2px 6px; color: var(--ink); }
+.ch-rec { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0 10px; }
+.ch-rec .faint { font-size: .75rem; }
+.ch-rewards { padding: 12px; border-radius: 16px; background: var(--surface-2); }
+.ch-rewards .note { margin: 4px 0 8px; }
+.ch-badge { display: flex; gap: 8px; align-items: flex-start; font-size: .85rem; padding: 6px 0; border-top: 1px solid var(--line); }
+.ch-badge .d { font-size: .78rem; margin-top: 2px; }
+.ch-badge.ok .d { color: var(--ok); font-weight: 800; }
+.ch-badge.no .d { color: var(--muted); }
+.ch-help { margin-top: 12px; padding: 10px 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); font-size: .85rem; }
+.ch-help summary { cursor: pointer; font-weight: 800; }
+.ch-help ul { margin: 8px 0 0; padding-inline-start: 18px; display: grid; gap: 6px; color: var(--muted); }
+.seg button[disabled] { opacity: .35; cursor: not-allowed; }
+button.mission { width: 100%; background: none; border: 0; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+button.mission[disabled] { cursor: default; }
+.mission .md { font-size: .72rem; color: var(--muted); font-weight: 600; margin: 2px 0 4px; }
+button.badge.goal { font: inherit; color: inherit; cursor: pointer; border: 1px dashed var(--line-strong); }
+.badge .bp { font-size: .7rem; color: var(--accent); font-weight: 800; margin-top: 4px; }
+
+/* ===================== الرتب والإشعارات ===================== */
+.rank-card { display: flex; align-items: center; gap: 12px; border-color: color-mix(in srgb, var(--rc) 55%, var(--line)); background: radial-gradient(120% 100% at 100% 0%, color-mix(in srgb, var(--rc) 22%, transparent), transparent 60%), var(--surface); }
+.rank-card .rc-ic, .season-reward .rc-ic { font-size: 2.2rem; }
+.rank-card .t { font-weight: 900; font-size: 1.1rem; }
+.rank-card .d { font-size: .8rem; color: var(--muted); margin: 2px 0 6px; }
+.rank-card .bar { height: 8px; }
+.season-reward { display: flex; align-items: center; gap: 12px; border-color: rgba(255, 201, 74, .7); background: linear-gradient(110deg, color-mix(in srgb, #FFC94A 20%, var(--surface)), var(--surface)); }
+.season-reward .t { font-weight: 900; }
+.season-reward .d { font-size: .82rem; color: var(--muted); }
+.rank-change { margin: 8px auto; width: max-content; padding: 8px 14px; border-radius: 99px; font-weight: 900; }
+.rank-change.up { background: rgba(61, 220, 151, .18); color: var(--ok); }
+.rank-change.down { background: rgba(255, 90, 110, .14); }
+.lb-rank { margin-inline-start: 6px; }
+.icon-btn.bell { position: relative; font-size: 1.1rem; }
+.notif-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; text-align: start; cursor: pointer; }
+.notif-row.unread { border-color: color-mix(in srgb, var(--primary) 55%, var(--line)); background: color-mix(in srgb, var(--primary) 8%, var(--surface)); }
+.notif-row .ni { font-size: 1.3rem; }
+.left-box .left-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: .88rem; border-top: 1px solid var(--line); }
+.left-box .left-row:first-of-type { border-top: 0; }

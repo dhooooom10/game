@@ -13,9 +13,10 @@
    ========================================================================= */
 import { recordSkill, newSkill } from './adaptive.js';
 import { createRng } from './rng.js';
+import { mergeBadgeProgress, migrateRecordKey, normalizeChallenge } from './challenge.js';
 
 export const STAT_OPS = ['add', 'sub', 'mul', 'div', 'order', 'frac', 'percent', 'power'];
-export const DATA_VERSION = 2;
+export const DATA_VERSION = 3;
 
 export function todayStr(d = new Date()) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), dd = String(d.getDate()).padStart(2, '0');
@@ -46,6 +47,7 @@ export function newProfileData(lang = 'ar') {
     owned: {},           // ما اشتُري باللآلئ (مثل skin:ember)
     boost: {},           // xp2: جولات متبقية بخبرة مضاعفة
     pearlTokens: [],     // رموز الشراء التي مُنحت لآلئها
+    badgeProgress: {},   // أفضل محاولة مؤهلة نحو البرق/الصامد
     speedBest: 1,        // أعلى معامل سرعة بلغه اللاعب
     journey: { unlocked: 1, stars: {}, best: {} },
     lessons: { done: {}, unlocked: {} },
@@ -58,7 +60,8 @@ export function newProfileData(lang = 'ar') {
     badges: {},
     cosmetics: { theme: 'rain', skin: 'sky', acc: 'none' },
     committed: [],
-    prefs: { practice: { topics: ['add', 'sub'], level: 'auto', format: 'mixed', timer: false, length: 10 }, time: { dur: 60, diff: 'medium' }, survival: { diff: 'medium' }, friend: { names: ['', ''], count: 10, diff: 'medium', layout: 'turns' }, rain: { diff: 'medium' }, custom: { ops: ['add', 'sub', 'mul'], level: 'medium', speed: 'fast', end: 't60', accel: true }, turbo: { on: false } },
+    prefs: { practice: { topics: ['add', 'sub'], level: 'auto', format: 'mixed', timer: false, length: 10 }, friend: { names: ['', ''], count: 10, diff: 'medium', layout: 'turns' }, turbo: { on: false },
+      challenge: { mode: 'time', time: { mode: 'time', dur: 60, diff: 'medium' }, survival: { mode: 'survival', diff: 'medium' }, custom: { mode: 'custom', ops: ['add', 'sub'], level: 'easy', speed: 'fast', dur: 60, lives: 0, accel: true } } },
   };
 }
 
@@ -85,6 +88,31 @@ export function normalizeData(d, lang = 'ar') {
   for (const k of Object.keys(base.prefs)) out.prefs[k] = { ...base.prefs[k], ...((d.prefs || {})[k] || {}) };
   out.committed = Array.isArray(d.committed) ? d.committed : [];
   out.history = Array.isArray(d.history) ? d.history : [];
+  // ترقية الإصدار ٣: أنماط «تحدّيك الخاص» الموحّدة
+  if ((d.v || 1) < 3) {
+    // مفاتيح الأرقام القياسية القديمة ← الصيغة الجديدة (الأفضل يبقى عند التعارض)؛ أرقام التيربو للوقت/البقاء ← أرشيف
+    const rec = {};
+    for (const [k, v] of Object.entries(out.records || {})) {
+      const nk = migrateRecordKey(k);
+      const cur = rec[nk];
+      if (!cur || v.value > cur.value || (v.value === cur.value && (v.score || 0) > (cur.score || 0))) rec[nk] = v;
+    }
+    out.records = rec;
+    // تفضيلات الوقت/البقاء/التخصيص القديمة ← تفضيلات «تحدّيك الخاص»
+    const old = d.prefs || {};
+    out.prefs.challenge = {
+      mode: 'time',
+      time: normalizeChallenge({ mode: 'time', dur: old.time?.dur, diff: old.time?.diff }),
+      survival: normalizeChallenge({ mode: 'survival', diff: old.survival?.diff }),
+      custom: normalizeChallenge({ mode: 'custom', ...(old.custom || {}) }),
+    };
+  }
+  for (const k of ['time', 'survival', 'custom', 'rain']) delete out.prefs[k];   // أُلغيت: صارت داخل prefs.challenge
+  const ch = out.prefs.challenge || {};
+  out.prefs.challenge = { mode: ['time', 'survival', 'custom'].includes(ch.mode) ? ch.mode : 'time',
+    time: normalizeChallenge({ ...(ch.time || {}), mode: 'time' }), survival: normalizeChallenge({ ...(ch.survival || {}), mode: 'survival' }),
+    custom: normalizeChallenge({ ...(ch.custom || {}), mode: 'custom' }) };
+  out.badgeProgress = d.badgeProgress && typeof d.badgeProgress === 'object' ? d.badgeProgress : {};
   out.v = DATA_VERSION;
   return out;
 }
@@ -147,8 +175,9 @@ function checkBadges(data, round) {
   give('correct100', st.correct >= 100);
   give('correct1000', st.correct >= 1000);
   give('perfect', round && round.answered >= 10 && round.correct === round.answered);
-  give('speed20', round && round.mode === 'custom' && round.correct >= 20);
-  give('survive25', round && round.mode === 'custom' && round.endLives && round.correct >= 25);
+  // البرق والصامد: الشروط الدقيقة في core/challenge.js (BADGE_RULES) وتُقيَّم عند إنهاء الجولة
+  give('speed20', !!round?.badgeEval?.speed20?.met);
+  give('survive25', !!round?.badgeEval?.survive25?.met);
   give('daily3', data.daily.streak >= 3);
   give('daily7', data.daily.streak >= 7);
   give('world1', data.journey.unlocked > 10 || !!data.journey.stars[10]);
@@ -163,21 +192,34 @@ function checkBadges(data, round) {
   give('allround', ['add', 'sub', 'mul', 'div'].every((op) => (data.skill[op]?.r || 1) >= 5));
   give('friend', st.friendMatches >= 1);
   give('scholar', round && round.mode === 'lesson' && round.pathComplete);
-  give('rain', round && round.mode === 'rain' && round.passed && (round.diff === 'hard' || round.diff === 'expert'));
+  give('rain', round && round.mode === 'journey' && round.passed && round.boss);          // سيد المطر: اجتز مرحلة زعيم 👑
   give('fever', round && (round.fevers || 0) >= 1);
   give('gift', round && (round.gifts || 0) >= 1);
   give('speedx2', round && (round.speedX || 1) >= 2);
   give('speedx3', round && (round.speedX || 1) >= 3);
-  give('turbo', round && round.turbo && (round.correct || 0) >= 20);
+  give('turbo', round && round.turbo && round.passed);                                   // اجتز مرحلة بالتيربو
   return earn;
 }
 
-/* ---------------- المهام اليومية ---------------- */
+/* ---------------- المهام اليومية ----------------
+   كل مهمة تُحتسب من حدث لعب حقيقي (جولة سُجّلت نتيجتها)، لا من فتح شاشة أو بدء جولة.
+   «إكمال» جولة من «تحدّيك الخاص» = انتهت بقاعدتها (الوقت أو المحاولات) بـ٥ إجابات صحيحة على الأقل (core/challenge.js).
+   needs: 'online' ← لا تُعرض إلا إذا كان الأونلاين متاحًا في هذا الإصدار. */
 export const MISSION_POOL = [
   { id: 'journey1', goal: 1 }, { id: 'correct20', goal: 20 }, { id: 'acc90', goal: 1 }, { id: 'streak8', goal: 1 },
-  { id: 'time1', goal: 1 }, { id: 'weak10', goal: 10 }, { id: 'daily1', goal: 1 }, { id: 'survive10', goal: 1 }, { id: 'rounds3', goal: 3 },
+  { id: 'weak10', goal: 10 }, { id: 'daily1', goal: 1 }, { id: 'rounds3', goal: 3 },
+  { id: 'time1', goal: 1 }, { id: 'survive1', goal: 1 }, { id: 'custom1', goal: 1 },
+  { id: 'online1', goal: 1, needs: 'online' }, { id: 'friend1', goal: 1 },
 ];
 export const MISSION_XP = 40;
+export const MISSION_PEARLS = 5;
+/** أنواع المباريات الأونلاين الحقيقية (ضد لاعبين أو على لوحة حقيقية) — مباراة «الشبح» لا تُحتسب */
+export const ONLINE_REAL = new Set(['duel', 'room', 'tournament', 'weekly']);
+
+let FEATURES = { online: false };
+/** يضبطه التطبيق عند الإقلاع: هل الأونلاين متاح في هذا الإصدار؟ */
+export function setFeatures(f) { FEATURES = { ...FEATURES, ...f }; }
+const available = (m) => !m.needs || !!FEATURES[m.needs];
 
 /** العملية الأضعف (الأقل دقة بعينة ≥ ١٠، وإلا الأقل تقديرًا) */
 export function weakestOp(data) {
@@ -189,17 +231,54 @@ export function weakestOp(data) {
   return ops.reduce((a, b) => ((data.skill[b]?.r || 1) < (data.skill[a]?.r || 1) ? b : a));
 }
 const acc = (data, op) => { const p = data.stats.perOp[op]; return p && p.q ? p.c / p.q : 1; };
+const newMission = (data, m) => ({ id: m.id, goal: m.goal, progress: 0, done: false, claimed: false, op: m.id === 'weak10' ? weakestOp(data) : undefined });
 
 export function ensureMissions(data, date = todayStr(), salt = '') {
-  if (data.missions.date === date && data.missions.list.length) return false;
+  if (data.missions.date === date && data.missions.list.length) return repairMissions(data, date, salt);
   const rng = createRng(`missions:${date}:${salt}`);
-  const pool = rng.shuffle(MISSION_POOL.filter((m) => m.id !== 'daily1'));
-  const picks = [{ id: 'daily1', goal: 1 }, pool[0], pool[1]];
-  data.missions = {
-    date,
-    list: picks.map((m) => ({ id: m.id, goal: m.goal, progress: 0, done: false, claimed: false, op: m.id === 'weak10' ? weakestOp(data) : undefined })),
-  };
+  const pool = rng.shuffle(MISSION_POOL.filter((m) => m.id !== 'daily1' && available(m)));
+  const picks = [MISSION_POOL.find((m) => m.id === 'daily1'), pool[0], pool[1]];
+  data.missions = { date, list: picks.map((m) => newMission(data, m)) };
   return true;
+}
+/**
+ * مهام اليوم من إصدار قديم (معرّفات أُلغيت مثل survive10) أو مهمة غير متاحة الآن (الأونلاين):
+ * تُستبدل بمهمة صالحة. المكتملة تبقى مكتملة (لا تُسحب ولا تُمنح مرة ثانية).
+ */
+function repairMissions(data, date, salt) {
+  const valid = (id) => { const m = MISSION_POOL.find((x) => x.id === id); return m && available(m); };
+  if (data.missions.list.every((m) => valid(m.id))) return false;
+  const rng = createRng(`missions-fix:${date}:${salt}`);
+  const used = new Set(data.missions.list.map((m) => m.id));
+  const spare = rng.shuffle(MISSION_POOL.filter((m) => m.id !== 'daily1' && available(m) && !used.has(m.id)));
+  data.missions.list = data.missions.list.map((m) => {
+    if (valid(m.id)) return m;
+    const rep = spare.shift(); if (!rep) return null;
+    const n = newMission(data, rep);
+    if (m.done) Object.assign(n, { progress: n.goal, done: true, claimed: true });
+    return n;
+  }).filter(Boolean);
+  return true;
+}
+
+/** كم تتقدّم مهمة واحدة بجولة مسجّلة */
+export function missionIncrement(m, round) {
+  const custom = round.mode === 'custom';
+  switch (m.id) {
+    case 'journey1': return round.mode === 'journey' && round.passed ? 1 : 0;
+    case 'correct20': return round.correct || 0;
+    case 'acc90': return round.answered >= 10 && round.correct / round.answered >= 0.9 ? 1 : 0;
+    case 'streak8': return (round.bestStreak || 0) >= 8 ? 1 : 0;
+    case 'weak10': return (round.perOp?.[m.op]?.c) || 0;
+    case 'daily1': return round.mode === 'daily' && round.official ? 1 : 0;
+    case 'rounds3': return round.mode === 'friend' || round.event ? 0 : 1;
+    case 'time1': return custom && round.sub === 'time' && round.completed ? 1 : 0;
+    case 'survive1': return custom && round.sub === 'survival' && round.completed ? 1 : 0;
+    case 'custom1': return custom && round.sub === 'custom' && round.completed ? 1 : 0;
+    case 'online1': return round.mode === 'online' && ONLINE_REAL.has(round.onlineKind) && round.valid !== false ? 1 : 0;
+    case 'friend1': return round.mode === 'friend' || round.event === 'friendSent' || (round.mode === 'online' && round.onlineKind === 'challenge' && round.valid !== false) ? 1 : 0;
+    default: return 0;
+  }
 }
 
 function progressMissions(data, round, date) {
@@ -207,18 +286,7 @@ function progressMissions(data, round, date) {
   if (data.missions.date !== date) return done;
   for (const m of data.missions.list) {
     if (m.done) continue;
-    let inc = 0;
-    switch (m.id) {
-      case 'journey1': inc = round.mode === 'journey' && round.passed ? 1 : 0; break;
-      case 'correct20': inc = round.correct || 0; break;
-      case 'acc90': inc = round.answered >= 10 && round.correct / round.answered >= 0.9 ? 1 : 0; break;
-      case 'streak8': inc = (round.bestStreak || 0) >= 8 ? 1 : 0; break;
-      case 'time1': inc = round.mode === 'custom' ? 1 : 0; break;            // «العب تحدّيك الخاص»
-      case 'weak10': inc = (round.perOp?.[m.op]?.c) || 0; break;
-      case 'daily1': inc = round.mode === 'daily' && round.official ? 1 : 0; break;
-      case 'survive10': inc = round.mode === 'online' ? 1 : 0; break;        // «مباراة أونلاين أو تحدي صديق»
-      case 'rounds3': inc = round.mode === 'friend' ? 0 : 1; break;
-    }
+    const inc = missionIncrement(m, round);
     if (inc > 0) {
       m.progress = Math.min(m.goal, m.progress + inc);
       if (m.progress >= m.goal) { m.done = true; }
@@ -278,7 +346,7 @@ export function commitRound(data, round, date = todayStr()) {
   st.modes[round.mode] = (st.modes[round.mode] || 0) + 1;
   if ((round.bestStreak || 0) > st.bestStreak) st.bestStreak = round.bestStreak;
   if (st.days[date]) st.days[date].rounds++; else st.days[date] = { q: 0, c: 0, ms: 0, n: 0, rounds: 1 };
-  if (round.mode === 'friend') st.friendMatches++;
+  if (round.mode === 'friend' || (round.mode === 'online' && round.onlineKind === 'challenge')) st.friendMatches++;
 
   // الخبرة
   let xp = (round.correct || 0) * 10;
@@ -308,16 +376,40 @@ export function commitRound(data, round, date = todayStr()) {
   data.history.push({ id: round.id, mode: round.mode, date, score: round.score, correct: round.correct, answered: round.answered, acc: round.answered ? +(round.correct / round.answered).toFixed(3) : 0 });
   if (data.history.length > 60) data.history.splice(0, data.history.length - 60);
 
-  // المهام
+  // المهام (خبرة + لآلئ لكل مهمة مكتملة)
   const missions = progressMissions(data, round, date);
   xp += missions.length * MISSION_XP;
+  const pearls = missions.length * MISSION_PEARLS;
+  if (pearls) data.pearls = (data.pearls || 0) + pearls;
+
+  // تقدّم شارتي البرق والصامد (أفضل محاولة مؤهلة — يُعرض للاعب)
+  if (round.badgeEval) data.badgeProgress = mergeBadgeProgress(data.badgeProgress, round.badgeEval);
 
   data.xp += xp;
   const badges = checkBadges(data, round);
   for (const b of badges) data.badges[b] = date;
   const after = levelFromXp(data.xp).level;
   const unlocks = unlockedCosmetics(data).filter((k) => !unlockedBefore.has(k));
-  return { applied: true, xp, levelBefore: before, levelAfter: after, badges, missions, records, unlocks };
+  return { applied: true, xp, pearls, levelBefore: before, levelAfter: after, badges, missions, records, unlocks };
+}
+
+/**
+ * حدث مشاركة ليس جولة (مثل: الخادم قبل تحدّيًا أرسلته لصديق). يُحتسب مرة واحدة لكل معرّف.
+ * لا يزيد عدد الجولات ولا يمنح خبرة اللعب — فقط تقدّم المهام المرتبطة به.
+ */
+export function recordEvent(data, { id, type }, date = todayStr()) {
+  const key = 'ev:' + id;
+  if (!id || data.committed.includes(key)) return { applied: false, missions: [] };
+  data.committed.push(key);
+  if (data.committed.length > 200) data.committed.splice(0, data.committed.length - 200);
+  ensureMissions(data, date);
+  if (type === 'friendSent') data.stats.friendMatches++;
+  const missions = progressMissions(data, { id: key, event: type, mode: 'event' }, date);
+  const xp = missions.length * MISSION_XP, pearls = missions.length * MISSION_PEARLS;
+  data.xp += xp; if (pearls) data.pearls = (data.pearls || 0) + pearls;
+  const badges = checkBadges(data, null);
+  for (const b of badges) data.badges[b] = date;
+  return { applied: true, missions, xp, pearls, badges };
 }
 
 /* ---------------- التحدي اليومي ---------------- */

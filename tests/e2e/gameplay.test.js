@@ -175,7 +175,7 @@ test('pause hides the drops and freezes the storm; going to background pauses to
   const page = await newPage(browser);
   await page.goto(URL_);
   await skipTut(page);
-  await page.evaluate(() => window.__mc.go('rainPlay', { kind: 'time', args: { dur: 60, diff: 'medium' } }));
+  await page.evaluate(() => window.__mc.go('rainPlay', { kind: 'custom', args: { mode: 'time', dur: 60, diff: 'medium' } }));
   await page.waitForTimeout(2500);
   await page.keyboard.press('Escape');
   await page.waitForSelector('.overlay');
@@ -195,7 +195,7 @@ test('time storm ends exactly when the clock runs out and saves the record', asy
   await page.clock.install();
   await page.goto(URL_);
   await skipTut(page);
-  await page.evaluate(() => window.__mc.go('rainPlay', { kind: 'time', args: { dur: 30, diff: 'easy' } }));
+  await page.evaluate(() => window.__mc.go('rainPlay', { kind: 'custom', args: { mode: 'time', dur: 30, diff: 'easy' } }));
   await page.clock.runFor(2000);
   for (let i = 0; i < 4; i++) {
     await page.clock.runFor(1500);
@@ -244,7 +244,7 @@ test('survival ends after 3 drops land and saves the record', async () => {
   await page.clock.install();
   await page.goto(URL_);
   await skipTut(page);
-  await page.evaluate(() => window.__mc.go('rainPlay', { kind: 'survival', args: { diff: 'medium' } }));
+  await page.evaluate(() => window.__mc.go('rainPlay', { kind: 'custom', args: { mode: 'survival', diff: 'medium' } }));
   for (let i = 0; i < 60 && (await page.evaluate(() => window.__mc.current.name)) === 'rainPlay'; i++) await page.clock.runFor(2000);
   await waitScreen(page, 'results');
   assert.equal((await data(page)).records['survival:medium'].value, 0);

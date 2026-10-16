@@ -93,54 +93,12 @@ export function evaluateJourney(info, sum) {
 }
 
 /* =========================================================================
-   تحدّي الوقت
+   الصعوبات المشتركة (تحدي الصديق على الجهاز نفسه)
    ========================================================================= */
 export const DIFFICULTIES = ['easy', 'medium', 'hard'];
 const START_TIER = { easy: 2, medium: 4, hard: 6 };
-const TIME_OPS = { easy: ['add', 'sub', 'mul'], medium: OPS, hard: OPS };
 const TIME_FORMATS = { easy: { input: 3, choice: 3 }, medium: { input: 4, choice: 2, missing: 1, compare: 1 }, hard: { input: 4, choice: 1, missing: 2, compare: 1 } };
-export const TIME_DURATIONS = [30, 60, 120];
-
-export function timeSpec(durationSec = 60, diff = 'medium', { seed = Date.now() } = {}) {
-  const rng = createRng(seed);
-  const fac = createQuestionFactory(rng);
-  const base = START_TIER[diff] || 4;
-  return {
-    id: `t${durationSec}${diff}-${seed}`, mode: 'time', duration: durationSec, diff,
-    totalQuestions: null, timeLimitMs: durationSec * 1000, lives: null, useSpeed: true, resumePolicy: 'swap',
-    source: (i, ctx) => {
-      const topic = rng.pick(TIME_OPS[diff] || OPS);
-      const tier = clampTier(base + Math.min(3, Math.floor(ctx.correct / 6)) - (topic === 'div' || topic === 'mul' ? 1 : 0));
-      return fac.make({ topic, tier, format: pickFormat(rng, topic, TIME_FORMATS[diff]) });
-    },
-  };
-}
-export const timeRecordKey = (dur, diff) => `time:${dur}:${diff}`;
-
-/* =========================================================================
-   البقاء — ٣ محاولات، ومؤقت لكل سؤال يقصر تدريجيًا
-   ========================================================================= */
-const SURV_START_MS = { easy: 15000, medium: 12000, hard: 10000 };
-export function survivalPerQuestionMs(diff, correct) {
-  const start = SURV_START_MS[diff] || 12000;
-  return Math.max(5000, start - correct * 200);
-}
-export function survivalSpec(diff = 'medium', { seed = Date.now() } = {}) {
-  const rng = createRng(seed);
-  const fac = createQuestionFactory(rng);
-  const base = START_TIER[diff] || 4;
-  return {
-    id: `s${diff}-${seed}`, mode: 'survival', diff,
-    totalQuestions: null, timeLimitMs: null, lives: 3, useSpeed: true, resumePolicy: 'swap',
-    perQuestionMs: (S) => survivalPerQuestionMs(diff, S.correct),
-    source: (i, ctx) => {
-      const topic = rng.pick(TIME_OPS[diff] || OPS);
-      const tier = clampTier(base + Math.min(4, Math.floor(ctx.correct / 5)) - (topic === 'div' || topic === 'mul' ? 1 : 0));
-      return fac.make({ topic, tier, format: pickFormat(rng, topic, TIME_FORMATS[diff]) });
-    },
-  };
-}
-export const survivalRecordKey = (diff) => `survival:${diff}`;
+/* تحدّي الوقت والبقاء صارا خيارين داخل «تحدّيك الخاص» على محرّك المطر — القواعد في core/challenge.js */
 
 /* =========================================================================
    التدريب الحر

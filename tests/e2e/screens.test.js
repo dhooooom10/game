@@ -13,7 +13,7 @@ test('every screen renders without errors and without horizontal overflow at 320
   await page.goto(URL_);
   await waitScreen(page, 'home');
   const screens = [['home'], ['journey'], ['world', { w: 0 }], ['world', { w: 9 }], ['progress'], ['locker'], ['locker', { tab: 'looks' }],
-    ['settings'], ['profiles'], ['setupTime'], ['setupSurvival'], ['practice'], ['practice', { tab: 'lessons' }], ['lessonPath', { pid: 'mul' }],
+    ['settings'], ['profiles'], ['setupCustom', { mode: 'time' }], ['setupCustom', { mode: 'survival' }], ['setupCustom', { mode: 'custom' }], ['practice'], ['practice', { tab: 'lessons' }], ['lessonPath', { pid: 'mul' }],
     ['friendSetup']];
   for (const [name, params] of screens) {
     await go(page, name, params || {});
@@ -23,7 +23,7 @@ test('every screen renders without errors and without horizontal overflow at 320
     const unnamed = await page.evaluate(() => [...document.querySelectorAll('#app button, #nav button')].filter((b) => b.offsetParent && !(b.innerText.trim() || b.getAttribute('aria-label'))).length);
     assert.equal(unnamed, 0, `unnamed buttons on ${name}`);
   }
-  for (const kind of [['journey', { level: 57 }], ['time', { dur: 60, diff: 'hard' }], ['survival', { diff: 'expert' }]]) {
+  for (const kind of [['journey', { level: 57 }], ['custom', { mode: 'time', dur: 60, diff: 'hard' }], ['custom', { mode: 'survival', diff: 'hard' }], ['custom', { mode: 'custom', ops: ['mul', 'div'], level: 'expert', speed: 'insane', dur: 0, lives: 3 }]]) {
     await go(page, 'rainPlay', { kind: kind[0], args: kind[1] });
     await page.waitForTimeout(3500);
     assert.ok(await noHorizontalOverflow(page), `overflow in rain ${kind[0]}`);
