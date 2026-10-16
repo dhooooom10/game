@@ -317,10 +317,10 @@ export function customConfig({ ops = ['add', 'sub'], level = 'medium', speed = '
 export const customRecordKey = (o) => `custom:${[...o.ops].sort().join('')}:${o.level}:${o.speed}:${o.end}:${o.accel ? 1 : 0}`;
 
 /* ---------------- التيربو ⚡: تسارع مرعب بأرقام سهلة ----------------
-   الصعوبة من السرعة لا من الحساب: المستويات تُحدّ بـ٣ (جمع حتى ١٥، ضرب حتى ١٠×١٠)،
+   الصعوبة من السرعة لا من الحساب: المستويات تُحدّ بـ٢ (أرقام آحاد ١–٩، ضرب حتى ٥×١٠)،
    والتسارع ١٤٪ كل ١٠ ثوانٍ، وأرضية العدالة أخفض حتى تشعر بالسرعة فعلًا. */
 export const TURBO_ACCEL = 0.14;
-export const TURBO_TIER_MAX = 3;
+export const TURBO_TIER_MAX = 2;   // جمع وطرح ١–٩، ضرب حتى ٥×١٠
 export function turbo(cfgIn) {
   const cfg = rainConfig(cfgIn);
   const tiers = Object.fromEntries(Object.entries(cfg.tiers).map(([op, t]) => [op, Math.min(t, TURBO_TIER_MAX)]));

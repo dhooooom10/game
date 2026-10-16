@@ -1,5 +1,21 @@
 # ما الجديد — نص جاهز لحقل «ملاحظات الإصدار» في Google Play
 
+## الإصدار 1.1.1 (رقم البناء 6)
+
+### العربية (ar)
+```
+🌊 مستوى الماء يرتفع مع كل قطرة تسقط
+🔢 «تحدّيك الخاص» يوضح مدى الأرقام: السهل = أرقام آحاد 1–9
+⚡ التيربو صار بأرقام آحاد فقط — السرعة هي التحدي
+```
+
+### English (en-US)
+```
+🌊 The water rises with every drop that lands
+🔢 "Your challenge" shows each level's number range: easy = single digits 1–9
+⚡ Turbo now uses single-digit numbers only — speed is the challenge
+```
+
 ## الإصدار 1.1.0 (رقم البناء 5)
 
 ### العربية (ar)

@@ -799,3 +799,7 @@ details.card summary { cursor: pointer; font-weight: 800; }
 .speed-badge[data-tier="3"] { box-shadow: inset 0 0 0 1px #FFC94A; }
 .speed-badge[data-tier="4"] { box-shadow: inset 0 0 0 1px #7CF0FF, 0 0 18px -6px #7CF0FF; }
 .gift-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0; }
+/* الماء يرتفع مع كل قطرة تسقط */
+.sky .ground { overflow: visible; }
+.sky .ground .wave { top: -7px; }
+.sky.flooding .ground { background: linear-gradient(180deg, rgba(90, 170, 255, .6), rgba(40, 60, 170, .9)); box-shadow: 0 -10px 30px rgba(255, 120, 120, .25); }

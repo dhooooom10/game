@@ -86,8 +86,8 @@ export function popBurst(sky, cx, cy, color, count = 12) {
 }
 
 /** رذاذ على سطح الماء عندما تسقط القطرة */
-export function groundSplash(sky, cx) {
-  const H = sky.clientHeight;
+export function groundSplash(sky, cx, water = 20) {
+  const H = sky.clientHeight - (water - 20);
   const p = document.createElement('i');
   p.className = 'puddle';
   p.style.cssText = `left:${cx}px;top:${H - 16}px`;

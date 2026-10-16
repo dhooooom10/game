@@ -56,7 +56,7 @@ test('mystery gift drops: deterministic bonus from the seed, counted in summary'
 test('turbo: easy numbers (tiers capped), strong acceleration, faster than normal, speed tiers', () => {
   const base = survivalConfig('hard');
   const tb = turbo(base);
-  assert.ok(Object.values(tb.tiers).every((v) => v <= TURBO_TIER_MAX));
+  assert.ok(Object.values(tb.tiers).every((v) => v <= TURBO_TIER_MAX)); assert.equal(TURBO_TIER_MAX, 2, 'turbo = single-digit numbers');
   assert.equal(tb.accel, TURBO_ACCEL); assert.equal(tb.turbo, true); assert.equal(tb.ramp.tierEvery, null);
   const R = createRain(turboDuelConfig(), 'T1');
   while (!R.state.over) R.step();

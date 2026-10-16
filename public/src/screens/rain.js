@@ -183,7 +183,7 @@ registerScreen('rainPlay', (app, params) => {
       } else if (ev.type === 'miss') {
         const de = dropEls.get(ev.drop.id);
         if (de) {
-          if (!reducedMotion()) groundSplash(sky, de._x + de._w / 2);
+          if (!reducedMotion()) groundSplash(sky, de._x + de._w / 2, water);
           de.classList.add('splash'); setTimeout(() => de.remove(), 300); dropEls.delete(ev.drop.id);
         }
         sfx.splash(); buzz(90);
@@ -228,13 +228,30 @@ registerScreen('rainPlay', (app, params) => {
   /* ---------- الحلقة (نبضات ثابتة) ---------- */
   let skyW = 0, skyH = 0;
   const measure = () => { skyW = sky.clientWidth; skyH = sky.clientHeight; };
+  /* مستوى الماء: يرتفع مع كل قطرة تسقط (بالقلوب: كل قلب مفقود يرفعه ثُلثًا حتى ٤٠٪ من السماء،
+     وبلا قلوب: ٣٪ لكل قطرة حتى ٣٠٪). مرئي فقط — المحرّك لا يتغير. */
+  const ground = sky.querySelector('.ground');
+  const maxLives = cfg.lives;
+  let water = 20;
+  const waterTarget = () => {
+    const S = R.state;
+    const f = maxLives ? Math.max(0, maxLives - (S.lives ?? maxLives)) / maxLives * 0.4 : Math.min(0.3, S.missed * 0.03);
+    return 20 + f * (skyH || 300);
+  };
+  function paintWater(snap = false) {
+    const tg = waterTarget();
+    water = snap ? tg : water + (tg - water) * 0.08;
+    if (Math.abs(tg - water) < 0.3) water = tg;
+    ground.style.height = water.toFixed(1) + 'px';
+    sky.classList.toggle('flooding', water > 20 + (skyH || 300) * 0.25);
+  }
   window.addEventListener('resize', measure);
   /** موضع قطرة واحدة (الأبعاد محفوظة مسبقًا لتجنّب إعادة حساب التخطيط في كل إطار) */
   function placeOne(d, de) {
     if (!skyW) measure();
     const w = de._w || 90, hh = de._h || 96;
     const x = 6 + d.x * Math.max(0, skyW - w - 12);
-    const y = -hh * 0.35 + d.y * (skyH - 20 - hh * 0.65);
+    const y = -hh * 0.35 + d.y * (skyH - water - hh * 0.65);
     de._x = x;
     const tf = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
     de.style.transform = tf; de.style.setProperty('--tf', tf);
@@ -260,7 +277,7 @@ registerScreen('rainPlay', (app, params) => {
     let steps = 0;
     while (acc >= TICK_MS && steps < 15 && !ended) { acc -= TICK_MS; steps++; handle(R.step()); }
     if (ended) return;
-    placeDrops(); paintTimer();
+    paintWater(); placeDrops(); paintTimer();
     if (persist && now - lastSave > 1000) { lastSave = now; persistNow(); }
     if (online && now - lastReport > 400) { lastReport = now; online.report?.({ tick: R.state.tick, score: R.state.score, popped: R.state.popped, lives: R.state.lives }); }
     if (online?.ghosts) paintGhosts();
@@ -432,6 +449,7 @@ registerScreen('rainPlay', (app, params) => {
       while (i < rs.log.length && rs.log[i][0] === R.state.tick && rs.log[i][1] !== 'rv') { R.input(String(rs.log[i][1])); i++; }
       R.step();
     }
+    measure(); paintWater(true);
     for (const d of R.state.drops) if (!d.dead) spawnEl(d);
     started = true; paintHud(); paintTyped();
     if (realtime) {

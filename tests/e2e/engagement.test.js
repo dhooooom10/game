@@ -97,3 +97,21 @@ test('online menu has the turbo arena and its matchmaking screen', async () => {
   await p.waitForSelector('.turbo-search');
   assert.deepEqual(p.errors, []);
 });
+
+test('water level rises with every drop that lands; custom setup shows the number range (easy = single digits)', async () => {
+  const p = await newPage(browser);
+  await p.goto(S.url + '/?e2e=1');
+  await waitScreen(p, 'home');
+  await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.go('rainPlay', { kind: 'survival', args: { diff: 'easy' } }); });
+  await waitScreen(p, 'rainPlay');
+  await p.waitForFunction(() => window.__mc.current.rain().state.tick > 10, null, { timeout: 8000 });
+  const h0 = await p.evaluate(() => document.querySelector('.sky .ground').getBoundingClientRect().height);
+  // نترك قطرتين تسقطان (نقفز في المحرك حتى خسارة قلبين)
+  await p.evaluate(() => { const R = window.__mc.current.rain(); while (R.state.lives > 1 && !R.state.over) R.step(); });
+  await p.waitForFunction((h) => document.querySelector('.sky .ground').getBoundingClientRect().height > h + 60, h0, { timeout: 8000 });
+  await p.evaluate(() => window.__mc.go('setupCustom'));
+  await waitScreen(p, 'setupCustom');
+  await p.click('text=سهل');
+  assert.match(await p.textContent('#rangeHint'), /[1١].*[9٩]/);
+  assert.deepEqual(p.errors, []);
+});
