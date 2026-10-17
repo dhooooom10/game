@@ -886,4 +886,10 @@ export default {
   "home.challengeSub": "Aynı damlalar, tek kod",
   "home.codeSub": "Meydan okuma ya da sonuç",
   "home.partySub": "2–6 oyuncu",
+  "err.screen": "Bu ekran açılamadı — güvenle geri döndük. Sorun Ayarlar'a kaydedildi.",
+  "set.errors": "Sorun kaydı",
+  "set.errorsSub": "Bir sorun olduysa kaydı kopyalayıp bize gönder, düzeltelim. Hiçbir şey otomatik gönderilmez.",
+  "set.errorsNone": "Kayıtlı sorun yok 👍",
+  "set.errorsCopy": "Kaydı kopyala",
+  "set.errorsClear": "Temizle",
 };

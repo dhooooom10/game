@@ -886,4 +886,10 @@ export default {
   "home.challengeSub": "Mêmes gouttes, un code",
   "home.codeSub": "Défi ou résultat",
   "home.partySub": "2–6 joueurs",
+  "err.screen": "Impossible d'ouvrir cet écran — retour en sécurité. Le problème est enregistré dans les Paramètres.",
+  "set.errors": "Journal des problèmes",
+  "set.errorsSub": "En cas de souci, copie le journal et envoie-le-nous pour qu'on corrige. Rien n'est envoyé automatiquement.",
+  "set.errorsNone": "Aucun problème enregistré 👍",
+  "set.errorsCopy": "Copier le journal",
+  "set.errorsClear": "Effacer",
 };

@@ -53,3 +53,16 @@ test('full round trip between two players: send → play → result → who won,
   assert.deepEqual(friendsRecord(me).map((f) => [f.uid, f.w, f.l]), [['fr0001', 0, 1]]);
   assert.deepEqual(friendsRecord(friend).map((f) => [f.uid, f.w, f.l]), [['me0001', 1, 0]]);
 });
+
+test('saved-round validation and data repair (startup must never crash on bad local data)', async () => {
+  const { validActive } = await import('../../public/src/runs.js');
+  assert.equal(validActive({ engine: 'rain', kind: 'journey', args: { level: 3 }, seed: 1, log: [], tick: 0 }), true);
+  assert.equal(validActive({ engine: 'rain', kind: 'levelDuel', args: null, seed: 1, log: [], tick: 0 }), false);
+  assert.equal(validActive({ engine: 'rain', kind: 'daily', args: {}, seed: 1, log: [], tick: 0 }), false);
+  assert.equal(validActive({ kind: 'practice', args: {}, snap: { v: 1, state: { answers: [] } } }), true);
+  assert.equal(validActive('x'), false);
+  const { normalizeData } = await import('../../public/src/core/progression.js');
+  const d = normalizeData({ v: 3, journey: { unlocked: 'x', stars: null }, records: null, social: { uid: 'a', list: [null, { dir: 'recv' }, { id: 'q', dir: 'sent', args: {}, replies: null }] } });
+  assert.equal(d.journey.unlocked, 1); assert.deepEqual(d.journey.stars, {}); assert.deepEqual(d.records, {});
+  assert.equal(d.social.list.length, 1); assert.deepEqual(d.social.list[0].replies, []);
+});

@@ -1,7 +1,7 @@
 /* الإعدادات والملفات الشخصية. */
 import * as notify from '../net/notify.js';
 import * as ads from '../net/ads.js';
-import { app, registerScreen, VERSION } from '../app.js';
+import { app, registerScreen, VERSION, readErrors, clearErrors } from '../app.js';
 import { h, icon, clear } from '../ui/dom.js';
 import { mascotSVG } from '../ui/mascot.js';
 import { sfx, setLevels, hapticsSupported, buzz } from '../ui/audio.js';
@@ -90,6 +90,19 @@ registerScreen('settings', (app) => {
       app.data = newProfileData(keep.lang); app.data.settings = { ...app.data.settings, ...keep, tutorialDone: true };
       app.store.clearActive(app.pid); app.save(); app.applyLook(); toast(t('set.resetDone')); app.refresh();
     } } }, t('set.reset'))));
+
+  // سجل المشكلات: يُنسخ ويُرسل للمطوّر يدويًا (لا يُرسل شيء تلقائيًا)
+  const errs = readErrors();
+  const errBox = h('section.card', { id: 'errLog' }, h('h2.section-title', '🧰 ', t('set.errors'), h('small', String(errs.length))),
+    h('p.note', errs.length ? t('set.errorsSub') : t('set.errorsNone')));
+  if (errs.length) errBox.append(h('div.btn-row',
+    h('button.btn.grow', { id: 'copyErrors', type: 'button', on: { click: async () => {
+      sfx.tap();
+      const text = `Qatra ${VERSION} · ${navigator.userAgent}\n` + errs.map((x) => `[${x.at}] ${x.w} (${x.scr}) ${x.m}\n${x.s}`).join('\n---\n');
+      try { await navigator.clipboard.writeText(text); toast(t('share.copied')); } catch { toast(t('share.failed')); }
+    } } }, t('set.errorsCopy')),
+    h('button.btn.ghost', { type: 'button', on: { click: () => { sfx.tap(); clearErrors(); app.refresh(); } } }, t('set.errorsClear'))));
+  el.append(errBox);
 
   el.append(h('section.card', h('h2.section-title', t('set.about')),
     h('p.note', t('app.name') + ' — ', t('app.tagline')), h('p.note', tRaw('set.credits')), h('p.faint', t('set.version', { v: VERSION }))));

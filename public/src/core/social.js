@@ -88,7 +88,8 @@ export function decodeCode(text) {
 export function ensureSocial(d) {
   const s = (d.social && typeof d.social === 'object') ? d.social : {};
   if (!s.uid) s.uid = Math.random().toString(36).slice(2, 8);
-  s.list = Array.isArray(s.list) ? s.list.slice(-100) : [];
+  s.list = Array.isArray(s.list) ? s.list.filter((c) => c && typeof c === 'object' && c.args && (c.dir === 'sent' || c.dir === 'recv')).slice(-100) : [];
+  for (const c of s.list) if (c.dir === 'sent' && !Array.isArray(c.replies)) c.replies = [];
   d.social = s;
   return s;
 }

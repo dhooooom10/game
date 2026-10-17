@@ -28,6 +28,21 @@ export function migrateActiveRun(active) {
   if (active.args?.turbo) return null;
   return { ...active, kind: 'custom', args: { mode: active.kind, dur: active.args?.dur, diff: active.args?.diff } };
 }
+/**
+ * هل الجولة المحفوظة صالحة للاستئناف؟ لقطة تالفة (إغلاق مفاجئ أثناء الحفظ، أو صيغة قديمة)
+ * تُحذف بهدوء بدل أن توقف اللعبة.
+ */
+export function validActive(a) {
+  if (!a || typeof a !== 'object' || !a.args || typeof a.args !== 'object') return false;
+  const lvl = (n) => Number.isInteger(n) && n >= 1 && n <= TOTAL_LEVELS;
+  if (a.engine === 'rain') {
+    if (!RAIN_PERSISTED.has(a.kind) || !Array.isArray(a.log) || !Number.isFinite(a.tick) || a.seed == null) return false;
+    if ((a.kind === 'journey' || a.kind === 'levelDuel') && !lvl(a.args.level)) return false;
+    if (a.kind === 'daily' && !/^\d{4}-\d{2}-\d{2}$/.test(a.args.date || '')) return false;
+    return true;
+  }
+  return PERSISTED.has(a.kind) && !!a.snap?.state && typeof a.snap.state === 'object' && Array.isArray(a.snap.state.answers);
+}
 /** وصف قصير لخيار «تحدّيك الخاص» */
 export function challengeLabel(a) {
   if (a.mode === 'time') return `${t('mode.time')} · ${t('common.sec', { n: a.dur })} · ${t('diff.' + a.diff)}`;

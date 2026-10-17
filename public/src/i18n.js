@@ -609,6 +609,12 @@ const ar = {
   "home.challengeSub": "نفس القطرات برمز",
   "home.codeSub": "تحدٍّ أو نتيجة",
   "home.partySub": "2–6 لاعبين",
+  "err.screen": "تعذّر فتح هذه الشاشة — عدنا بأمان. سجّلنا المشكلة في الإعدادات.",
+  "set.errors": "سجل المشكلات",
+  "set.errorsSub": "إن واجهت مشكلة، انسخ السجل وأرسله لنا لنصلحها. لا يُرسل شيء تلقائيًا.",
+  "set.errorsNone": "لا توجد مشكلات مسجّلة 👍",
+  "set.errorsCopy": "نسخ السجل",
+  "set.errorsClear": "مسح",
 };
 
 const en = {
@@ -1207,6 +1213,12 @@ const en = {
   "home.challengeSub": "Same drops, one code",
   "home.codeSub": "Challenge or result",
   "home.partySub": "2–6 players",
+  "err.screen": "Couldn't open that screen — we went back safely. The problem was logged in Settings.",
+  "set.errors": "Problem log",
+  "set.errorsSub": "If something went wrong, copy the log and send it to us so we can fix it. Nothing is sent automatically.",
+  "set.errorsNone": "No problems logged 👍",
+  "set.errorsCopy": "Copy log",
+  "set.errorsClear": "Clear",
 };
 
 /* لغات النسخة السابقة: العناوين الأساسية فقط (والباقي بالإنجليزية) */

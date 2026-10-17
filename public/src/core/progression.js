@@ -72,6 +72,12 @@ export function normalizeData(d, lang = 'ar') {
   const out = { ...base, ...d };
   out.settings = { ...base.settings, ...(d.settings || {}) };
   out.journey = { ...base.journey, ...(d.journey || {}) };
+  // قيم تالفة لا يجب أن توقف اللعبة أبدًا
+  const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
+  out.journey.unlocked = Math.max(1, Math.min(100, Math.floor(+out.journey.unlocked) || 1));
+  out.journey.stars = obj(out.journey.stars); out.journey.best = obj(out.journey.best);
+  out.records = obj(d.records); out.owned = obj(d.owned); out.badges = obj(d.badges);
+  out.xp = Math.max(0, +d.xp || 0); out.pearls = Math.max(0, Math.floor(+d.pearls || 0));
   out.lessons = { ...base.lessons, ...(d.lessons || {}) };
   out.stats = { ...base.stats, ...(d.stats || {}) };
   out.daily = { ...base.daily, ...(d.daily || {}) };
@@ -113,6 +119,11 @@ export function normalizeData(d, lang = 'ar') {
     time: normalizeChallenge({ ...(ch.time || {}), mode: 'time' }), survival: normalizeChallenge({ ...(ch.survival || {}), mode: 'survival' }),
     custom: normalizeChallenge({ ...(ch.custom || {}), mode: 'custom' }) };
   out.badgeProgress = d.badgeProgress && typeof d.badgeProgress === 'object' ? d.badgeProgress : {};
+  if (d.social && typeof d.social === 'object') {
+    const list = Array.isArray(d.social.list) ? d.social.list.filter((c) => c && typeof c === 'object' && typeof c.id === 'string' && (c.dir === 'sent' || c.dir === 'recv') && c.args && typeof c.args === 'object') : [];
+    for (const c of list) if (c.dir === 'sent' && !Array.isArray(c.replies)) c.replies = [];
+    out.social = { uid: typeof d.social.uid === 'string' ? d.social.uid : undefined, list };
+  }
   delete out.online;   // هوية الخادم القديمة (أُلغي الأونلاين) — لا نحتفظ بها
   out.v = DATA_VERSION;
   return out;

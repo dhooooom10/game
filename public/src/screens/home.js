@@ -12,7 +12,7 @@ import * as ads from '../net/ads.js';
 import { WORLDS, worldOf, DAILY_COUNT } from '../core/modes.js';
 import { createSession } from '../core/session.js';
 import { isNativeApp, PLAY_URL } from '../config.js';
-import { nextJourneyLevel, buildRun, finishRun, PERSISTED, RAIN_PERSISTED, buildRainRun, finishRainRun, MAX_SHIELDS, migrateActiveRun, challengeLabel } from '../runs.js';
+import { nextJourneyLevel, buildRun, finishRun, buildRainRun, finishRainRun, MAX_SHIELDS, migrateActiveRun, challengeLabel, validActive } from '../runs.js';
 import { normalizeChallenge, COMPLETE_MIN_CORRECT } from '../core/challenge.js';
 import { replayRain } from '../core/rain.js';
 import { ensureSocial } from '../core/social.js';
@@ -181,8 +181,10 @@ registerScreen('home', (app) => {
       let active = app.store.loadActive(app.pid);
       const migrated = migrateActiveRun(active);
       if (migrated !== active) { if (migrated) app.store.saveActive(app.pid, migrated); else app.store.clearActive(app.pid); active = migrated; }
-      if (active && active.engine === 'rain' && RAIN_PERSISTED.has(active.kind)) offerResume(active);
-      else if (active && PERSISTED.has(active.kind) && active.snap) offerResume(active);
+      if (!active) return;
+      // لقطة تالفة أو غير مفهومة ← تُحذف بهدوء (لا تمنع فتح اللعبة أبدًا)
+      if (!validActive(active)) { app.store.clearActive(app.pid); return; }
+      try { offerResume(active); } catch (e) { console.error(e); app.logError?.(e, 'resume-offer'); app.store.clearActive(app.pid); }
     },
   };
 });

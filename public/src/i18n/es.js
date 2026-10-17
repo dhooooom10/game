@@ -886,4 +886,10 @@ export default {
   "home.challengeSub": "Mismas gotas, un código",
   "home.codeSub": "Reto o resultado",
   "home.partySub": "2–6 jugadores",
+  "err.screen": "No se pudo abrir esa pantalla: volvimos con seguridad. El problema quedó registrado en Ajustes.",
+  "set.errors": "Registro de problemas",
+  "set.errorsSub": "Si algo falló, copia el registro y envíanoslo para arreglarlo. No se envía nada automáticamente.",
+  "set.errorsNone": "No hay problemas registrados 👍",
+  "set.errorsCopy": "Copiar registro",
+  "set.errorsClear": "Borrar",
 };

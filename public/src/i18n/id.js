@@ -886,4 +886,10 @@ export default {
   "home.challengeSub": "Tetesan sama, satu kode",
   "home.codeSub": "Tantangan atau hasil",
   "home.partySub": "2–6 pemain",
+  "err.screen": "Layar itu tidak bisa dibuka — kami kembali dengan aman. Masalahnya dicatat di Pengaturan.",
+  "set.errors": "Log masalah",
+  "set.errorsSub": "Jika ada masalah, salin log dan kirim ke kami agar bisa diperbaiki. Tidak ada yang dikirim otomatis.",
+  "set.errorsNone": "Tidak ada masalah tercatat 👍",
+  "set.errorsCopy": "Salin log",
+  "set.errorsClear": "Hapus",
 };

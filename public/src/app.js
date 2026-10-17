@@ -10,7 +10,20 @@ import { setMotion, toast } from './ui/fx.js';
 import * as notify from './net/notify.js';
 import * as pgs from './net/playgames.js';
 
-export const VERSION = '2.0.0';
+export const VERSION = '1.4.1';
+
+/* ---------------- سجل الأخطاء (على الجهاز فقط) ----------------
+   آخر الأخطاء تُحفظ محليًا ليتمكن اللاعب من نسخها وإرسالها من الإعدادات. لا يُرسل شيء تلقائيًا. */
+const ERR_KEY = 'mc2:errors';
+export function readErrors() { try { const v = JSON.parse(localStorage.getItem(ERR_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } }
+export function clearErrors() { try { localStorage.removeItem(ERR_KEY); } catch { /* ignore */ } }
+export function logError(e, where = '') {
+  try {
+    const list = readErrors();
+    list.push({ at: new Date().toISOString(), v: VERSION, w: String(where).slice(0, 60), scr: app.current?.name || '', m: String(e?.message || e).slice(0, 300), s: String(e?.stack || '').split('\n').slice(0, 6).join('\n').slice(0, 900) });
+    localStorage.setItem(ERR_KEY, JSON.stringify(list.slice(-15)));
+  } catch { /* ignore */ }
+}
 
 const screens = {};
 export function registerScreen(name, factory) { screens[name] = factory; }
@@ -28,6 +41,7 @@ export const app = {
   get settings() { return this.data.settings; },
   get profile() { return this.store.currentProfile(); },
   get playerName() { const n = (this.profile?.name || '').trim(); return n; },
+  logError,
   get level() { return levelFromXp(this.data.xp); },
 
   /** حفظ بيانات اللاعب فورًا */
@@ -89,7 +103,20 @@ export const app = {
     if (!top) return;
     if (this.current?.destroy) { try { this.current.destroy(); } catch (e) { console.error(e); } }
     const y = keepScroll ? window.scrollY : 0;
-    const scr = screens[top.name](this, top.params || {});
+    let scr;
+    try {
+      scr = screens[top.name](this, top.params || {});
+    } catch (e) {
+      // شاشة تعذّر بناؤها (بيانات غير متوقعة): نسجّل الخطأ ونعود بأمان بدل أن تتوقف اللعبة
+      console.error(e); logError(e, 'screen:' + top.name);
+      if (top.params?.restore) this.store.clearActive(this.pid);   // جولة محفوظة تالفة لا تُعرض مرة أخرى
+      this.stack.pop();
+      if (top.name === 'home') throw e;
+      if (!this.stack.length) this.stack.push({ name: 'home', params: {} });
+      this.current = null;
+      setTimeout(() => toast(t('err.screen')), 50);
+      return this.render();
+    }
     scr.name = top.name;
     this.current = scr;
     clear(this.root);
@@ -103,7 +130,7 @@ export const app = {
       const focusTarget = scr.el.querySelector('[data-autofocus]') || scr.el.querySelector('h1');
       if (focusTarget) { focusTarget.setAttribute('tabindex', '-1'); focusTarget.focus({ preventScroll: true }); }
     }
-    if (scr.afterMount) scr.afterMount();
+    if (scr.afterMount) { try { scr.afterMount(); } catch (e) { console.error(e); logError(e, 'mount:' + top.name); } }
   },
 
   renderNav(active) {
@@ -201,6 +228,9 @@ export const app = {
 /* ---------------- الإقلاع ---------------- */
 export async function boot() {
   app.root = document.getElementById('app');
+  // أي خطأ غير متوقع يُسجَّل محليًا (للإرسال من الإعدادات) ولا يوقف اللعبة
+  window.addEventListener('error', (e) => logError(e.error || e.message, 'window'));
+  window.addEventListener('unhandledrejection', (e) => logError(e.reason, 'promise'));
   app.nav = document.getElementById('nav');
   const be = createBackend();
   app.store = createStore(be, { lang: detectLang() });

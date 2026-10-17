@@ -1,5 +1,21 @@
 # ما الجديد — نص جاهز لحقل «ملاحظات الإصدار» في Google Play
 
+## الإصدار 1.4.1 (رقم البناء 10)
+
+### العربية (ar)
+```
+🛠️ إصلاح توقف اللعبة أحيانًا عند فتحها بعد جولة لم تكتمل
+🧰 اللعبة تصلح نفسها تلقائيًا إن تلفت بيانات محفوظة
+📋 سجل المشكلات في الإعدادات لإرساله لنا بسهولة
+```
+
+### English (en-US)
+```
+🛠️ Fixed an occasional startup error after an unfinished round
+🧰 The game now repairs damaged saved data by itself
+📋 Problem log in Settings, easy to copy and send to us
+```
+
 ## الإصدار 1.4.0 (رقم البناء 9)
 
 ### العربية (ar)
