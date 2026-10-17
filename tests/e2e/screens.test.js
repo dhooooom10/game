@@ -14,7 +14,7 @@ test('every screen renders without errors and without horizontal overflow at 320
   await waitScreen(page, 'home');
   const screens = [['home'], ['journey'], ['world', { w: 0 }], ['world', { w: 9 }], ['progress'], ['locker'], ['locker', { tab: 'looks' }],
     ['settings'], ['profiles'], ['setupCustom', { mode: 'time' }], ['setupCustom', { mode: 'survival' }], ['setupCustom', { mode: 'custom' }], ['practice'], ['practice', { tab: 'lessons' }], ['lessonPath', { pid: 'mul' }],
-    ['friendSetup']];
+    ['friendSetup'], ['friends'], ['friendCompose'], ['party']];
   for (const [name, params] of screens) {
     await go(page, name, params || {});
     await waitScreen(page, name);

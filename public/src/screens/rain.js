@@ -28,16 +28,19 @@ export const speedText = (x) => '\u2066×' + num((x || 1).toFixed(1)) + '\u2069'
 /* ---------------- اللعب ---------------- */
 registerScreen('rainPlay', (app, params) => {
   const data = app.data;
-  const online = params.online || null;          // مباراة أونلاين (الإعدادات والبذرة من الخادم)
-  const kind = online ? 'online' : params.kind;
-  const built = online ? { cfg: online.cfg, seed: online.seed, meta: online.meta } : buildRainRun(kind, params.args || {}, data, params.restore?.seed);
+  // منافسون على نفس الجوال (غرفة الأصدقاء): أشرطة نتائجهم السابقة تتحرك معك بنفس التوقيت
+  const rivals = params.rivals || null;
+  const party = params.party || null;
+  const kind = params.kind;
+  // البذرة: من جولة محفوظة، أو من رمز تحدٍّ/غرفة (نفس القطرات للجميع)، أو عشوائية
+  const built = buildRainRun(kind, params.args || {}, data, params.restore?.seed ?? params.seed);
   const { cfg, seed, meta } = built;
   if (params.restore?.id) built.id = params.restore.id;
   let R = createRain(cfg, seed);
   const realtime = !!meta.realtime;              // لا إيقاف: الوقت يمضي حتى لو غادرت (اليومي والأونلاين)
-  const persist = !online && meta.persist;
+  const persist = !party && meta.persist;
 
-  let raf = 0, last = 0, acc = 0, ended = false, paused = false, revived = false, offering = false, overlay = null, started = false, lastSave = 0, lastReport = 0, lastSec = null;
+  let raf = 0, last = 0, acc = 0, ended = false, paused = false, revived = false, offering = false, overlay = null, started = false, lastSave = 0, lastSec = null;
   const dropEls = new Map();
 
   /* ---------- العناصر ---------- */
@@ -53,7 +56,7 @@ registerScreen('rainPlay', (app, params) => {
   let chaseBroken = false;
   const chaseFill = h('i'); const chaseText = h('span.chase-t');
   const chaseEl = chase ? h('div.chase', { aria: { hidden: 'true' } }, h('div.chase-bar', chaseFill, h('b.chase-mark')), chaseText) : null;
-  const oppBox = h('div.opp-box', { hidden: !online });
+  const oppBox = h('div.opp-box', { hidden: !rivals?.ghosts?.length });
   // لون القطرات العادية = لون مظهر اللاعب (السماوي الافتراضي يبقى كما هو)
   const skinTint = app.data.cosmetics.skin && app.data.cosmetics.skin !== 'sky' ? SKINS[app.data.cosmetics.skin]?.[0] : null;
   const sky = h('div.sky.rain-sky', { aria: { label: meta.label }, style: skinTint ? { '--drop-tint': skinTint } : {} },
@@ -281,8 +284,7 @@ registerScreen('rainPlay', (app, params) => {
     if (ended) return;
     paintWater(); placeDrops(); paintTimer();
     if (persist && now - lastSave > 1000) { lastSave = now; persistNow(); }
-    if (online && now - lastReport > 400) { lastReport = now; online.report?.({ tick: R.state.tick, score: R.state.score, popped: R.state.popped, lives: R.state.lives }); }
-    if (online?.ghosts) paintGhosts();
+    if (rivals?.ghosts?.length) paintGhosts();
   }
 
   /* ---------- الخصوم (أونلاين) ---------- */
@@ -303,15 +305,12 @@ registerScreen('rainPlay', (app, params) => {
     r.row.classList.toggle('done', done);
   }
   function paintGhosts() {
-    for (const g of online.ghosts) {
+    for (const g of rivals.ghosts) {
       let s = 0; for (const [tk, sc] of g.timeline) { if (tk <= R.state.tick) s = sc; else break; }
       setOpp(g.id, g.name, s, R.state.tick >= g.timeline[g.timeline.length - 1][0], g.color);
     }
   }
-  if (online) {
-    for (const o of online.opponents || []) setOpp(o.id, o.name, 0, false, o.color);
-    online.onProgress = (id, name, score, done, color) => setOpp(id, name, score, done, color);
-  }
+  if (rivals?.ghosts?.length) for (const g of rivals.ghosts) setOpp(g.id, g.name, 0, false, g.color);
 
   /* ---------- الشرح التفاعلي ---------- */
   function coachSay() {
@@ -359,11 +358,11 @@ registerScreen('rainPlay', (app, params) => {
     sfx.tap();
     if (!fromPause && !realtime) pause();
     const official = kind === 'daily' && params.args?.official;
-    const body = online ? t('online.quitBody') : official ? t('game.quitDaily') : t('game.quitBody');
+    const body = party ? t('party.quitBody') : official ? t('game.quitDaily') : t('game.quitBody');
     const ok = await app.confirm({ title: t('game.quitTitle'), body, ok: t('game.quit'), cancel: t('game.keepPlaying'), danger: true });
     if (!ok) return;
     overlay?.remove(); overlay = null;
-    if (official || online) { handle(R.quit()); return; }
+    if (official || party) { handle(R.quit()); return; }
     ended = true; cleanup();
     if (persist) app.store.clearActive(app.pid);
     app.back();
@@ -371,8 +370,9 @@ registerScreen('rainPlay', (app, params) => {
 
   /* ---------- فرصة ثانية بإعلان بمكافأة (اختياري، مرة واحدة، أنماط فردية فقط) ---------- */
   function canRevive() {
-    // تحدي صديق: لا فرصة ثانية (الخادم لا يقبل الجولات المُنعشة)
-    return !online && !meta.tutorial && !params.args?.sendTo && ['journey', 'custom'].includes(kind) && R.state.endReason === 'lives' && !revived
+    // تحدي صديق: لا فرصة ثانية (النتيجتان على نفس القواعد)
+    // غرفة الأصدقاء وتحدّي الرمز: لا فرصة ثانية (يجب أن تكون الشروط متساوية للجميع)
+    return !party && !meta.duel && !meta.tutorial && ['journey', 'custom'].includes(kind) && R.state.endReason === 'lives' && !revived
       && (ads.rewardedReady() || pearls(data) >= PEARL_PRICES.revive);
   }
   function offerRevive() {
@@ -409,7 +409,8 @@ registerScreen('rainPlay', (app, params) => {
     if (!skipRevive && canRevive()) return offerRevive();
     ended = true; cleanup();
     const sum = R.summary();
-    if (online) return online.finish({ log: R.state.log, endTick: R.state.tick, summary: sum, timeline: R.state.timeline });
+    // غرفة على نفس الجوال: دور هذا اللاعب انتهى ← شاشة الغرفة (بلا مكافآت فردية؛ تُحتسب الغرفة كاملة في النهاية)
+    if (party) return app.go('partyTurn', { party, result: { score: sum.score, popped: sum.popped, timeline: R.state.timeline.slice() } }, { replace: true });
     if (meta.tutorial) {
       data.settings.tutorialDone = true; app.save(); sfx.win(); confetti({ count: 60 });
       return app.go('rainPlay', { kind: 'journey', args: { level: 1 } }, { replace: true });
@@ -417,11 +418,9 @@ registerScreen('rainPlay', (app, params) => {
     // المكافآت تُطبَّق مرة واحدة لكل معرّف جولة (commitRound)؛ نحفظ قبل حذف الجولة المعلّقة،
     // فإن أُغلق التطبيق بينهما تُستأنف الجولة وتنتهي بالمعرّف نفسه بلا مكافأة مكررة
     const { view } = finishRainRun(kind, params.args || {}, { id: built.id, seed, revived }, sum, data);
-    // لتحويل الجولة إلى تحدٍّ لصديق (يعيد الخادم تشغيلها للتحقق)
-    // جولة استُخدمت فيها فرصة ثانية لا تتحول إلى تحدٍّ (الخادم لا يقبل الفرص الإعلانية)
-    view.replay = revived ? null : { cfg: built.cfg, seed, log: R.state.log.slice(), endTick: R.state.tick };
+    // البذرة تحوّل الجولة إلى رمز تحدٍّ لصديق (يلعب نفس القطرات)؛ جولة بفرصة ثانية لا تتحول إلى تحدٍّ
+    view.seed = typeof seed === 'number' ? seed : null;
     view.revived = revived;
-    if (kind === 'daily' && view.official) import('./online.js').then((m) => m.uploadDaily(app, params.args.date, R.state.log, R.state.tick)).catch(() => {});
     app.save();
     if (persist) app.store.clearActive(app.pid);
     app.go('results', { view }, { replace: true });
@@ -480,20 +479,6 @@ registerScreen('rainPlay', (app, params) => {
     if (meta.tutorial) coachSay();
     const startNow = () => { started = true; last = performance.now(); acc = 0; raf = requestAnimationFrame(loop); };
     const steps = reducedMotion() || meta.tutorial ? [] : [num(3), num(2), num(1), t('game.go')];
-    if (online?.startAt) {
-      // مزامنة البداية مع الخادم
-      const cd = h('div.countdown', { aria: { hidden: 'true' } }, h('span'));
-      document.body.appendChild(cd);
-      const tickCd = () => {
-        const ms = online.startAt - online.now();
-        if (ms <= 0) { cd.remove(); sfx.go(); startNow(); return; }
-        const s = Math.ceil(ms / 1000); const sp = cd.firstChild;
-        if (sp.textContent !== num(s)) { sp.textContent = num(s); replay(sp, 'x'); sfx.count(); }
-        setTimeout(tickCd, 50);
-      };
-      tickCd();
-      return;
-    }
     if (!steps.length) return startNow();
     const cd = h('div.countdown', { aria: { hidden: 'true' } }, h('span'));
     document.body.appendChild(cd);

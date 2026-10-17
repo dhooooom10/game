@@ -21,19 +21,17 @@ Setiap tetesan membawa satu soal. Ketik jawabannya dan tetesan langsung pecah. K
 • Latihan Bebas — pilih operasi dan tingkat kesulitan, tanpa tekanan
 • Tantang Teman — dua pemain, satu HP
 
-🌍 BERTANDING DENGAN DUNIA
-• Pertandingan langsung melawan pemain sungguhan
-• Ruang privat dengan kode 6 digit
-• Turnamen musiman dan di momen spesial
-• Liga Negara — setiap poinmu mengangkat negaramu di peringkat dunia mingguan. Bawa Indonesia ke puncak!
-• Klub — buat klub untuk kelas, tim, atau teman-temanmu dan naik di Liga Klub
-• Tantang teman lewat tautan: dia akan mendapat tetesan yang persis sama denganmu
+🤝 MAIN BERSAMA TEMAN
+• Tantang teman dengan kode lewat WhatsApp: dia memainkan tetesan yang persis sama lalu membalas dengan hasilnya
+• Ruang satu ponsel: 2–6 pemain bergiliran, melawan bayangan pemain sebelumnya
+• Tatap muka: dua pemain sekaligus di layar terbagi
+• Papan peringkat global dan teman lewat Google Play Games
 
 🏆 KEMAJUAN
 Bintang, lencana, misi harian, pencapaian dan papan peringkat Google Play Games, serta tampilan warna-warni yang juga mewarnai tetesanmu di dalam game.
 
 🧠 PINTAR & ADIL
-Soal menyesuaikan dengan levelmu. Setiap skor online diputar ulang dan diverifikasi di server — tidak ada papan peringkat palsu. Pembelian hanya kosmetik: tidak ada pay-to-win.
+Soal menyesuaikan dengan levelmu. Seluruh game bisa dimainkan offline tanpa akun. Pembelian hanya kosmetik: tidak ada pay-to-win.
 
 📚 BELAJAR
 Bagian belajar yang santai dengan pelajaran langkah demi langkah untuk penjumlahan, pengurangan, perkalian, pembagian, pecahan, persen, dan lainnya. Cocok untuk latihan berhitung, menghafal perkalian, dan mengasah otak setiap hari.

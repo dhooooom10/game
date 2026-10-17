@@ -50,7 +50,7 @@ registerScreen('locker', (app, params) => {
         if (cat === 'theme') { const [a, b] = THEME_SWATCH[it.id]; visual = h('span.sw', { style: { background: `linear-gradient(135deg, ${a} 55%, ${b} 55%)` } }); }
         else if (cat === 'skin') visual = h('span', { html: mascotSVG({ skin: it.id, acc: 'none', size: 40, label: '' }) });
         else visual = h('span', { html: mascotSVG({ skin: cos.skin, acc: it.id, size: 40, label: '' }) });
-        const need = it.need.ent ? t(it.need.ent === 'season' ? 'shop.needSeason' : 'shop.needShop') : it.need.badge ? t('lock.needBadge', { b: t('badge.' + it.need.badge) }) : t('lock.needLevel', { n: it.need.level });
+        const need = it.need.ent ? t('shop.needShop') : it.need.badge ? t('lock.needBadge', { b: t('badge.' + it.need.badge) }) : t('lock.needLevel', { n: it.need.level });
         grid.appendChild(h('button.cos' + (unlocked ? '' : '.locked'), {
           aria: { pressed: String(sel), label: `${t(cat + '.' + it.id)}${unlocked ? '' : ' — ' + need}` },
           on: { click: () => {

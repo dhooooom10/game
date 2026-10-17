@@ -1,19 +1,15 @@
 /* =========================================================================
-   المشاركة: نص قصير على طريقة Wordle + رابط يفتح اللعبة مباشرة في المتصفح.
+   المشاركة: نص قصير على طريقة Wordle + رابط اللعبة في Google Play (بلا خادم).
    داخل تطبيق Android نستخدم إضافة Capacitor Share (WebView لا يدعم navigator.share)،
    وفي المتصفح Web Share API، وإلا ننسخ النص إلى الحافظة.
    ========================================================================= */
 import { t } from '../i18n.js';
 import { num } from './dom.js';
 import { toast } from './fx.js';
-import { CONFIG, PUBLIC_URL, isNativeApp } from '../config.js';
+import { CONFIG, PLAY_URL, isNativeApp } from '../config.js';
 
-/** رابط مع مصدر الزيارة (لقياس أي قناة تجلب لاعبين) */
-export function shareUrl(params = {}) {
-  const u = new URL(PUBLIC_URL + '/');
-  for (const [k, v] of Object.entries({ ref: 'share', ...params })) if (v != null) u.searchParams.set(k, v);
-  return u.toString();
-}
+/** رابط تحميل اللعبة من Google Play (مصدر الزيارة يظهر في تقارير Play Console) */
+export const shareUrl = () => `${PLAY_URL}&referrer=utm_source%3Dshare`;
 
 /** رقم التحدي اليومي (#1 = يوم الإطلاق) */
 export function dailyNumber(date) {

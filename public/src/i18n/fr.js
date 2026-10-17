@@ -52,7 +52,7 @@ export default {
   "ch.notCompleted": "Non complétée pour les missions : au moins {n} bonnes réponses requises",
   "m.survive1": "Termine une survie",
   "m.custom1": "Termine un défi perso",
-  "m.online1": "Termine un match en ligne",
+
   "m.friend1": "Termine un défi entre amis",
   "mr.journey1": "Réussis un niveau du voyage",
   "mr.correct20": "Tes bonnes réponses du jour, tous modes",
@@ -64,7 +64,7 @@ export default {
   "mr.time1": "Jusqu’à la fin du temps, avec au moins {n} bonnes réponses",
   "mr.survive1": "Jusqu’à épuisement des essais, avec au moins {n} bonnes réponses",
   "mr.custom1": "N’importe quel réglage, terminé selon sa règle avec {n}+ bonnes réponses",
-  "mr.online1": "Match rapide, salon, tournoi ou hebdo — vérifié par le serveur (les fantômes ne comptent pas)",
+
   "mr.friend1": "Envoie un défi, joue un défi reçu, ou joue avec un ami sur ce téléphone",
   "lock.prog.speed20": "Meilleur essai : {a}/{n} questions · {acc} % · moy. {s} s",
   "lock.prog.survive25": "Meilleur essai : {a}/{n} bonnes réponses",
@@ -74,72 +74,42 @@ export default {
   "set.notify": "Rappels",
   "set.notifySub": "Ta série quotidienne et les défis d’amis en attente",
   "set.notifyDenied": "Autorisation refusée — active les notifications dans les réglages du téléphone",
-  "notif.title": "Notifications",
-  "notif.empty": "Pas encore de notifications",
-  "notif.challenge": "{name} te défie : bats {n} points",
-  "notif.resultWon": "{name} a joué ton défi : toi {a}, lui {b} — tu gagnes 🏆",
-  "notif.resultLost": "{name} a battu ton défi : toi {a}, lui {b} — réplique !",
-  "notif.resultDraw": "{name} est à égalité : {a} – {b}",
-  "notif.friendAdded": "{name} t’a ajouté en ami",
+
+
+
+
   "notif.streak": "Ta série de {n} jours est en danger 🔥 Joue le défi du jour",
   "notif.daily": "Le défi du jour t’attend 💧",
   "notif.friends": "Tu as {n} défis d’amis en attente ⚔️",
-  "rank.bronze": "Bronze",
-  "rank.silver": "Argent",
-  "rank.gold": "Or",
-  "rank.diamond": "Diamant",
-  "rank.legend": "Légende",
-  "rank.placement": "Matchs de placement",
-  "rank.placementLeft": "Encore {n} matchs rapides pour révéler ton rang",
-  "rank.toNext": "{n} points pour {r}",
-  "rank.top": "Rang maximal — garde-le",
-  "rank.how": "Le rang vient du classement des matchs rapides de la saison (les fantômes ne comptent pas)",
-  "rank.change.up": "Tu passes {r} !",
-  "rank.change.down": "Tu redescends {r} — reviens plus fort",
-  "rank.seasonEnd": "{s} est terminée",
-  "rank.finalRank": "Ton rang final : {r}",
-  "rank.claim": "Récupérer +{n} 💎",
-  "rank.claimed": "Tu as reçu {n} perles 💎",
-  "rank.alreadyClaimed": "Tu as déjà récupéré cette récompense",
+
+
+
+
+
+
+
+
+
   "home.bestSpeed": "Vitesse max",
-  "home.onlineLive": "EN DIRECT",
-  "home.onlineAll": "Tout en ligne",
-  "home.quickSub": "Un vrai rival",
-  "home.turboSub": "Vitesse folle",
-  "home.friendsSub": "Défie tes amis",
-  "fh.title": "Défi entre amis",
-  "fh.sub": "Tes amis et vos défis",
-  "fh.levelN": "Niveau {n}",
-  "fh.customLabel": "Perso",
-  "fh.sendCode": "Envoyer mon code",
-  "fh.added": "Ami ajouté 🤝",
-  "fh.inbox": "Défis pour toi",
-  "fh.fromX": "{name} te défie",
-  "fh.beat": "bats {n} points",
-  "fh.play": "Jouer",
-  "fh.empty": "Pas encore d'amis. Envoie ton code ou tape le sien ci-dessus.",
-  "fh.h2h": "Toi {w} – {l}",
-  "fh.challenge": "Défier",
-  "fh.race": "Course du voyage entre amis",
-  "fh.sent": "Défis envoyés",
-  "fh.toX": "À {name}",
-  "fh.yourScore": "ton score {n}",
-  "fh.waiting": "En attente",
-  "fh.local": "Joue avec un ami sur ce téléphone",
-  "fh.res.win": "Gagné",
-  "fh.res.lose": "Perdu",
-  "fh.res.draw": "Égalité",
-  "fh.newTitle": "Défier {name}",
-  "fh.newSub": "Choisis le type de défi",
-  "fh.tabCustom": "Perso",
-  "fh.tabLevel": "Niveau",
-  "fh.howCustom": "Joue d'abord ta manche ; {name} reçoit ensuite les mêmes gouttes et tente de te battre.",
-  "fh.playSend": "Jouer et envoyer",
-  "fh.pickLevel": "Choisis un niveau atteint",
-  "fh.howLevel": "Tu joues le niveau {n}, puis {name} avec les mêmes gouttes — le plus de points gagne.",
-  "fh.sending": "Envoi du défi à {name}…",
-  "fh.sent1": "Défi envoyé à {name} — il doit battre {n}",
-  "fh.sendFail": "Envoi impossible pour l'instant — vérifie la connexion et réessaie",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   "wal.earned": "perles gagnées",
   "wal.boosted": "XP doublée +{n}",
   "wal.balance": "Tes perles",
@@ -193,8 +163,7 @@ export default {
   "res.speedTier.4": "Vitesse diamant",
   "res.speedBest": "Ta vitesse la plus élevée !",
   "res.speedPrev": "Ta meilleure vitesse : {x}",
-  "net.turbo": "Arène turbo",
-  "net.turboSub": "Un duel à accélération folle avec des nombres faciles — qui tiendra ?",
+
   "badge.fever": "Fièvre",
   "badge.feverD": "Entre en mode fièvre avec 10 bonnes réponses d’affilée",
   "badge.gift": "Surprise",
@@ -694,158 +663,85 @@ export default {
   'jrr.boss': 'Boss : {n} gouttes avec des gouttes spéciales',
   'jrr.rule.hearts': 'Étoiles = cœurs restants (★★★ si aucune goutte ne tombe)',
   'jrr.rule.sprint': 'Étoiles selon le temps restant : ★★★ 35 % · ★★ 15 %',
-  'net.err.offline': 'Impossible de joindre le serveur pour le moment.',
-  'net.err.generic': 'Un problème est survenu, réessaie.',
-  'net.err.unauthorized': 'Session expirée, réessaie.',
-  'net.err.banned': 'Ce compte est suspendu.',
-  'net.err.rate_limited': 'Trop de requêtes, patiente un instant.',
-  'net.err.name_length': 'Le nom doit faire 2 à 16 caractères.',
-  'net.err.name_chars': 'Utilise uniquement des lettres et des chiffres.',
-  'net.err.name_blocked': "Ce nom n'est pas autorisé.",
-  'net.err.code_not_found': 'Aucun joueur avec ce code.',
-  'net.err.self': "C'est ton propre code !",
-  'net.err.too_many': "Limite d'amis atteinte.",
-  'net.err.room_not_found': 'Aucun salon avec ce code.',
-  'net.err.room_full': 'Le salon est plein.',
-  'net.err.room_busy': "Une partie est en cours dans ce salon, attends qu'elle se termine.",
-  'net.err.need_players': 'Il faut au moins deux joueurs.',
-  'net.err.not_active': "Le tournoi n'est pas en cours.",
-  'net.err.no_attempts': 'Tu as utilisé tous tes essais.',
-  'net.err.not_found': 'Introuvable ou expiré.',
-  'net.err.already_submitted': 'Déjà envoyé.',
-  'net.err.timeout': 'Délai dépassé.',
-  'net.err.run_not_found': 'Partie introuvable.',
-  'net.dur.dh': '{d} j {h} h',
-  'net.dur.hm': '{h} h {m} min',
-  'net.dur.m': '{m} min',
-  'net.offlineTitle': 'Connexion impossible',
-  'net.offlineHint': "Le jeu solo et l'apprentissage marchent hors ligne ; le mode en ligne demande une connexion.",
-  'net.retry': 'Réessayer',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   'net.loading': 'Connexion…',
-  'net.emotes': 'Réactions',
-  'net.season': 'Saison',
-  'net.rating': 'Classement',
-  'net.myCode': 'Ton code ami :',
-  'net.rename': 'Ton nom en ligne',
-  'net.nameRules': '2 à 16 caractères, sans symboles ni mots offensants.',
-  'net.quick': 'Partie rapide',
-  'net.quickSub': 'Un vrai adversaire de ton niveau — les mêmes gouttes pour les deux',
-  'net.rooms': 'Salons entre amis',
-  'net.roomsSub': "Salons avec code, jusqu'à 8 joueurs",
-  'net.tournaments': 'Tournois',
-  'net.tournamentsSub': 'Événements de saison et de fêtes',
-  'net.weekly': 'Tempête de la semaine',
-  'net.weeklySub': 'Une minute pour la première place de la semaine',
-  'net.leaderboards': 'Classements',
-  'net.leaderboardsSub': 'Résultats réels et vérifiés',
-  'net.friends': 'Amis',
-  'net.friendsSub': 'Ajoute-les par code et affrontez-vous',
-  'net.myRewards': 'Mes récompenses',
-  'net.rank': 'Rang {n}',
-  'net.safety': 'Le mode en ligne est sûr pour les enfants : pas de chat écrit, uniquement des réactions prédéfinies. Chaque score est recalculé par le serveur pour rester équitable.',
-  'net.endsIn': 'Se termine dans {d}',
-  'net.startsIn': 'Commence dans {d}',
-  'net.live': 'En cours',
-  'net.soon': 'Bientôt',
-  'net.ended': 'Terminé',
-  'net.searching': "Recherche d'un adversaire de ton niveau…",
-  'net.ghostNote': "Si personne n'est libre en quelques secondes, tu affronteras un « fantôme » : une vraie partie enregistrée d'un autre joueur.",
-  'net.noPlayers': 'Aucun joueur disponible pour le moment — réessaie bientôt.',
-  'net.roomMatch': 'Partie en salon',
-  'net.vsGhost': 'contre le fantôme de {name}',
-  'net.roomCode': 'Code du salon',
-  'net.createRoom': 'Créer un salon',
-  'net.createRoomSub': 'Tu reçois un code à 6 chiffres à partager avec tes amis.',
-  'net.joinRoom': 'Rejoindre avec un code',
-  'net.codeLen': 'Le code fait 6 chiffres',
-  'net.join': 'Rejoindre',
-  'net.room': 'Salon',
-  'net.shareCode': 'Partage ce code',
-  'net.share': 'Partager',
-  'net.roomInvite': 'Rejoins mon salon Qatra Challenge ! Code : {code}',
-  'net.players': 'Joueurs',
-  'net.you': 'toi',
-  'net.teamRed': 'Équipe rouge',
-  'net.teamBlue': 'Équipe bleue',
-  'net.roomMode': 'Mode du salon',
-  'net.race': 'Course',
-  'net.teams': 'Équipes',
-  'net.specials': 'Gouttes spéciales',
-  'net.startRoom': 'Lancer la partie',
-  'net.needTwo': 'Il faut au moins deux joueurs',
-  'net.waitHost': "En attente du lancement par l'hôte…",
-  'net.copied': 'Lien copié',
-  'net.noTournaments': 'Aucun tournoi pour le moment',
-  'net.noTournamentsSub': "Les tournois sont annoncés pour les saisons et les grandes occasions — reste à l'affût !",
-  'net.tournament': 'Tournoi',
-  'net.rules': 'Règles',
-  'net.stormSecs': 'Tempête de {n} secondes',
-  'net.attempts': 'Essais',
-  'net.attemptsLeft': '{n} sur {m} restants',
-  'net.unlimited': 'Illimités',
-  'net.sameStorm': 'Mêmes gouttes pour tous',
-  'net.yesSame': 'Oui',
-  'net.noSame': 'Non — difficulté égale',
-  'net.prize': 'Prix',
-  'net.topN': 'pour le top {n}',
-  'net.myBest': 'Ton record',
-  'net.playTournament': 'Jouer',
-  'net.tLeaderboard': 'Classement du tournoi',
-  'net.lbEmpty': 'Pas encore de résultats — sois le premier !',
-  'net.lbReal': 'Uniquement des résultats réels',
-  'net.lb.weekly': 'Semaine',
-  'net.lb.season': 'Saison',
-  'net.lb.daily': "Aujourd'hui",
-  'net.lb.friends': 'Amis',
-  'net.lb.alltime': 'De tous les temps',
-  'net.lbDesc.weekly': 'Meilleur score de la tempête de la semaine (remis à zéro chaque semaine).',
-  'net.lbDesc.season': 'Classement des parties rapides pour la saison en cours.',
-  'net.lbDesc.daily': 'Résultats officiels du défi du jour.',
-  'net.lbDesc.friends': 'Toi et tes amis dans la tempête de la semaine.',
-  'net.lbDesc.alltime': 'Meilleur score vérifié de tous les temps.',
-  'net.friendCode': "Code de l'ami",
-  'net.addMe': 'Ajoute-moi sur Qatra Challenge ! Mon code : {code}',
-  'net.addFriend': 'Ajouter un ami',
-  'net.add': 'Ajouter',
-  'net.noFriends': "Pas encore d'amis — partage ton code !",
-  'net.onlineNow': 'En ligne',
-  'net.weeklyBest': 'Record de la semaine : {n}',
-  'net.noWeekly': "N'a pas joué cette semaine",
-  'net.removeFriend': 'Retirer cet ami ?',
-  'net.challenge': 'Défier',
-  'net.challengeFrom': 'Défi de {name}',
-  'net.challengeBeat': 'Fais plus de {n} points dans la même tempête !',
-  'net.challengeNote': 'Tu joueras exactement les mêmes gouttes que ton ami.',
-  'net.acceptChallenge': 'Relever le défi',
-  'net.takers': "Qui l'a relevé",
-  'net.playAgain': 'Rejouer',
-  'net.backToRoom': 'Retour au salon',
-  'net.makeChallenge': 'Défie un ami avec cette tempête',
-  'net.challengeShare': "J'ai fait {n} dans Qatra Challenge — tu peux me battre ?",
-  'net.popped': 'Éclatées',
-  'net.missed': 'Tombées',
-  'net.waitingResults': 'En attente des résultats…',
-  'net.waitingOthers': 'En attente que les autres joueurs terminent.',
-  'net.teamWon': 'Ton équipe a gagné !',
-  'net.teamLost': "L'autre équipe a gagné",
-  'net.youWon': 'Tu as gagné ! 🏆',
-  'net.rankN': 'Rang {n}',
-  'net.invalid': "Cette partie n'a pas été classée (temps ou vitesse anormaux).",
-  'net.standings': 'Classement',
-  'net.dnf': "n'a pas terminé",
-  'net.checking': 'Vérification de ton score…',
-  'net.scoreSaved': 'Score enregistré !',
-  'net.beatChallenge': 'Tu as battu {name} !',
-  'net.lostChallenge': "Tu n'as pas battu {name} cette fois",
-  'net.yourRank': 'Ton rang : {n}',
-  'net.notSaved': 'Score non enregistré',
-  'nav.online': 'En ligne',
-  'home.eventJoin': 'Participer',
-  'net.privacy': 'Politique de confidentialité',
-  'net.deleteAccount': 'Supprimer mon compte en ligne',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   'shop.title': 'Boutique',
   'shop.sub': 'Soutiens le jeu et obtiens des looks premium',
-  'shop.previewTitle': 'Looks de la boutique — ils colorent aussi tes gouttes en jeu',
+
   'shop.appOnly': "La boutique est dans l'appli Android",
   'shop.appOnlyBody': "Les achats sont disponibles via Google Play dans l'appli Android. Le jeu complet est aussi gratuit ici.",
   'shop.unavailable': 'Impossible de joindre Google Play pour le moment. Réessaie plus tard.',
@@ -858,16 +754,14 @@ export default {
   'shop.restored': 'Tes achats ont été restaurés',
   'shop.fair': 'Tous les achats sont esthétiques ou pratiques uniquement : aucun avantage en partie, en tournoi ou dans les classements.',
   'shop.needShop': 'En boutique',
-  'shop.needSeason': 'Pass saison',
-  'shop.passHolder': 'Détenteur du Pass saison',
+
   'shop.p.pro_bundle': 'Pack complet',
   'shop.p.pro_bundleD': 'Plus de pubs interstitielles + tous les looks de la boutique (4 couleurs et une auréole) — un seul paiement, pour toujours.',
   'shop.p.remove_ads': 'Supprimer les pubs',
   'shop.p.remove_adsD': 'Plus de pubs entre les manches, pour toujours. Les pubs avec récompense restent facultatives.',
   'shop.p.skins_pack': 'Pack Couleurs de pluie',
   'shop.p.skins_packD': 'Braise, Citron vert, Glacier, Néon + Auréole — colorent ton personnage et tes gouttes en jeu.',
-  'shop.p.season_pass': 'Pass saison',
-  'shop.p.season_passD': 'Couleur Or de saison, Étoile de saison et un ✦ à côté de ton nom dans les classements pour la saison en cours.',
+
   'ads.reviveTitle': 'Deuxième chance ?',
   'ads.reviveBody': 'Regarde une courte pub et continue avec un cœur en plus — les gouttes proches du sol sont effacées.',
   'ads.reviveYes': 'Regarder et continuer',
@@ -875,82 +769,121 @@ export default {
   'ads.doubleXp': 'XP doublée (+{n})',
   'ads.doubled': 'Doublée : +{n} XP',
   'ads.privacy': 'Options de confidentialité des pubs',
-  'club.title': 'Clubs',
-  'club.sub': 'Ton propre groupe : classe, équipe, amis ou famille',
-  'club.mine': 'Mes clubs',
-  'club.none': "Tu n'es dans aucun club. Crées-en un ou rejoins-en un avec un code.",
-  'club.members': 'Membres : {n}',
-  'club.name': 'Nom du club',
-  'club.namePh': 'ex. CM2 B ou Champions du bureau',
-  'club.create': 'Créer un club',
-  'club.createHint': 'Tu recevras un code à 6 caractères à partager avec les membres.',
-  'club.createBtn': 'Créer',
-  'club.code': 'Code du club',
-  'club.join': 'Rejoindre avec un code',
-  'club.joinBtn': 'Rejoindre',
-  'club.joinTitle': 'Tu es invité dans un club',
-  'club.privacy': 'En rejoignant, le créateur du club voit ton nom, tes points, ton nombre de manches, ta précision et ta dernière activité. Tu peux partir à tout moment.',
-  'club.league': 'Ligue des clubs',
-  'club.leagueHow': 'Points du club = somme de ses 30 meilleurs membres cette semaine (clubs de 3 membres ou plus).',
-  'club.leagueEmpty': 'Pas encore de points de club cette semaine.',
-  'club.weekPts': '{n} pts cette semaine',
-  'club.invite': 'Rejoins mon club « {name} » sur Qatra Challenge 💧 Code : {code}',
-  'club.inviteBtn': 'Inviter des membres',
-  'club.ownerNote': "Tu es le créateur : tu vois l'activité de chaque membre cette semaine et tu peux retirer des membres.",
-  'club.week': 'Classement de la semaine',
-  'club.stats': "{runs} manches · {acc} % de précision · {days} j d'activité",
-  'club.today': "aujourd'hui",
-  'club.daysAgo': 'il y a {n} j',
-  'club.remove': 'Retirer le membre',
-  'club.play': 'Joue pour ton club',
-  'club.delete': 'Supprimer le club',
-  'club.leave': 'Quitter le club',
-  'net.err.club_not_found': 'Aucun club avec ce code',
-  'net.err.club_full': 'Ce club est complet',
-  'net.err.too_many_clubs': 'Tu as atteint la limite de clubs',
-  'net.err.not_member': "Tu n'es pas membre de ce club",
-  'net.err.owner_only': 'Réservé au créateur',
-  'nat.title': 'Ligue des nations',
-  'nat.sub': 'Joue pour faire grimper ton pays au classement mondial',
-  'nat.pick': 'Choisis ton pays',
-  'nat.pickNote': "Suggéré d'après les réglages de ton appareil (sans localisation). Tes points de la semaine comptent pour ton pays.",
-  'nat.join': 'Rejoindre la ligue',
-  'nat.myCountry': 'Mon pays',
-  'nat.rank': 'N° {n} cette semaine',
-  'nat.noRank': 'Pas encore de points cette semaine',
-  'nat.myPoints': 'Ta contribution : {n}',
-  'nat.myRank': 'N° {n} dans ton pays',
-  'nat.how': 'Chaque jour, ton meilleur score en ligne compte (tempête de la semaine, parties, tournois, défi du jour). Points du pays = somme de ses 100 meilleurs joueurs. Remise à zéro chaque semaine.',
-  'nat.play': 'Joue pour ton pays',
-  'nat.board': 'Classement des pays',
-  'nat.empty': 'Pas encore de points cette semaine — sois le premier !',
-  'nat.players': 'Joueurs : {n}',
-  'nat.change': 'Changer de pays',
-  'nat.changeNote': 'Tu peux changer de pays une fois tous les 7 jours.',
-  'nat.locked': 'Tu as changé récemment — réessaie dans 7 jours.',
-  'net.err.bad_country': 'Pays invalide',
-  'net.err.country_locked': 'Tu as changé récemment — réessaie dans 7 jours.',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   'share.title': 'Partager',
-  'set.analytics': "Statistiques d'utilisation anonymes",
-  'set.analyticsSub': 'Nous aide à améliorer le jeu : jours actifs et nombre de manches uniquement — ni nom, ni compte.',
-  'share.reshare': 'Partager ce défi',
+
+
   'share.daily': 'Partage ton résultat',
   'share.dailyTitle': 'Qatra Challenge 💧 Défi #{n}',
   'share.dailyLine': '{drops} gouttes · {acc} % de précision · {score} pts',
   'share.challenge': 'Défie un ami avec les mêmes gouttes',
   'share.challengeHot': 'Défie un ami : battra-t-il {n} ?',
-  'share.challengeText': "J'ai fait {n} dans Qatra Challenge 💧 Tu peux me battre sur les mêmes gouttes ?",
+
   'share.copied': "Copié — colle-le dans n'importe quelle discussion",
   'share.failed': 'Partage impossible',
   'share.getApp': "Télécharge l'appli sur Google Play",
   'share.getAppSub': 'Jeu plus fluide, succès, progression sauvegardée',
-  'net.pgsAch': 'Succès Google Play',
-  'net.pgsLb': 'Classements Google Play',
-  'net.pgsLinked': 'Associé à Google Play Games — ta progression est sauvegardée sur tous tes appareils.',
-  'net.deleteTitle': 'Supprimer le compte en ligne ?',
-  'net.deleteBody': 'Ton nom, tes scores, tes amis et tes récompenses seront définitivement supprimés du serveur. Ta progression locale reste sur cet appareil.',
-  'net.deleted': 'Ton compte en ligne a été supprimé',
-  'online.title': 'En ligne',
-  'online.sub': 'Parties en direct · salons · tournois · classements',
-  'online.quitBody': 'Ton score actuel compte et ta partie se termine.',
+
+
+
+
+
+  "nav.friends": "Amis",
+  "fr2.title": "Amis",
+  "fr2.sub": "Défis par code · salle sur le même téléphone",
+  "fr2.challenge": "Défie un ami",
+  "fr2.challengeSub": "Joue puis envoie ton code : mêmes gouttes exactement",
+  "fr2.face": "Face à face",
+  "fr2.faceSub": "Deux joueurs en même temps sur écran partagé",
+  "fr2.record": "Ton bilan avec tes amis",
+  "fr2.empty": "Défie un ami ou saisis un code pour commencer ton bilan.",
+  "fr2.wld": "V {w} · D {l} · N {d}",
+  "fr2.composeSub": "Choisis le défi puis joue-le d'abord",
+  "fr2.tabCustom": "Personnalisé",
+  "fr2.tabLevel": "Niveau",
+  "fr2.how": "Tu joues d'abord, puis tu obtiens un code pour que ton ami joue exactement les mêmes gouttes.",
+  "fr2.playFirst": "Jouer et envoyer",
+  "fr2.pickLevel": "Choisis un niveau débloqué",
+  "code.howTo": "Ouvre Qatra Challenge → Amis → Saisir le code",
+  "code.share": "Partager le code",
+  "code.copy": "Copier",
+  "code.enter": "Saisis un code reçu",
+  "code.enterShort": "Saisir un code",
+  "code.enterSub": "Colle le message entier de ton ami ou juste le code (commence par QC ou QR).",
+  "code.paste": "Coller",
+  "code.pasteFail": "Collage impossible : colle le code à la main",
+  "code.open": "Ouvrir le code",
+  "code.bad": "Ce code est invalide ou incomplet. Vérifie que tu l'as copié en entier.",
+  "code.own": "C'est ton propre défi — envoie-le à un ami !",
+  "code.fromX": "Défi de {name}",
+  "code.beat": "Dépasse {n} points",
+  "code.play": "Jouer",
+  "code.again": "Rejouer",
+  "code.unknown": "Ce code de résultat concerne un défi qui n'a pas été envoyé depuis ce profil.",
+  "code.res.win": "Tu as battu {name} !",
+  "code.res.lose": "{name} t'a battu !",
+  "code.res.draw": "Égalité avec {name}",
+  "code.vs.win": "Tu as battu {name} !",
+  "code.vs.lose": "{name} gagne cette fois",
+  "code.vs.draw": "Égalité avec {name}",
+  "code.received": "Défis reçus",
+  "code.sent": "Défis envoyés",
+  "code.yourScore": "Ton score {n}",
+  "code.waiting": "En attente du code de résultat de ton ami",
+  "code.inviteText": "⚔️ Je te défie dans Qatra Challenge ! J'ai fait {n} points en {label}. Tu me bats avec les mêmes gouttes ?",
+  "code.yourCode": "Ton code de défi",
+  "code.afterShare": "Quand ton ami aura joué, il te renverra un code de résultat — saisis-le dans Amis pour voir qui a gagné.",
+  "code.sendBack": "Envoie ton résultat à {name}",
+  "code.resultText": "🏁 J'ai joué ton défi, {name}, et fait {n} points ! Saisis ce code pour voir qui a gagné :",
+  "pgs.title": "Google Play Games",
+  "pgs.sub": "Classements mondiaux et entre amis, et succès.",
+  "pgs.lb": "Classements",
+  "pgs.ach": "Succès",
+  "party.title": "Salle sur le même téléphone",
+  "party.sub": "De 2 à 6 joueurs à tour de rôle",
+  "party.pN": "Joueur {n}",
+  "party.remove": "Retirer le joueur",
+  "party.add": "Ajouter un joueur",
+  "party.players": "Joueurs",
+  "party.rules": "Règles de la manche",
+  "party.how": "Chaque joueur joue son tour sur les mêmes gouttes et voit le fantôme des précédents. Le meilleur score gagne.",
+  "party.prev": "{name} a fait {n}",
+  "party.turnN": "Tour {a} sur {b}",
+  "party.endTitle": "Terminer la salle ?",
+  "party.endBody": "Les résultats de cette manche seront perdus.",
+  "party.end": "Terminer la salle",
+  "party.tiebreak": "Égalité de points ? Le plus de gouttes l'emporte.",
+  "party.again": "Nouvelle manche",
+  "party.quitBody": "Ton tour se terminera avec ton score actuel.",
+  "home.friendsAll": "Tout",
+  "home.challengeSub": "Mêmes gouttes, un code",
+  "home.codeSub": "Défi ou résultat",
+  "home.partySub": "2–6 joueurs",
 };

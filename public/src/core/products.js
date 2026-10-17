@@ -16,8 +16,6 @@ export const PRODUCTS = {
   remove_ads: { icon: '🚫', grants: ['noAds'], consumable: false },
   skins_pack: { icon: '🎨', grants: ['skins'], consumable: false },
   pro_bundle: { icon: '👑', grants: ['noAds', 'skins', 'pro'], pearls: 300, consumable: false, best: true },
-  // تذكرة الموسم: تُشترى مرة لكل موسم (منتج قابل للاستهلاك يستهلكه الخادم بعد تسجيل الموسم)
-  season_pass: { icon: '✦', grants: ['season'], consumable: true, needsServer: true },
 };
 export const PRODUCT_IDS = Object.keys(PRODUCTS);
 export const PEARL_PACKS = ['pearls_s', 'pearls_m', 'pearls_l', 'pearls_xl'];

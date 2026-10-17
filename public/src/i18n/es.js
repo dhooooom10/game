@@ -52,7 +52,7 @@ export default {
   "ch.notCompleted": "No completada para misiones: requiere al menos {n} aciertos",
   "m.survive1": "Completa una supervivencia",
   "m.custom1": "Completa un desafío personalizado",
-  "m.online1": "Completa una partida en línea",
+
   "m.friend1": "Completa un reto de amigo",
   "mr.journey1": "Supera cualquier nivel del viaje",
   "mr.correct20": "Tus aciertos de hoy en cualquier modo",
@@ -64,7 +64,7 @@ export default {
   "mr.time1": "Hasta que acabe el tiempo, con al menos {n} aciertos",
   "mr.survive1": "Hasta agotar los intentos, con al menos {n} aciertos",
   "mr.custom1": "Cualquier configuración, terminada por su regla con {n}+ aciertos",
-  "mr.online1": "Partida rápida, sala, torneo o semanal, verificada por el servidor (los fantasmas no cuentan)",
+
   "mr.friend1": "Envía un reto, juega uno recibido o juega con un amigo en este móvil",
   "lock.prog.speed20": "Mejor intento: {a}/{n} preguntas · {acc} % · media {s} s",
   "lock.prog.survive25": "Mejor intento: {a}/{n} aciertos",
@@ -74,72 +74,42 @@ export default {
   "set.notify": "Recordatorios",
   "set.notifySub": "Tu racha diaria y los retos de amigos pendientes",
   "set.notifyDenied": "Permiso denegado: activa las notificaciones en los ajustes del móvil",
-  "notif.title": "Notificaciones",
-  "notif.empty": "Aún no hay notificaciones",
-  "notif.challenge": "{name} te retó: supera {n} puntos",
-  "notif.resultWon": "{name} jugó tu reto: tú {a}, rival {b}; ganaste 🏆",
-  "notif.resultLost": "{name} superó tu reto: tú {a}, rival {b}. ¡Responde!",
-  "notif.resultDraw": "{name} empató contigo: {a} – {b}",
-  "notif.friendAdded": "{name} te añadió como amigo",
+
+
+
+
   "notif.streak": "Tu racha de {n} días está en riesgo 🔥 Juega el reto de hoy",
   "notif.daily": "El reto de hoy te espera 💧",
   "notif.friends": "Tienes {n} retos de amigos pendientes ⚔️",
-  "rank.bronze": "Bronce",
-  "rank.silver": "Plata",
-  "rank.gold": "Oro",
-  "rank.diamond": "Diamante",
-  "rank.legend": "Leyenda",
-  "rank.placement": "Partidas de clasificación",
-  "rank.placementLeft": "{n} partidas rápidas más para ver tu rango",
-  "rank.toNext": "{n} puntos para {r}",
-  "rank.top": "Rango máximo: mantenlo",
-  "rank.how": "El rango viene del rating de partidas rápidas de esta temporada (los fantasmas no cuentan)",
-  "rank.change.up": "¡Subiste a {r}!",
-  "rank.change.down": "Bajaste a {r}: vuelve más fuerte",
-  "rank.seasonEnd": "{s} ha terminado",
-  "rank.finalRank": "Tu rango final: {r}",
-  "rank.claim": "Reclamar +{n} 💎",
-  "rank.claimed": "Recibiste {n} perlas 💎",
-  "rank.alreadyClaimed": "Ya reclamaste esta recompensa",
+
+
+
+
+
+
+
+
+
   "home.bestSpeed": "Velocidad máx.",
-  "home.onlineLive": "EN VIVO",
-  "home.onlineAll": "Todo en línea",
-  "home.quickSub": "Un rival real ya",
-  "home.turboSub": "Velocidad loca",
-  "home.friendsSub": "Reta a amigos",
-  "fh.title": "Reto de amigos",
-  "fh.sub": "Tus amigos y vuestros retos",
-  "fh.levelN": "Nivel {n}",
-  "fh.customLabel": "Personalizado",
-  "fh.sendCode": "Enviar mi código",
-  "fh.added": "Amigo añadido 🤝",
-  "fh.inbox": "Retos para ti",
-  "fh.fromX": "{name} te reta",
-  "fh.beat": "supera {n} puntos",
-  "fh.play": "Jugar",
-  "fh.empty": "Aún no tienes amigos. Envía tu código o escribe el suyo arriba.",
-  "fh.h2h": "Tú {w} – {l}",
-  "fh.challenge": "Retar",
-  "fh.race": "Carrera del viaje entre amigos",
-  "fh.sent": "Retos enviados",
-  "fh.toX": "Para {name}",
-  "fh.yourScore": "tu puntuación {n}",
-  "fh.waiting": "Esperando",
-  "fh.local": "Juega con un amigo en este móvil",
-  "fh.res.win": "Ganaste",
-  "fh.res.lose": "Perdiste",
-  "fh.res.draw": "Empate",
-  "fh.newTitle": "Retar a {name}",
-  "fh.newSub": "Elige el tipo de reto",
-  "fh.tabCustom": "Personalizado",
-  "fh.tabLevel": "Nivel",
-  "fh.howCustom": "Juega tu ronda primero; luego {name} recibe las mismas gotas e intenta superarte.",
-  "fh.playSend": "Jugar y enviar",
-  "fh.pickLevel": "Elige un nivel al que hayas llegado",
-  "fh.howLevel": "Juegas el nivel {n} y luego {name} con las mismas gotas: gana quien sume más puntos.",
-  "fh.sending": "Enviando el reto a {name}…",
-  "fh.sent1": "Reto enviado a {name}: debe superar {n}",
-  "fh.sendFail": "No se pudo enviar ahora: revisa la conexión e inténtalo de nuevo",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   "wal.earned": "perlas ganadas",
   "wal.boosted": "XP doble +{n}",
   "wal.balance": "Tus perlas",
@@ -193,8 +163,7 @@ export default {
   "res.speedTier.4": "Velocidad diamante",
   "res.speedBest": "¡Tu mayor velocidad de todas!",
   "res.speedPrev": "Tu mejor velocidad: {x}",
-  "net.turbo": "Arena turbo",
-  "net.turboSub": "Duelo con aceleración brutal y números fáciles — ¿quién aguanta?",
+
   "badge.fever": "Fiebre",
   "badge.feverD": "Entra en modo fiebre con 10 aciertos seguidos",
   "badge.gift": "Sorpresa",
@@ -694,158 +663,85 @@ export default {
   'jrr.boss': 'Jefe: {n} gotas con gotas especiales',
   'jrr.rule.hearts': 'Estrellas = corazones restantes (★★★ si no cae ninguna gota)',
   'jrr.rule.sprint': 'Estrellas por tiempo restante: ★★★ 35% · ★★ 15%',
-  'net.err.offline': 'No se puede conectar con el servidor ahora.',
-  'net.err.generic': 'Algo salió mal, inténtalo de nuevo.',
-  'net.err.unauthorized': 'La sesión expiró, inténtalo de nuevo.',
-  'net.err.banned': 'Esta cuenta está suspendida.',
-  'net.err.rate_limited': 'Demasiadas solicitudes, espera un momento.',
-  'net.err.name_length': 'El nombre debe tener de 2 a 16 caracteres.',
-  'net.err.name_chars': 'Usa solo letras y números.',
-  'net.err.name_blocked': 'Ese nombre no está permitido.',
-  'net.err.code_not_found': 'No hay ningún jugador con ese código.',
-  'net.err.self': '¡Ese es tu propio código!',
-  'net.err.too_many': 'Llegaste al límite de amigos.',
-  'net.err.room_not_found': 'No hay ninguna sala con ese código.',
-  'net.err.room_full': 'La sala está llena.',
-  'net.err.room_busy': 'Hay una partida en curso en esa sala; espera a que termine.',
-  'net.err.need_players': 'Se necesitan al menos dos jugadores.',
-  'net.err.not_active': 'El torneo no está activo ahora.',
-  'net.err.no_attempts': 'Ya usaste todos tus intentos.',
-  'net.err.not_found': 'No encontrado o expirado.',
-  'net.err.already_submitted': 'Ya enviado.',
-  'net.err.timeout': 'Se agotó el tiempo.',
-  'net.err.run_not_found': 'Partida no encontrada.',
-  'net.dur.dh': '{d} d {h} h',
-  'net.dur.hm': '{h} h {m} min',
-  'net.dur.m': '{m} min',
-  'net.offlineTitle': 'No se pudo conectar',
-  'net.offlineHint': 'El juego en solitario y el aprendizaje funcionan sin conexión; el modo en línea necesita internet.',
-  'net.retry': 'Reintentar',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   'net.loading': 'Conectando…',
-  'net.emotes': 'Reacciones',
-  'net.season': 'Temporada',
-  'net.rating': 'Puntuación',
-  'net.myCode': 'Tu código de amigo:',
-  'net.rename': 'Tu nombre en línea',
-  'net.nameRules': 'De 2 a 16 caracteres, sin símbolos ni palabras ofensivas.',
-  'net.quick': 'Partida rápida',
-  'net.quickSub': 'Un rival real de tu nivel, con las mismas gotas para ambos',
-  'net.rooms': 'Salas de amigos',
-  'net.roomsSub': 'Salas con código para hasta 8',
-  'net.tournaments': 'Torneos',
-  'net.tournamentsSub': 'Eventos de temporada y de fechas especiales',
-  'net.weekly': 'Tormenta semanal',
-  'net.weeklySub': 'Un minuto para llegar a la cima de la semana',
-  'net.leaderboards': 'Clasificaciones',
-  'net.leaderboardsSub': 'Resultados reales y verificados',
-  'net.friends': 'Amigos',
-  'net.friendsSub': 'Agrégalos con un código y compite',
-  'net.myRewards': 'Mis recompensas',
-  'net.rank': 'Puesto {n}',
-  'net.safety': 'El modo en línea es seguro para niños: sin chat de texto, solo reacciones predefinidas. El servidor recalcula cada puntaje para que todo sea justo.',
-  'net.endsIn': 'Termina en {d}',
-  'net.startsIn': 'Empieza en {d}',
-  'net.live': 'En vivo',
-  'net.soon': 'Pronto',
-  'net.ended': 'Terminado',
-  'net.searching': 'Buscando un rival de tu nivel…',
-  'net.ghostNote': 'Si nadie está libre en unos segundos, competirás contra un “fantasma”: una partida real grabada por otro jugador.',
-  'net.noPlayers': 'No hay jugadores disponibles ahora; inténtalo pronto.',
-  'net.roomMatch': 'Partida en sala',
-  'net.vsGhost': 'vs el fantasma de {name}',
-  'net.roomCode': 'Código de sala',
-  'net.createRoom': 'Crear una sala',
-  'net.createRoomSub': 'Recibirás un código de 6 dígitos para compartir con tus amigos.',
-  'net.joinRoom': 'Unirse con un código',
-  'net.codeLen': 'El código tiene 6 dígitos',
-  'net.join': 'Unirse',
-  'net.room': 'Sala',
-  'net.shareCode': 'Comparte este código',
-  'net.share': 'Compartir',
-  'net.roomInvite': '¡Únete a mi sala de Qatra Challenge! Código: {code}',
-  'net.players': 'Jugadores',
-  'net.you': 'tú',
-  'net.teamRed': 'Equipo rojo',
-  'net.teamBlue': 'Equipo azul',
-  'net.roomMode': 'Modo de sala',
-  'net.race': 'Carrera',
-  'net.teams': 'Equipos',
-  'net.specials': 'Gotas especiales',
-  'net.startRoom': 'Empezar partida',
-  'net.needTwo': 'Se necesitan al menos dos jugadores',
-  'net.waitHost': 'Esperando a que el anfitrión empiece…',
-  'net.copied': 'Enlace copiado',
-  'net.noTournaments': 'No hay torneos ahora',
-  'net.noTournamentsSub': 'Los torneos se anuncian por temporadas y fechas especiales. ¡Mantente atento!',
-  'net.tournament': 'Torneo',
-  'net.rules': 'Reglas',
-  'net.stormSecs': 'Tormenta de {n} segundos',
-  'net.attempts': 'Intentos',
-  'net.attemptsLeft': 'Quedan {n} de {m}',
-  'net.unlimited': 'Ilimitados',
-  'net.sameStorm': 'Las mismas gotas para todos',
-  'net.yesSame': 'Sí',
-  'net.noSame': 'No, misma dificultad',
-  'net.prize': 'Premio',
-  'net.topN': 'para los {n} mejores',
-  'net.myBest': 'Tu récord',
-  'net.playTournament': 'Jugar ahora',
-  'net.tLeaderboard': 'Clasificación del torneo',
-  'net.lbEmpty': 'Aún no hay resultados. ¡Sé el primero!',
-  'net.lbReal': 'Solo resultados reales',
-  'net.lb.weekly': 'Semana',
-  'net.lb.season': 'Temporada',
-  'net.lb.daily': 'Hoy',
-  'net.lb.friends': 'Amigos',
-  'net.lb.alltime': 'Histórico',
-  'net.lbDesc.weekly': 'Mejor puntaje en la tormenta semanal (se reinicia cada semana).',
-  'net.lbDesc.season': 'Puntuación de partida rápida en la temporada actual.',
-  'net.lbDesc.daily': 'Resultados oficiales del reto diario de hoy.',
-  'net.lbDesc.friends': 'Tú y tus amigos en la tormenta semanal.',
-  'net.lbDesc.alltime': 'El puntaje verificado más alto de todos los tiempos.',
-  'net.friendCode': 'Código de tu amigo',
-  'net.addMe': '¡Agrégame en Qatra Challenge! Mi código: {code}',
-  'net.addFriend': 'Agregar amigo',
-  'net.add': 'Agregar',
-  'net.noFriends': 'Aún no tienes amigos agregados. ¡Comparte tu código!',
-  'net.onlineNow': 'En línea ahora',
-  'net.weeklyBest': 'Récord de la semana: {n}',
-  'net.noWeekly': 'No ha jugado esta semana',
-  'net.removeFriend': '¿Eliminar amigo?',
-  'net.challenge': 'Retar',
-  'net.challengeFrom': 'Reto de {name}',
-  'net.challengeBeat': '¡Supera {n} puntos en la misma tormenta!',
-  'net.challengeNote': 'Jugarás exactamente las mismas gotas que jugó tu amigo.',
-  'net.acceptChallenge': 'Aceptar reto',
-  'net.takers': 'Quién lo aceptó',
-  'net.playAgain': 'Jugar otra vez',
-  'net.backToRoom': 'Volver a la sala',
-  'net.makeChallenge': 'Reta a un amigo con esta tormenta',
-  'net.challengeShare': 'Hice {n} puntos en Qatra Challenge. ¿Puedes superarme?',
-  'net.popped': 'Reventadas',
-  'net.missed': 'Caídas',
-  'net.waitingResults': 'Esperando resultados…',
-  'net.waitingOthers': 'Esperando a que terminen los demás jugadores.',
-  'net.teamWon': '¡Tu equipo ganó!',
-  'net.teamLost': 'Ganó el otro equipo',
-  'net.youWon': '¡Ganaste! 🏆',
-  'net.rankN': 'Puesto {n}',
-  'net.invalid': 'Esta partida no se clasificó (tiempos o velocidad anormales).',
-  'net.standings': 'Posiciones',
-  'net.dnf': 'no terminó',
-  'net.checking': 'Verificando tu puntaje…',
-  'net.scoreSaved': '¡Puntaje guardado!',
-  'net.beatChallenge': '¡Superaste a {name}!',
-  'net.lostChallenge': 'Esta vez no superaste a {name}',
-  'net.yourRank': 'Tu puesto: {n}',
-  'net.notSaved': 'Puntaje no guardado',
-  'nav.online': 'En línea',
-  'home.eventJoin': 'Unirme ahora',
-  'net.privacy': 'Política de privacidad',
-  'net.deleteAccount': 'Eliminar mi cuenta en línea',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   'shop.title': 'Tienda',
   'shop.sub': 'Apoya el juego y consigue aspectos premium',
-  'shop.previewTitle': 'Aspectos de la tienda: también colorean tus gotas en el juego',
+
   'shop.appOnly': 'La tienda está en la app de Android',
   'shop.appOnlyBody': 'Las compras están disponibles mediante Google Play en la app de Android. Aquí el juego completo también es gratis.',
   'shop.unavailable': 'No se pudo conectar con Google Play ahora. Inténtalo más tarde.',
@@ -858,16 +754,14 @@ export default {
   'shop.restored': 'Se restauraron tus compras',
   'shop.fair': 'Todas las compras son estéticas o de comodidad: ninguna da ventaja en partidas, torneos ni clasificaciones.',
   'shop.needShop': 'De la tienda',
-  'shop.needSeason': 'Pase de temporada',
-  'shop.passHolder': 'Con Pase de temporada',
+
   'shop.p.pro_bundle': 'Paquete completo',
   'shop.p.pro_bundleD': 'Sin anuncios intersticiales + todos los aspectos de la tienda (4 colores y una aureola). Un solo pago, para siempre.',
   'shop.p.remove_ads': 'Quitar anuncios',
   'shop.p.remove_adsD': 'Sin anuncios entre rondas, para siempre. Los anuncios con recompensa siguen siendo opcionales.',
   'shop.p.skins_pack': 'Paquete Colores de Lluvia',
   'shop.p.skins_packD': 'Brasa, Lima, Glaciar, Neón + Aureola: colorean a tu personaje y tus gotas en el juego.',
-  'shop.p.season_pass': 'Pase de temporada',
-  'shop.p.season_passD': 'Color Oro de temporada, Estrella de temporada y un ✦ junto a tu nombre en las clasificaciones durante la temporada actual.',
+
   'ads.reviveTitle': '¿Segunda oportunidad?',
   'ads.reviveBody': 'Mira un anuncio corto y sigue con un corazón extra; se eliminan las gotas cercanas al suelo.',
   'ads.reviveYes': 'Ver y continuar',
@@ -875,82 +769,121 @@ export default {
   'ads.doubleXp': 'XP doble (+{n})',
   'ads.doubled': 'Duplicado: +{n} XP',
   'ads.privacy': 'Opciones de privacidad de anuncios',
-  'club.title': 'Clubes',
-  'club.sub': 'Tu propio grupo: clase, equipo, amigos o familia',
-  'club.mine': 'Mis clubes',
-  'club.none': 'Aún no estás en un club. Crea uno o únete con un código.',
-  'club.members': 'Miembros: {n}',
-  'club.name': 'Nombre del club',
-  'club.namePh': 'p. ej., 3.º B o Campeones de la oficina',
-  'club.create': 'Crear un club',
-  'club.createHint': 'Recibirás un código de 6 caracteres para compartir con los miembros.',
-  'club.createBtn': 'Crear',
-  'club.code': 'Código del club',
-  'club.join': 'Unirse con un código',
-  'club.joinBtn': 'Unirse',
-  'club.joinTitle': 'Te invitaron a un club',
-  'club.privacy': 'Al unirte, el dueño del club verá tu nombre, puntos, número de rondas, precisión y última actividad. Puedes salir cuando quieras.',
-  'club.league': 'Liga de Clubes',
-  'club.leagueHow': 'Puntos del club = suma de sus 30 mejores miembros esta semana (clubes con 3+ miembros).',
-  'club.leagueEmpty': 'Aún no hay puntos de clubes esta semana.',
-  'club.weekPts': '{n} pts esta semana',
-  'club.invite': 'Únete a mi club “{name}” en Qatra Challenge 💧 Código: {code}',
-  'club.inviteBtn': 'Invitar miembros',
-  'club.ownerNote': 'Eres el dueño: ves la actividad de cada miembro esta semana y puedes quitar miembros.',
-  'club.week': 'Clasificación de la semana',
-  'club.stats': '{runs} rondas · {acc}% de precisión · activo {days} días',
-  'club.today': 'hoy',
-  'club.daysAgo': 'hace {n} días',
-  'club.remove': 'Quitar miembro',
-  'club.play': 'Juega por tu club',
-  'club.delete': 'Eliminar club',
-  'club.leave': 'Salir del club',
-  'net.err.club_not_found': 'No hay ningún club con este código',
-  'net.err.club_full': 'Este club está lleno',
-  'net.err.too_many_clubs': 'Llegaste al límite de clubes',
-  'net.err.not_member': 'No eres miembro de este club',
-  'net.err.owner_only': 'Solo el dueño',
-  'nat.title': 'Liga de Naciones',
-  'nat.sub': 'Juega para subir a tu país en la clasificación mundial',
-  'nat.pick': 'Elige tu país',
-  'nat.pickNote': 'Sugerido según los ajustes de tu dispositivo (sin ubicación). Tus puntos de esta semana cuentan para tu país.',
-  'nat.join': 'Unirme a la liga',
-  'nat.myCountry': 'Mi país',
-  'nat.rank': '#{n} esta semana',
-  'nat.noRank': 'Aún sin puntos esta semana',
-  'nat.myPoints': 'Tu aporte: {n}',
-  'nat.myRank': '#{n} en tu país',
-  'nat.how': 'Cada día cuenta tu mejor puntaje en línea (semanal, partidas, torneos, diario). Puntos del país = suma de sus 100 mejores jugadores. Se reinicia cada semana.',
-  'nat.play': 'Juega ahora por tu país',
-  'nat.board': 'Clasificación de países',
-  'nat.empty': 'Aún no hay puntos esta semana. ¡Sé el primero!',
-  'nat.players': 'Jugadores: {n}',
-  'nat.change': 'Cambiar de país',
-  'nat.changeNote': 'Puedes cambiar de país una vez cada 7 días.',
-  'nat.locked': 'Cambiaste hace poco; inténtalo de nuevo en 7 días.',
-  'net.err.bad_country': 'País no válido',
-  'net.err.country_locked': 'Cambiaste hace poco; inténtalo de nuevo en 7 días.',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   'share.title': 'Compartir',
-  'set.analytics': 'Estadísticas de uso anónimas',
-  'set.analyticsSub': 'Nos ayudan a mejorar el juego: solo días activos y número de rondas, sin nombre ni cuenta.',
-  'share.reshare': 'Compartir este reto',
+
+
   'share.daily': 'Comparte tu resultado',
   'share.dailyTitle': 'Qatra Challenge 💧 Diario #{n}',
   'share.dailyLine': '{drops} gotas · {acc}% de precisión · {score} pts',
   'share.challenge': 'Reta a un amigo con las mismas gotas',
   'share.challengeHot': 'Reta a un amigo: ¿podrá superar {n}?',
-  'share.challengeText': 'Hice {n} puntos en Qatra Challenge 💧 ¿Puedes superarme con las mismas gotas?',
+
   'share.copied': 'Copiado: pégalo en cualquier chat',
   'share.failed': 'No se pudo compartir',
   'share.getApp': 'Descarga la app en Google Play',
   'share.getAppSub': 'Juego más fluido, logros y progreso guardado',
-  'net.pgsAch': 'Logros de Google Play',
-  'net.pgsLb': 'Clasificaciones de Google Play',
-  'net.pgsLinked': 'Vinculado a Google Play Games: tu progreso se guarda en cualquier dispositivo.',
-  'net.deleteTitle': '¿Eliminar la cuenta en línea?',
-  'net.deleteBody': 'Tu nombre, puntajes, amigos y recompensas se borrarán para siempre del servidor. Tu progreso local se queda en este dispositivo.',
-  'net.deleted': 'Se eliminó tu cuenta en línea',
-  'online.title': 'En línea',
-  'online.sub': 'Partidas en vivo · salas · torneos · clasificaciones',
-  'online.quitBody': 'Tu puntaje actual cuenta y tu partida termina.',
+
+
+
+
+
+  "nav.friends": "Amigos",
+  "fr2.title": "Amigos",
+  "fr2.sub": "Retos con código · sala en el mismo móvil",
+  "fr2.challenge": "Reta a un amigo",
+  "fr2.challengeSub": "Juega y envía tu código: tendrá exactamente las mismas gotas",
+  "fr2.face": "Cara a cara",
+  "fr2.faceSub": "Dos jugadores a la vez en pantalla dividida",
+  "fr2.record": "Tu historial con amigos",
+  "fr2.empty": "Reta a un amigo o introduce un código para empezar tu historial.",
+  "fr2.wld": "G {w} · P {l} · E {d}",
+  "fr2.composeSub": "Elige el reto y juégalo primero",
+  "fr2.tabCustom": "Personalizado",
+  "fr2.tabLevel": "Nivel",
+  "fr2.how": "Juegas primero y obtienes un código para que tu amigo juegue exactamente las mismas gotas.",
+  "fr2.playFirst": "Jugar y enviar",
+  "fr2.pickLevel": "Elige un nivel desbloqueado",
+  "code.howTo": "Abre Qatra Challenge → Amigos → Introducir código",
+  "code.share": "Compartir código",
+  "code.copy": "Copiar",
+  "code.enter": "Introduce un código recibido",
+  "code.enterShort": "Introducir código",
+  "code.enterSub": "Pega el mensaje completo de tu amigo o solo el código (empieza por QC o QR).",
+  "code.paste": "Pegar",
+  "code.pasteFail": "No se pudo pegar: pega el código a mano",
+  "code.open": "Abrir código",
+  "code.bad": "El código no es válido o está incompleto. Asegúrate de copiarlo entero.",
+  "code.own": "¡Ese es tu propio reto: envíaselo a un amigo!",
+  "code.fromX": "Reto de {name}",
+  "code.beat": "Supera {n} puntos",
+  "code.play": "Jugar",
+  "code.again": "Otra vez",
+  "code.unknown": "Este código de resultado es de un reto que no se envió desde este perfil.",
+  "code.res.win": "¡Le ganaste a {name}!",
+  "code.res.lose": "¡{name} te ganó!",
+  "code.res.draw": "Empate con {name}",
+  "code.vs.win": "¡Le ganaste a {name}!",
+  "code.vs.lose": "{name} gana esta vez",
+  "code.vs.draw": "Empate con {name}",
+  "code.received": "Retos recibidos",
+  "code.sent": "Retos enviados",
+  "code.yourScore": "Tu puntaje {n}",
+  "code.waiting": "Esperando el código de resultado de tu amigo",
+  "code.inviteText": "⚔️ ¡Te reto en Qatra Challenge! Hice {n} puntos en {label}. ¿Me superas con las mismas gotas?",
+  "code.yourCode": "Tu código de reto",
+  "code.afterShare": "Cuando tu amigo juegue, te enviará un código de resultado: introdúcelo en Amigos para ver quién ganó.",
+  "code.sendBack": "Envía tu resultado a {name}",
+  "code.resultText": "🏁 Jugué tu reto, {name}, ¡e hice {n} puntos! Introduce este código para ver quién ganó:",
+  "pgs.title": "Google Play Games",
+  "pgs.sub": "Clasificaciones globales y de amigos, y logros.",
+  "pgs.lb": "Clasificaciones",
+  "pgs.ach": "Logros",
+  "party.title": "Sala en el mismo móvil",
+  "party.sub": "De 2 a 6 jugadores por turnos",
+  "party.pN": "Jugador {n}",
+  "party.remove": "Quitar jugador",
+  "party.add": "Añadir jugador",
+  "party.players": "Jugadores",
+  "party.rules": "Reglas de la ronda",
+  "party.how": "Cada jugador juega su turno con las mismas gotas y ve el fantasma de los anteriores. Gana el mayor puntaje.",
+  "party.prev": "{name} hizo {n}",
+  "party.turnN": "Turno {a} de {b}",
+  "party.endTitle": "¿Terminar la sala?",
+  "party.endBody": "Se perderán los resultados de esta ronda.",
+  "party.end": "Terminar sala",
+  "party.tiebreak": "¿Empate en puntos? Gana quien reventó más gotas.",
+  "party.again": "Nueva ronda",
+  "party.quitBody": "Tu turno terminará con tu puntaje actual.",
+  "home.friendsAll": "Todo",
+  "home.challengeSub": "Mismas gotas, un código",
+  "home.codeSub": "Reto o resultado",
+  "home.partySub": "2–6 jugadores",
 };

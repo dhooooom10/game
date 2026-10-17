@@ -36,8 +36,9 @@ export async function newPage(browser, { width = 390, height = 844, locale = 'ar
   const page = await ctx.newPage();
   page.errors = [];
   page.on('pageerror', (e) => page.errors.push(e.message));
-  // نتجاهل فشل طلبات /api في خادم الملفات الثابتة (لا يوجد خادم لعب في هذه الاختبارات)
-  page.on('console', (m) => { if (m.type() === 'error' && !(/\/api\//.test(m.location()?.url || '') && /404/.test(m.text()))) page.errors.push(m.text()); });
+  // اللعبة بلا خادم: أي طلب /api خطأ
+  page.on('console', (m) => { if (m.type() === 'error') page.errors.push(m.text()); });
+  page.on('request', (r) => { if (/\/api\//.test(r.url())) page.errors.push('server call: ' + r.url()); });
   return page;
 }
 

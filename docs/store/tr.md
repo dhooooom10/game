@@ -21,19 +21,17 @@ Her damla bir işlem taşır. Cevabı yaz, damla patlasın. Birini kaçırırsan
 • Serbest Antrenman — işlemleri ve zorluğu sen seç, baskı yok
 • Arkadaş Düellosu — iki oyuncu, tek telefon
 
-🌍 DÜNYAYLA OYNA
-• Gerçek oyunculara karşı canlı maçlar
-• 6 haneli kodla özel odalar
-• Sezonlara ve özel günlere özel turnuvalar
-• Ülkeler Ligi — kazandığın her puan ülkeni haftalık dünya sıralamasında yükseltir
-• Kulüpler — sınıfın, takımın ya da arkadaşların için kulüp kur ve Kulüp Ligi'nde yüksel
-• Bir bağlantıyla arkadaşına meydan oku: seninle tıpatıp aynı damlaları oynar
+🤝 ARKADAŞLARINLA OYNA
+• WhatsApp'tan bir kodla arkadaşına meydan oku: aynı damlaları tıpatıp oynar ve sonucunu sana gönderir
+• Aynı telefonda oda: 2–6 oyuncu sırayla, öncekilerin hayaletine karşı
+• Yüz yüze: bölünmüş ekranda aynı anda iki oyuncu
+• Google Play Games ile küresel ve arkadaş sıralamaları
 
 🏆 İLERLEME
 Yıldızlar, rozetler, günlük görevler, Google Play Games başarımları ve lider tabloları; üstelik oyunda damlalarını da renklendiren rengârenk görünümler.
 
 🧠 AKILLI VE ADİL
-Sorular seviyene uyum sağlar. Her çevrimiçi puan sunucuda yeniden oynatılıp doğrulanır — sahte lider tablosu yok. Satın almalar yalnızca görünüm içindir: parayla kazanmak yok.
+Sorular seviyene uyum sağlar. Oyunun tamamı internetsiz ve hesapsız çalışır. Satın almalar yalnızca görünüm içindir: parayla kazanmak yok.
 
 📚 ÖĞREN
 Toplama, çıkarma, çarpma, bölme, kesirler, yüzdeler ve daha fazlası için adım adım derslerle sakin bir öğrenme bölümü. Çarpım tablosunu ve dört işlemi oynayarak pekiştir.

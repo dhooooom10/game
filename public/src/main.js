@@ -10,28 +10,15 @@ import './screens/locker.js';
 import './screens/settings.js';
 import './screens/friend.js';
 import './screens/rain.js';
-import './screens/online.js';
-import './screens/friendsHub.js';
+import './screens/friends.js';
 import './screens/shop.js';
 
-// مصدر أول زيارة (?ref=share/tiktok/teacher...) — يُرسل مجهولًا مع إحصاءات الاستخدام
-try {
-  const ref = new URLSearchParams(location.search).get('ref');
-  if (ref && /^[\w-]{2,32}$/.test(ref) && !localStorage.getItem('mc_ref')) localStorage.setItem('mc_ref', ref);
-} catch { /* ignore */ }
-
 boot().then(() => {
-  // رابط تحدٍّ: ?c=المعرّف
-  const c = new URLSearchParams(location.search).get('c');
-  if (c && /^[\w-]{4,20}$/.test(c)) {
-    history.replaceState(null, '', location.pathname + (location.search.includes('e2e=1') ? '?e2e=1' : ''));
-    if (app.current?.name === 'home') app.go('challenge', { id: c });
-  }
-  // رابط انضمام لنادٍ: ?club=الرمز
-  const club = new URLSearchParams(location.search).get('club');
-  if (club && /^[0-9A-Za-z]{6}$/.test(club)) {
-    history.replaceState(null, '', location.pathname + (location.search.includes('e2e=1') ? '?e2e=1' : ''));
-    if (app.current?.name === 'home') app.go('clubJoin', { code: club.toUpperCase() });
+  // رمز تحدٍّ في الرابط (#QC-… في نسخة المتصفح) ← يفتح شاشة الأصدقاء على الرمز
+  const code = decodeURIComponent(location.hash.slice(1));
+  if (/^Q[CR]-/.test(code)) {
+    history.replaceState(null, '', location.pathname + location.search);
+    if (app.current?.name === 'home') app.go('friends', { code });
   }
 }).catch((e) => {
   console.error(e);

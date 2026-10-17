@@ -1,12 +1,11 @@
-/* إعادة الصياغة: الأونلاين في الواجهة، تحدّي الأصدقاء (قائمة، تحدٍّ مخصص يُرسل تلقائيًا، صندوق التحديات)،
+/* الأصدقاء بلا خادم: بطاقة الأصدقاء في الرئيسية، تحدٍّ برمز بين جوالين، غرفة على نفس الجوال،
    متجر اللآلئ 💎 (حزم، عرض البداية، الإنفاق)، والفرصة الثانية باللآلئ */
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { launch, newPage, waitScreen } from './helpers.js';
-import { startServer } from '../../server/index.js';
+import { startServer, launch, newPage, waitScreen } from './helpers.js';
 
 let S, browser;
-before(async () => { S = await startServer({ registerLimit: 1000 }); browser = await launch(); });
+before(async () => { S = await startServer(); browser = await launch(); });
 after(async () => { await browser.close(); await S.close(); });
 
 async function nativePage() {
@@ -27,63 +26,123 @@ async function nativePage() {
   return p;
 }
 
-test('home: online card sits right under Play, highlighted online tab, time/survival removed', async () => {
+const popUntil = async (P, n) => {
+  for (let i = 0; i < 200; i++) {
+    const st = await P.evaluate((n) => {
+      const c = window.__mc.current; if (c?.name !== 'rainPlay') return { done: true };
+      const R = c.rain(); const d = R.state.drops.filter((x) => !x.dead).sort((a, b) => b.y - a.y)[0];
+      if (d && R.state.popped < n) { for (const ch of String(d.q.answer)) document.dispatchEvent(new KeyboardEvent('keydown', { key: ch })); document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' })); }
+      return { done: false, popped: R.state.popped };
+    }, n);
+    if (st.done) return;
+    await P.waitForTimeout(250);
+  }
+};
+const QUICK = { mode: 'custom', ops: ['add'], level: 'easy', speed: 'fast', dur: 0, lives: 1, accel: false };
+
+test('home: friends card sits right under Play (challenge / enter code / same-phone room), friends tab', async () => {
   const p = await newPage(browser);
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
-  await p.waitForSelector('.online-hero #homeQuick');
+  await p.waitForSelector('.online-hero #homeChallenge');
   const order = await p.evaluate(() => { const secs = [...document.querySelectorAll('main > section')]; return [secs.findIndex((x) => x.classList.contains('hero')), secs.findIndex((x) => x.classList.contains('online-hero'))]; });
-  assert.equal(order[1], order[0] + 1, 'online directly after the hero');
-  await p.waitForSelector('#nav button.nav-hero[data-nav="online"]');
-  assert.equal(await p.locator('#modeTime').count(), 0);
-  assert.equal(await p.locator('#modeSurvival').count(), 0);
-  await p.click('#homeFriends');
-  await waitScreen(p, 'friendsHub');
+  assert.equal(order[1], order[0] + 1, 'friends directly after the hero');
+  await p.waitForSelector('#nav button.nav-hero[data-nav="friends"]');
+  assert.equal(await p.locator('#homeBell, #homeQuick, #homeTurbo').count(), 0, 'no online leftovers');
+  await p.click('#homeChallenge');
+  await waitScreen(p, 'friendCompose');
+  await p.waitForSelector('#rangeHint');
+  await p.evaluate(() => window.__mc.go('home', {}, { root: true }));
+  await p.click('#homeParty');
+  await waitScreen(p, 'party');
   assert.deepEqual(p.errors, []);
 });
 
-test('friends: add by code, send a custom challenge (same fields as your challenge), friend sees it in the inbox', async () => {
+test('code challenge round trip between two phones: play → share code → friend plays same drops → result code → who won', async () => {
   const A = await newPage(browser), B = await newPage(browser);
-  for (const P of [A, B]) { await P.goto(S.url + '/?e2e=1'); await waitScreen(P, 'home'); await P.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.go('friendsHub'); }); await P.waitForSelector('#myCode'); }
-  const codeA = (await A.textContent('#myCode')).trim();
-  await B.fill('.fh-add input', codeA);
-  await B.click('#addFriend');
-  await B.waitForSelector('[data-challenge]');
-  await B.evaluate(() => { const d = window.__mc.data; d.missions.list = ['friend1', 'survive1'].map((id) => ({ id, goal: 1, progress: 0, done: false, claimed: false })); window.__mc.save(); });
-  await B.click('[data-challenge]');
-  await waitScreen(B, 'friendChallenge');
-  await B.waitForSelector('#rangeHint');
-  await B.click('text=جنونية');
-  await B.click('.custom-fields button[role=radio][data-v="3"]:has-text("محاولات")');
-  await B.click('#startFriendChallenge');
-  await waitScreen(B, 'rainPlay');
-  assert.equal(await B.evaluate(() => window.__mc.current.rain().cfg.lives), 3);
-  // نصيب ٣ قطرات ثم نترك الباقي يسقط حتى تنتهي القلوب
-  for (let i = 0; i < 60; i++) {
-    const n = await B.evaluate(() => {
-      const R = window.__mc.current.rain(); const d = R.state.drops.filter((x) => !x.dead).sort((a, b) => b.y - a.y)[0];
-      if (d && R.state.popped < 3) { for (const ch of String(d.q.answer)) document.dispatchEvent(new KeyboardEvent('keydown', { key: ch })); document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' })); }
-      return R.state.popped;
-    });
-    if (n >= 3) break;
-    await B.waitForTimeout(250);
+  for (const [P, name] of [[A, 'Sara'], [B, 'Omar']]) {
+    await P.addInitScript(() => { window.__shared = []; navigator.share = async (d) => { window.__shared.push(d); }; });
+    await P.goto(S.url + '?e2e=1'); await waitScreen(P, 'home');
+    await P.evaluate((name) => { const a = window.__mc; a.data.settings.tutorialDone = true; a.store.updateProfile(a.pid, { name }); a.data.missions.list = ['friend1', 'survive1'].map((id) => ({ id, goal: 1, progress: 0, done: false, claimed: false })); a.save(); }, name);
   }
+  // A: تحدٍّ مخصص سريع (محاولة واحدة)
+  await A.evaluate((q) => { window.__mc.data.prefs.friendChallenge = { ...q, tab: 'custom' }; window.__mc.go('friendCompose'); }, QUICK);
+  await A.click('#startCompose');
+  await waitScreen(A, 'rainPlay');
+  const seedA = await A.evaluate(() => window.__mc.stack.at(-1).params.seed);
+  await popUntil(A, 2);
+  await waitScreen(A, 'results', 60000);
+  const code = await A.getAttribute('#challengeCode [data-code]', 'data-code');
+  assert.match(code, /^QC-/);
+  await A.waitForFunction(() => window.__mc.data.missions.list.find((m) => m.id === 'friend1').done, null, { timeout: 5000 });
+  await A.click('#challengeCode [data-share]');
+  const msg = (await A.evaluate(() => window.__shared))[0].text;
+  assert.ok(msg.includes(code) && /Sara|سارة/.test(await A.evaluate(() => window.__mc.playerName)));
+  // B: يلصق الرسالة ويلعب نفس القطرات ويتجاوز النتيجة
+  await B.evaluate(() => window.__mc.go('friends'));
+  await B.fill('#codeIn', msg);
+  await B.click('#openCode');
+  await B.waitForSelector('#codeChallenge');
+  assert.match(await B.textContent('#codeChallenge'), /Sara/);
+  await B.click('#playCode');
+  await waitScreen(B, 'rainPlay');
+  assert.equal(await B.evaluate(() => window.__mc.stack.at(-1).params.seed), seedA, 'same seed → same drops');
+  await popUntil(B, 6);
   await waitScreen(B, 'results', 60000);
   assert.equal(await B.locator('#reviveYes, #revivePearls').count(), 0, 'no second chance in friend challenges');
-  await B.waitForSelector('#sendStatus.ok', { timeout: 10000 });
-  // «أكمل تحدّي صديق» بعد قبول الخادم فقط، وليس «بقاء» رغم المحاولات المحدودة
-  await B.waitForFunction(() => window.__mc.data.missions.list.find((m) => m.id === 'friend1').done);
+  await B.waitForSelector('#duelResult[data-outcome="win"]');
+  const rcode = await B.getAttribute('#resultCode [data-code]', 'data-code');
+  assert.match(rcode, /^QR-/);
+  // مهمة الصديق تُحتسب، ولا تُحتسب «بقاء» رغم المحاولة الواحدة
+  assert.equal(await B.evaluate(() => window.__mc.data.missions.list.find((m) => m.id === 'friend1').done), true);
   assert.equal(await B.evaluate(() => window.__mc.data.missions.list.find((m) => m.id === 'survive1').done), false);
-  // الصديق A يرى التحدي في صندوقه
-  await A.evaluate(() => window.__mc.go('friendsHub', {}, { replace: true }));
-  await A.waitForSelector('[data-ch]', { timeout: 10000 });
-  await A.waitForSelector('.race-row');
+  // A: يدخل رمز النتيجة ← خسر، والحصيلة تظهر
+  await A.evaluate(() => window.__mc.go('friends', {}, { root: true }));
+  await A.fill('#codeIn', rcode);
+  await A.click('#openCode');
+  await A.waitForSelector('#codeResult[data-outcome="lose"]');
+  assert.match(await A.textContent('#codeResult'), /Omar/);
+  await A.waitForSelector('.friend-row');
+  // رمز معدّل يُرفض
+  await A.fill('#codeIn', rcode.slice(0, -1) + (rcode.endsWith('a') ? 'b' : 'a'));
+  await A.click('#openCode');
+  await A.waitForSelector('#codeOut .bad');
   assert.deepEqual(A.errors, []); assert.deepEqual(B.errors, []);
+});
+
+test('same-phone room: 3 players take turns on the same drops with ghosts, standings at the end, counted once', async () => {
+  const p = await newPage(browser);
+  await p.goto(S.url + '?e2e=1');
+  await waitScreen(p, 'home');
+  await p.evaluate((q) => { const d = window.__mc.data; d.settings.tutorialDone = true; d.prefs.party = { ...q, names: ['Lina', 'Ali'] }; window.__mc.go('party'); }, QUICK);
+  await p.click('#addPlayer');
+  await p.fill('.party-name:nth-child(3) input', 'Noor');
+  await p.dispatchEvent('.party-name:nth-child(3) input', 'change');
+  const matches = await p.evaluate(() => window.__mc.data.stats.friendMatches);
+  await p.click('#startParty');
+  const seeds = [];
+  for (const [who, n] of [['Lina', 1], ['Ali', 3], ['Noor', 2]]) {
+    await waitScreen(p, 'partyTurn');
+    assert.match(await p.textContent('#partyWho'), new RegExp(who));
+    await p.click('#partyReady');
+    await waitScreen(p, 'rainPlay');
+    seeds.push(await p.evaluate(() => window.__mc.stack.at(-1).params.seed));
+    if (who !== 'Lina') assert.ok(await p.locator('.opp-box .opp').count() >= 1, 'ghosts of earlier players');
+    await popUntil(p, n);
+  }
+  await waitScreen(p, 'partyTurn', 60000);
+  await p.waitForSelector('#partyWinner');
+  assert.equal(new Set(seeds).size, 1, 'everyone gets the same drops');
+  assert.match(await p.textContent('#partyWinner'), /Ali/);
+  assert.equal(await p.evaluate(() => window.__mc.data.stats.friendMatches), matches + 1);
+  await p.evaluate(() => window.__mc.refresh?.());
+  assert.equal(await p.evaluate(() => window.__mc.data.stats.friendMatches), matches + 1, 'counted once');
+  assert.deepEqual(p.errors, []);
 });
 
 test('shop: pearl pack, starter pack once, spend on a shield and a single skin', async () => {
   const p = await nativePage();
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => window.__mc.go('shop'));
   await p.waitForSelector('#buy-pearls_l');
@@ -105,7 +164,7 @@ test('shop: pearl pack, starter pack once, spend on a shield and a single skin',
 
 test('second chance with pearls when no ad is available', async () => {
   const p = await newPage(browser);
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => { const d = window.__mc.data; d.settings.tutorialDone = true; d.pearls = 100; window.__mc.go('rainPlay', { kind: 'custom', args: { ops: ['add'], level: 'easy', speed: 'insane', end: 'lives', accel: false } }); });
   await p.waitForSelector('#revivePearls', { timeout: 60000 });

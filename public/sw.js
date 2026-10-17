@@ -2,7 +2,7 @@
    يخزّن اللعبة محليًا لتعمل بلا إنترنت بعد أول زيارة.
    قائمة الملفات ورقم الإصدار يولّدهما: node scripts/build-sw.mjs */
 
-const CACHE = 'qatra-3d2f4d963a';
+const CACHE = 'qatra-c1cc06e987';
 const ASSETS = [
   './',
   './admin.html',
@@ -25,6 +25,7 @@ const ASSETS = [
   './src/app.js',
   './src/config.js',
   './src/core/adaptive.js',
+  './src/core/challenge.js',
   './src/core/country.js',
   './src/core/curriculum.js',
   './src/core/modes.js',
@@ -33,10 +34,13 @@ const ASSETS = [
   './src/core/progression.js',
   './src/core/questions.js',
   './src/core/rain.js',
+  './src/core/ranks.js',
   './src/core/rng.js',
   './src/core/scoring.js',
   './src/core/session.js',
+  './src/core/social.js',
   './src/core/storage.js',
+  './src/core/wallet.js',
   './src/i18n.js',
   './src/i18n/es.js',
   './src/i18n/fr.js',
@@ -46,19 +50,18 @@ const ASSETS = [
   './src/i18n/tr.js',
   './src/main.js',
   './src/net/ads.js',
-  './src/net/analytics.js',
   './src/net/billing.js',
   './src/net/monetization-config.js',
-  './src/net/online.js',
+  './src/net/notify.js',
   './src/net/playgames-config.js',
   './src/net/playgames.js',
   './src/runs.js',
   './src/screens/friend.js',
+  './src/screens/friends.js',
   './src/screens/game.js',
   './src/screens/home.js',
   './src/screens/journey.js',
   './src/screens/locker.js',
-  './src/screens/online.js',
   './src/screens/progress.js',
   './src/screens/rain.js',
   './src/screens/results.js',
@@ -71,6 +74,7 @@ const ASSETS = [
   './src/ui/fx.js',
   './src/ui/mascot.js',
   './src/ui/share.js',
+  './src/ui/turbo.js',
   './styles/admin.css',
   './styles/main.css'
 ];

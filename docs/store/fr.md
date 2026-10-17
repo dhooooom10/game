@@ -21,19 +21,17 @@ Chaque goutte porte une opération. Tape la bonne réponse et elle éclate. Rate
 • Entraînement libre — choisis les opérations et la difficulté, sans pression
 • Défi entre amis — deux joueurs, un seul téléphone
 
-🌍 AFFRONTE LE MONDE
-• Parties en direct contre de vrais joueurs
-• Salons privés avec un code à 6 chiffres
-• Tournois pour les saisons et les grandes occasions
-• Ligue des nations — chaque point marqué fait grimper ton pays au classement mondial de la semaine
-• Clubs — crée un club pour ta classe, ton équipe ou tes amis et grimpe dans la Ligue des clubs
-• Défie un ami avec un lien : il reçoit exactement les mêmes gouttes que toi
+🤝 JOUE AVEC TES AMIS
+• Défie un ami avec un code sur WhatsApp : il joue exactement les mêmes gouttes et te renvoie son résultat
+• Salle sur le même téléphone : de 2 à 6 joueurs à tour de rôle, contre le fantôme des précédents
+• Face à face : deux joueurs en même temps sur écran partagé
+• Classements mondiaux et entre amis avec Google Play Jeux
 
 🏆 PROGRESSION
 Étoiles, badges, missions quotidiennes, succès et classements Google Play Games, et des looks colorés qui colorent aussi tes gouttes en jeu.
 
 🧠 MALIN ET ÉQUITABLE
-Les questions s'adaptent à ton niveau. Chaque score en ligne est rejoué et vérifié sur le serveur — pas de faux classements. Les achats sont uniquement esthétiques : pas de pay-to-win.
+Les questions s'adaptent à ton niveau. Tout le jeu fonctionne hors ligne et sans compte. Les achats sont uniquement esthétiques : pas de pay-to-win.
 
 📚 APPRENDRE
 Un espace d'apprentissage au calme, avec des leçons pas à pas pour l'addition, la soustraction, la multiplication (tables de multiplication), la division, les fractions, les pourcentages et plus encore.

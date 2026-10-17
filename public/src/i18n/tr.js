@@ -52,7 +52,7 @@ export default {
   "ch.notCompleted": "Görevler için tamamlanmadı: en az {n} doğru gerekir",
   "m.survive1": "Bir hayatta kalma tamamla",
   "m.custom1": "Bir özel düello tamamla",
-  "m.online1": "Bir çevrimiçi maç tamamla",
+
   "m.friend1": "Bir arkadaş düellosu tamamla",
   "mr.journey1": "Yolculukta bir seviye geç",
   "mr.correct20": "Bugünkü doğruların, her modda",
@@ -64,7 +64,7 @@ export default {
   "mr.time1": "Süre bitene kadar, en az {n} doğruyla",
   "mr.survive1": "Haklar bitene kadar, en az {n} doğruyla",
   "mr.custom1": "Herhangi bir özel ayar, kuralıyla biten ve {n}+ doğru",
-  "mr.online1": "Hızlı maç, oda, turnuva ya da haftalık — sunucu doğrular (hayalet sayılmaz)",
+
   "mr.friend1": "Düello gönder, gelen birini oyna ya da aynı telefonda arkadaşınla oyna",
   "lock.prog.speed20": "En iyi deneme: {a}/{n} soru · %{acc} · ort. {s} sn",
   "lock.prog.survive25": "En iyi deneme: {a}/{n} doğru",
@@ -74,72 +74,42 @@ export default {
   "set.notify": "Hatırlatıcılar",
   "set.notifySub": "Günlük serin ve bekleyen arkadaş düelloları",
   "set.notifyDenied": "İzin reddedildi — bildirimleri telefon ayarlarından aç",
-  "notif.title": "Bildirimler",
-  "notif.empty": "Henüz bildirim yok",
-  "notif.challenge": "{name} sana meydan okudu: {n} puanı geç",
-  "notif.resultWon": "{name} düellonu oynadı: sen {a}, o {b} — kazandın 🏆",
-  "notif.resultLost": "{name} düellonu geçti: sen {a}, o {b} — karşılık ver!",
-  "notif.resultDraw": "{name} seninle berabere: {a} – {b}",
-  "notif.friendAdded": "{name} seni arkadaş ekledi",
+
+
+
+
   "notif.streak": "{n} günlük serin tehlikede 🔥 Bugünkü düelloyu oyna",
   "notif.daily": "Bugünkü düello seni bekliyor 💧",
   "notif.friends": "Bekleyen {n} arkadaş düellon var ⚔️",
-  "rank.bronze": "Bronz",
-  "rank.silver": "Gümüş",
-  "rank.gold": "Altın",
-  "rank.diamond": "Elmas",
-  "rank.legend": "Efsane",
-  "rank.placement": "Yerleştirme maçları",
-  "rank.placementLeft": "Rütbeni görmek için {n} hızlı maç daha",
-  "rank.toNext": "{r} için {n} puan",
-  "rank.top": "En üst rütbe — koru",
-  "rank.how": "Rütbe bu sezonun hızlı maç puanından gelir (hayaletler sayılmaz)",
-  "rank.change.up": "{r} rütbesine yükseldin!",
-  "rank.change.down": "{r} rütbesine düştün — daha güçlü dön",
-  "rank.seasonEnd": "{s} sona erdi",
-  "rank.finalRank": "Son rütben: {r}",
-  "rank.claim": "Al +{n} 💎",
-  "rank.claimed": "{n} inci aldın 💎",
-  "rank.alreadyClaimed": "Bu ödülü zaten aldın",
+
+
+
+
+
+
+
+
+
   "home.bestSpeed": "En yüksek hız",
-  "home.onlineLive": "CANLI",
-  "home.onlineAll": "Tüm çevrimiçi",
-  "home.quickSub": "Gerçek rakip",
-  "home.turboSub": "Çılgın hız",
-  "home.friendsSub": "Arkadaşlarını yen",
-  "fh.title": "Arkadaş düellosu",
-  "fh.sub": "Arkadaşların ve düelloların",
-  "fh.levelN": "Seviye {n}",
-  "fh.customLabel": "Özel",
-  "fh.sendCode": "Kodumu gönder",
-  "fh.added": "Arkadaş eklendi 🤝",
-  "fh.inbox": "Sana gelen düellolar",
-  "fh.fromX": "{name} sana meydan okuyor",
-  "fh.beat": "{n} puanı geç",
-  "fh.play": "Oyna",
-  "fh.empty": "Henüz arkadaş yok. Kodunu gönder ya da onunkini yukarı yaz.",
-  "fh.h2h": "Sen {w} – {l}",
-  "fh.challenge": "Meydan oku",
-  "fh.race": "Arkadaşlar arası yolculuk yarışı",
-  "fh.sent": "Gönderdiğin düellolar",
-  "fh.toX": "{name} için",
-  "fh.yourScore": "puanın {n}",
-  "fh.waiting": "Bekleniyor",
-  "fh.local": "Aynı telefonda arkadaşınla oyna",
-  "fh.res.win": "Kazandın",
-  "fh.res.lose": "Kaybettin",
-  "fh.res.draw": "Berabere",
-  "fh.newTitle": "{name} ile düello",
-  "fh.newSub": "Düello türünü seç",
-  "fh.tabCustom": "Özel",
-  "fh.tabLevel": "Seviye",
-  "fh.howCustom": "Önce sen oyna; sonra {name} aynı damlaları alır ve skorunu geçmeye çalışır.",
-  "fh.playSend": "Oyna ve gönder",
-  "fh.pickLevel": "Ulaştığın bir seviye seç",
-  "fh.howLevel": "Seviye {n}’i sen oynarsın, sonra {name} aynı damlalarla oynar — en çok puan kazanır.",
-  "fh.sending": "Düello {name} kişisine gönderiliyor…",
-  "fh.sent1": "Düello {name} kişisine gitti — {n} puanı geçmeli",
-  "fh.sendFail": "Şu an gönderilemedi — bağlantını kontrol edip tekrar dene",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   "wal.earned": "inci kazanıldı",
   "wal.boosted": "Çift XP +{n}",
   "wal.balance": "İncilerin",
@@ -193,8 +163,7 @@ export default {
   "res.speedTier.4": "Elmas hız",
   "res.speedBest": "Şimdiye kadarki en yüksek hızın!",
   "res.speedPrev": "En iyi hızın: {x}",
-  "net.turbo": "Turbo arenası",
-  "net.turboSub": "Çılgın hızlanma ve kolay sayılarla düello — kim dayanacak?",
+
   "badge.fever": "Ateş",
   "badge.feverD": "Art arda 10 doğru ile ateş moduna gir",
   "badge.gift": "Sürpriz",
@@ -694,158 +663,85 @@ export default {
   'jrr.boss': 'Boss: özel damlalarla {n} damla',
   'jrr.rule.hearts': 'Yıldız = kalan can (hiç damla düşmezse ★★★)',
   'jrr.rule.sprint': 'Kalan süreye göre yıldız: ★★★ %35 · ★★ %15',
-  'net.err.offline': 'Şu anda sunucuya ulaşılamıyor.',
-  'net.err.generic': 'Bir şeyler ters gitti, tekrar dene.',
-  'net.err.unauthorized': 'Oturum süresi doldu, tekrar dene.',
-  'net.err.banned': 'Bu hesap askıya alındı.',
-  'net.err.rate_limited': 'Çok fazla istek, biraz bekle.',
-  'net.err.name_length': 'Adlar 2–16 karakter olmalı.',
-  'net.err.name_chars': 'Yalnızca harf ve rakam kullan.',
-  'net.err.name_blocked': 'Bu ada izin verilmiyor.',
-  'net.err.code_not_found': 'Bu koda sahip oyuncu yok.',
-  'net.err.self': 'Bu senin kendi kodun!',
-  'net.err.too_many': 'Arkadaş sınırına ulaşıldı.',
-  'net.err.room_not_found': 'Bu koda sahip oda yok.',
-  'net.err.room_full': 'Oda dolu.',
-  'net.err.room_busy': 'Bu odada bir maç sürüyor, bitmesini bekle.',
-  'net.err.need_players': 'En az iki oyuncu gerekiyor.',
-  'net.err.not_active': 'Turnuva şu anda aktif değil.',
-  'net.err.no_attempts': 'Tüm denemelerini kullandın.',
-  'net.err.not_found': 'Bulunamadı veya süresi doldu.',
-  'net.err.already_submitted': 'Zaten gönderildi.',
-  'net.err.timeout': 'Zaman aşımı.',
-  'net.err.run_not_found': 'Oyun kaydı bulunamadı.',
-  'net.dur.dh': '{d} g {h} sa',
-  'net.dur.hm': '{h} sa {m} dk',
-  'net.dur.m': '{m} dk',
-  'net.offlineTitle': 'Bağlanılamadı',
-  'net.offlineHint': 'Tek kişilik oyun ve dersler çevrimdışı çalışır; çevrimiçi mod bağlantı gerektirir.',
-  'net.retry': 'Tekrar dene',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   'net.loading': 'Bağlanıyor…',
-  'net.emotes': 'Tepkiler',
-  'net.season': 'Sezon',
-  'net.rating': 'Puan derecesi',
-  'net.myCode': 'Arkadaş kodun:',
-  'net.rename': 'Çevrimiçi adın',
-  'net.nameRules': '2–16 karakter, sembol veya kaba kelime yok.',
-  'net.quick': 'Hızlı maç',
-  'net.quickSub': 'Seviyende gerçek bir rakip — ikinize de aynı damlalar',
-  'net.rooms': 'Arkadaş odaları',
-  'net.roomsSub': '8 kişiye kadar kodlu odalar',
-  'net.tournaments': 'Turnuvalar',
-  'net.tournamentsSub': 'Sezon ve bayram etkinlikleri',
-  'net.weekly': 'Haftalık fırtına',
-  'net.weeklySub': 'Haftanın zirvesi için bir dakika',
-  'net.leaderboards': 'Lider tabloları',
-  'net.leaderboardsSub': 'Gerçek, doğrulanmış sonuçlar',
-  'net.friends': 'Arkadaşlar',
-  'net.friendsSub': 'Kodla ekle ve yarış',
-  'net.myRewards': 'Ödüllerim',
-  'net.rank': 'Sıra {n}',
-  'net.safety': 'Çevrimiçi mod çocuklar için güvenlidir: yazılı sohbet yok, sadece hazır tepkiler. Adil olması için her puan sunucuda yeniden hesaplanır.',
-  'net.endsIn': 'Bitişe: {d}',
-  'net.startsIn': 'Başlangıca: {d}',
-  'net.live': 'Canlı',
-  'net.soon': 'Yakında',
-  'net.ended': 'Bitti',
-  'net.searching': 'Seviyende bir rakip aranıyor…',
-  'net.ghostNote': 'Birkaç saniye içinde müsait kimse olmazsa bir “hayalet”le yarışırsın: başka bir oyuncunun gerçek kaydedilmiş oyunu.',
-  'net.noPlayers': 'Şu anda müsait oyuncu yok — birazdan tekrar dene.',
-  'net.roomMatch': 'Oda maçı',
-  'net.vsGhost': 'Hayalet rakip: {name}',
-  'net.roomCode': 'Oda kodu',
-  'net.createRoom': 'Oda oluştur',
-  'net.createRoomSub': 'Arkadaşlarınla paylaşmak için 6 haneli bir kod alırsın.',
-  'net.joinRoom': 'Kodla katıl',
-  'net.codeLen': 'Kod 6 hanelidir',
-  'net.join': 'Katıl',
-  'net.room': 'Oda',
-  'net.shareCode': 'Bu kodu paylaş',
-  'net.share': 'Paylaş',
-  'net.roomInvite': 'Qatra Challenge odama katıl! Kod: {code}',
-  'net.players': 'Oyuncular',
-  'net.you': 'sen',
-  'net.teamRed': 'Kırmızı takım',
-  'net.teamBlue': 'Mavi takım',
-  'net.roomMode': 'Oda modu',
-  'net.race': 'Yarış',
-  'net.teams': 'Takımlar',
-  'net.specials': 'Özel damlalar',
-  'net.startRoom': 'Maçı başlat',
-  'net.needTwo': 'En az iki oyuncu gerekiyor',
-  'net.waitHost': 'Oda sahibinin başlatması bekleniyor…',
-  'net.copied': 'Bağlantı kopyalandı',
-  'net.noTournaments': 'Şu anda turnuva yok',
-  'net.noTournamentsSub': 'Turnuvalar sezonlar ve özel günler için duyurulur — takipte kal!',
-  'net.tournament': 'Turnuva',
-  'net.rules': 'Kurallar',
-  'net.stormSecs': '{n} saniyelik fırtına',
-  'net.attempts': 'Denemeler',
-  'net.attemptsLeft': 'Kalan: {n}/{m}',
-  'net.unlimited': 'Sınırsız',
-  'net.sameStorm': 'Herkese aynı damlalar',
-  'net.yesSame': 'Evet',
-  'net.noSame': 'Hayır — eşit zorluk',
-  'net.prize': 'Ödül',
-  'net.topN': 'ilk {n} için',
-  'net.myBest': 'En iyin',
-  'net.playTournament': 'Hemen oyna',
-  'net.tLeaderboard': 'Turnuva sıralaması',
-  'net.lbEmpty': 'Henüz sonuç yok — ilk sen ol!',
-  'net.lbReal': 'Sadece gerçek sonuçlar',
-  'net.lb.weekly': 'Hafta',
-  'net.lb.season': 'Sezon',
-  'net.lb.daily': 'Bugün',
-  'net.lb.friends': 'Arkadaşlar',
-  'net.lb.alltime': 'Tüm zamanlar',
-  'net.lbDesc.weekly': 'En iyi haftalık fırtına puanı (her hafta sıfırlanır).',
-  'net.lbDesc.season': 'Bu sezonun hızlı maç puan derecesi.',
-  'net.lbDesc.daily': 'Bugünkü günlük meydan okumanın resmî sonuçları.',
-  'net.lbDesc.friends': 'Haftalık fırtınada sen ve arkadaşların.',
-  'net.lbDesc.alltime': 'Şimdiye kadarki en yüksek doğrulanmış puan.',
-  'net.friendCode': 'Arkadaşının kodu',
-  'net.addMe': 'Beni Qatra Challenge oyununda ekle! Kodum: {code}',
-  'net.addFriend': 'Arkadaş ekle',
-  'net.add': 'Ekle',
-  'net.noFriends': 'Henüz arkadaşın yok — kodunu paylaş!',
-  'net.onlineNow': 'Şu an çevrimiçi',
-  'net.weeklyBest': 'Bu haftanın en iyisi: {n}',
-  'net.noWeekly': 'Bu hafta oynamadı',
-  'net.removeFriend': 'Arkadaş silinsin mi?',
-  'net.challenge': 'Meydan oku',
-  'net.challengeFrom': 'Meydan okuyan: {name}',
-  'net.challengeBeat': 'Aynı fırtınada {n} puanı geç!',
-  'net.challengeNote': 'Arkadaşının oynadığı damlaların tıpatıp aynısını oynayacaksın.',
-  'net.acceptChallenge': 'Meydan okumayı kabul et',
-  'net.takers': 'Kabul edenler',
-  'net.playAgain': 'Tekrar oyna',
-  'net.backToRoom': 'Odaya dön',
-  'net.makeChallenge': 'Bu fırtınayla bir arkadaşına meydan oku',
-  'net.challengeShare': 'Qatra Challenge oyununda {n} puan yaptım — beni geçebilir misin?',
-  'net.popped': 'Patlatılan',
-  'net.missed': 'Düşen',
-  'net.waitingResults': 'Sonuçlar bekleniyor…',
-  'net.waitingOthers': 'Diğer oyuncuların bitirmesi bekleniyor.',
-  'net.teamWon': 'Takımın kazandı!',
-  'net.teamLost': 'Diğer takım kazandı',
-  'net.youWon': 'Kazandın! 🏆',
-  'net.rankN': 'Sıra {n}',
-  'net.invalid': 'Bu oyun sıralamaya alınmadı (anormal zamanlama veya hız).',
-  'net.standings': 'Sıralama',
-  'net.dnf': 'bitirmedi',
-  'net.checking': 'Puanın kontrol ediliyor…',
-  'net.scoreSaved': 'Puan kaydedildi!',
-  'net.beatChallenge': 'Geçtin! Rakip: {name}',
-  'net.lostChallenge': 'Bu sefer geçemedin. Rakip: {name}',
-  'net.yourRank': 'Sıran: {n}',
-  'net.notSaved': 'Puan kaydedilmedi',
-  'nav.online': 'Çevrimiçi',
-  'home.eventJoin': 'Hemen katıl',
-  'net.privacy': 'Gizlilik politikası',
-  'net.deleteAccount': 'Çevrimiçi hesabımı sil',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   'shop.title': 'Mağaza',
   'shop.sub': 'Oyunu destekle, özel görünümler kazan',
-  'shop.previewTitle': 'Mağaza görünümleri — oyunda damlalarını da renklendirir',
+
   'shop.appOnly': 'Mağaza Android uygulamasında',
   'shop.appOnlyBody': 'Satın almalar Android uygulamasında Google Play üzerinden yapılır. Oyunun tamamı burada da ücretsiz.',
   'shop.unavailable': "Şu anda Google Play'e ulaşılamadı. Daha sonra tekrar dene.",
@@ -858,16 +754,14 @@ export default {
   'shop.restored': 'Satın almaların geri yüklendi',
   'shop.fair': 'Tüm satın almalar yalnızca görünüm veya kolaylık içindir: maçlarda, turnuvalarda ya da lider tablolarında avantaj sağlamaz.',
   'shop.needShop': 'Mağazadan',
-  'shop.needSeason': 'Sezon Kartı',
-  'shop.passHolder': 'Sezon Kartı sahibi',
+
   'shop.p.pro_bundle': 'Tam Paket',
   'shop.p.pro_bundleD': 'Geçiş reklamı yok + tüm mağaza görünümleri (4 renk ve bir hale) — tek seferlik, sonsuza dek.',
   'shop.p.remove_ads': 'Reklamları Kaldır',
   'shop.p.remove_adsD': 'Turlar arasında reklam yok, sonsuza dek. Ödüllü reklamlar isteğe bağlı kalır.',
   'shop.p.skins_pack': 'Yağmur Renkleri Paketi',
   'shop.p.skins_packD': 'Kor, Limon, Buzul, Neon + Hale — oyunda karakterini ve damlalarını renklendirir.',
-  'shop.p.season_pass': 'Sezon Kartı',
-  'shop.p.season_passD': 'Bu sezon için Sezon Altını rengi, Sezon Yıldızı ve lider tablolarında adının yanında ✦.',
+
   'ads.reviveTitle': 'İkinci şans?',
   'ads.reviveBody': 'Kısa bir reklam izle ve ekstra bir canla devam et — yere yakın damlalar temizlenir.',
   'ads.reviveYes': 'İzle ve devam et',
@@ -875,82 +769,121 @@ export default {
   'ads.doubleXp': 'Çift XP (+{n})',
   'ads.doubled': 'İkiye katlandı: +{n} XP',
   'ads.privacy': 'Reklam gizlilik seçenekleri',
-  'club.title': 'Kulüpler',
-  'club.sub': 'Kendi grubun: sınıf, takım, arkadaşlar veya aile',
-  'club.mine': 'Kulüplerim',
-  'club.none': 'Henüz bir kulüpte değilsin. Bir tane oluştur veya kodla katıl.',
-  'club.members': '{n} üye',
-  'club.name': 'Kulüp adı',
-  'club.namePh': 'ör. 3-B Sınıfı veya Ofis Şampiyonları',
-  'club.create': 'Kulüp oluştur',
-  'club.createHint': 'Üyelerle paylaşmak için 6 karakterlik bir kod alacaksın.',
-  'club.createBtn': 'Oluştur',
-  'club.code': 'Kulüp kodu',
-  'club.join': 'Kodla katıl',
-  'club.joinBtn': 'Katıl',
-  'club.joinTitle': 'Bir kulübe davet edildin',
-  'club.privacy': 'Katıldığında kulüp sahibi adını, puanlarını, tur sayını, doğruluğunu ve son aktif olduğun zamanı görür. İstediğin zaman ayrılabilirsin.',
-  'club.league': 'Kulüp Ligi',
-  'club.leagueHow': 'Kulüp puanı = bu hafta en iyi 30 üyesinin toplamı (3+ üyeli kulüpler).',
-  'club.leagueEmpty': 'Bu hafta henüz kulüp puanı yok.',
-  'club.weekPts': 'Bu hafta {n} puan',
-  'club.invite': 'Qatra Challenge oyunundaki “{name}” kulübüme katıl 💧 Kod: {code}',
-  'club.inviteBtn': 'Üye davet et',
-  'club.ownerNote': 'Kulüp sahibisin: her üyenin bu haftaki etkinliğini görür ve üyeleri çıkarabilirsin.',
-  'club.week': 'Bu haftanın sıralaması',
-  'club.stats': '{runs} tur · %{acc} doğruluk · {days} gün aktif',
-  'club.today': 'bugün',
-  'club.daysAgo': '{n} gün önce',
-  'club.remove': 'Üyeyi çıkar',
-  'club.play': 'Kulübün için oyna',
-  'club.delete': 'Kulübü sil',
-  'club.leave': 'Kulüpten ayrıl',
-  'net.err.club_not_found': 'Bu koda sahip kulüp yok',
-  'net.err.club_full': 'Bu kulüp dolu',
-  'net.err.too_many_clubs': 'Kulüp sınırına ulaştın',
-  'net.err.not_member': 'Bu kulübün üyesi değilsin',
-  'net.err.owner_only': 'Sadece kulüp sahibi',
-  'nat.title': 'Ülkeler Ligi',
-  'nat.sub': 'Ülkeni dünya sıralamasında yükseltmek için oyna',
-  'nat.pick': 'Ülkeni seç',
-  'nat.pickNote': 'Cihaz ayarlarına göre önerildi (konum kullanılmaz). Bu haftaki puanların ülkene sayılır.',
-  'nat.join': 'Lige katıl',
-  'nat.myCountry': 'Ülkem',
-  'nat.rank': 'Bu hafta #{n}',
-  'nat.noRank': 'Bu hafta henüz puan yok',
-  'nat.myPoints': 'Katkın: {n}',
-  'nat.myRank': 'Ülkende #{n}',
-  'nat.how': 'Her gün en iyi çevrimiçi puanın sayılır (haftalık, maçlar, turnuvalar, günlük). Ülke puanı = en iyi 100 oyuncusunun toplamı. Her hafta sıfırlanır.',
-  'nat.play': 'Ülken için hemen oyna',
-  'nat.board': 'Ülke sıralaması',
-  'nat.empty': 'Bu hafta henüz puan yok — ilk sen ol!',
-  'nat.players': '{n} oyuncu',
-  'nat.change': 'Ülkeyi değiştir',
-  'nat.changeNote': 'Ülkeni 7 günde bir değiştirebilirsin.',
-  'nat.locked': 'Yakın zamanda değiştirdin — 7 gün sonra tekrar dene.',
-  'net.err.bad_country': 'Geçersiz ülke',
-  'net.err.country_locked': 'Yakın zamanda değiştirdin — 7 gün sonra tekrar dene.',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   'share.title': 'Paylaş',
-  'set.analytics': 'Anonim kullanım istatistikleri',
-  'set.analyticsSub': 'Oyunu geliştirmemize yardım eder: yalnızca aktif günler ve tur sayıları — ad veya hesap yok.',
-  'share.reshare': 'Bu meydan okumayı paylaş',
+
+
   'share.daily': 'Sonucunu paylaş',
   'share.dailyTitle': 'Qatra Challenge 💧 Günlük #{n}',
   'share.dailyLine': '{drops} damla · %{acc} doğruluk · {score} puan',
   'share.challenge': 'Aynı damlalarla bir arkadaşına meydan oku',
   'share.challengeHot': 'Arkadaşına meydan oku: {n} puanı geçebilir mi?',
-  'share.challengeText': 'Qatra Challenge 💧 oyununda {n} puan yaptım. Aynı damlalarla beni geçebilir misin?',
+
   'share.copied': 'Kopyalandı — istediğin sohbete yapıştır',
   'share.failed': 'Paylaşılamadı',
   'share.getApp': "Uygulamayı Google Play'den indir",
   'share.getAppSub': 'Daha akıcı oyun, başarımlar, kayıtlı ilerleme',
-  'net.pgsAch': 'Google Play başarımları',
-  'net.pgsLb': 'Google Play lider tabloları',
-  'net.pgsLinked': "Google Play Games'e bağlandı — ilerlemen her cihazda kayıtlı.",
-  'net.deleteTitle': 'Çevrimiçi hesap silinsin mi?',
-  'net.deleteBody': 'Adın, puanların, arkadaşların ve ödüllerin sunucudan kalıcı olarak silinecek. Yerel ilerlemen bu cihazda kalır.',
-  'net.deleted': 'Çevrimiçi hesabın silindi',
-  'online.title': 'Çevrimiçi',
-  'online.sub': 'Canlı maçlar · odalar · turnuvalar · lider tabloları',
-  'online.quitBody': 'Mevcut puanın sayılır ve maçın sona erer.',
+
+
+
+
+
+  "nav.friends": "Arkadaşlar",
+  "fr2.title": "Arkadaşlar",
+  "fr2.sub": "Kodla meydan okuma · aynı telefonda oda",
+  "fr2.challenge": "Arkadaşına meydan oku",
+  "fr2.challengeSub": "Oyna, sonra kodunu gönder — aynı damlaları oynar",
+  "fr2.face": "Yüz yüze",
+  "fr2.faceSub": "Bölünmüş ekranda aynı anda iki oyuncu",
+  "fr2.record": "Arkadaşlarınla skorun",
+  "fr2.empty": "Skorunu başlatmak için bir arkadaşına meydan oku ya da kod gir.",
+  "fr2.wld": "G {w} · M {l} · B {d}",
+  "fr2.composeSub": "Meydan okumayı seç, önce sen oyna",
+  "fr2.tabCustom": "Özel",
+  "fr2.tabLevel": "Seviye",
+  "fr2.how": "Önce sen oynarsın, sonra arkadaşının aynı damlaları oynaması için bir kod alırsın.",
+  "fr2.playFirst": "Oyna ve gönder",
+  "fr2.pickLevel": "Açılmış bir seviye seç",
+  "code.howTo": "Qatra Challenge'ı aç → Arkadaşlar → Kod gir",
+  "code.share": "Kodu paylaş",
+  "code.copy": "Kopyala",
+  "code.enter": "Aldığın kodu gir",
+  "code.enterShort": "Kod gir",
+  "code.enterSub": "Arkadaşının mesajının tamamını ya da sadece kodu yapıştır (QC veya QR ile başlar).",
+  "code.paste": "Yapıştır",
+  "code.pasteFail": "Yapıştırılamadı — kodu elle yapıştır",
+  "code.open": "Kodu aç",
+  "code.bad": "Kod geçersiz veya eksik. Tamamını kopyaladığından emin ol.",
+  "code.own": "Bu senin kendi meydan okuman — bir arkadaşına gönder!",
+  "code.fromX": "{name} meydan okuyor",
+  "code.beat": "{n} puanı geç",
+  "code.play": "Oyna",
+  "code.again": "Tekrar",
+  "code.unknown": "Bu sonuç kodu bu profilden gönderilmemiş bir meydan okumaya ait.",
+  "code.res.win": "{name} adlı oyuncuyu yendin!",
+  "code.res.lose": "{name} seni yendi!",
+  "code.res.draw": "{name} ile berabere",
+  "code.vs.win": "{name} adlı oyuncuyu yendin!",
+  "code.vs.lose": "Bu sefer {name} kazandı",
+  "code.vs.draw": "{name} ile berabere",
+  "code.received": "Gelen meydan okumalar",
+  "code.sent": "Gönderdiğin meydan okumalar",
+  "code.yourScore": "Puanın {n}",
+  "code.waiting": "Arkadaşının sonuç kodu bekleniyor",
+  "code.inviteText": "⚔️ Qatra Challenge'da sana meydan okuyorum! {label} modunda {n} puan yaptım. Aynı damlalarla beni geçebilir misin?",
+  "code.yourCode": "Meydan okuma kodun",
+  "code.afterShare": "Arkadaşın oynayınca sana bir sonuç kodu gönderir — kimin kazandığını görmek için Arkadaşlar'a gir.",
+  "code.sendBack": "Sonucunu {name} kişisine gönder",
+  "code.resultText": "🏁 Meydan okumanı oynadım {name}, {n} puan yaptım! Kimin kazandığını görmek için bu kodu gir:",
+  "pgs.title": "Google Play Games",
+  "pgs.sub": "Küresel ve arkadaş sıralamaları, başarımlar.",
+  "pgs.lb": "Sıralamalar",
+  "pgs.ach": "Başarımlar",
+  "party.title": "Aynı telefonda oda",
+  "party.sub": "Sırayla 2–6 oyuncu",
+  "party.pN": "Oyuncu {n}",
+  "party.remove": "Oyuncuyu çıkar",
+  "party.add": "Oyuncu ekle",
+  "party.players": "Oyuncular",
+  "party.rules": "Tur kuralları",
+  "party.how": "Her oyuncu aynı damlalarla sırasını oynar ve öncekilerin hayaletini görür. En yüksek puan kazanır.",
+  "party.prev": "{name}: {n} puan",
+  "party.turnN": "Sıra {a}/{b}",
+  "party.endTitle": "Oda bitirilsin mi?",
+  "party.endBody": "Bu turun sonuçları kaybolacak.",
+  "party.end": "Odayı bitir",
+  "party.tiebreak": "Puanlar eşitse en çok damla patlatan kazanır.",
+  "party.again": "Yeni tur",
+  "party.quitBody": "Sıran mevcut puanınla bitecek.",
+  "home.friendsAll": "Tümü",
+  "home.challengeSub": "Aynı damlalar, tek kod",
+  "home.codeSub": "Meydan okuma ya da sonuç",
+  "home.partySub": "2–6 oyuncu",
 };

@@ -21,19 +21,17 @@ Cada gota traz uma conta. Digite o resultado e ela estoura. Deixou passar? Ela c
 • Treino livre — escolha as operações e a dificuldade, sem pressão
 • Desafio entre amigos — dois jogadores, um celular só
 
-🌍 JOGUE CONTRA O MUNDO
-• Partidas ao vivo contra jogadores reais
-• Salas privadas com código de 6 dígitos
-• Torneios de temporada e datas especiais
-• Liga das Nações — cada ponto que você faz ajuda o Brasil a subir no ranking mundial da semana
-• Clubes — crie um clube para a sua turma, seu time ou seus amigos e suba na Liga de Clubes
-• Desafie um amigo por link: ele recebe exatamente as mesmas gotas que você
+🤝 JOGUE COM AMIGOS
+• Desafie um amigo com um código no WhatsApp: ele joga exatamente as mesmas gotas e responde com o resultado
+• Sala no mesmo celular: de 2 a 6 jogadores em turnos, contra o fantasma de quem jogou antes
+• Cara a cara: dois jogadores ao mesmo tempo em tela dividida
+• Placares globais e de amigos com o Google Play Games
 
 🏆 PROGRESSO
 Estrelas, medalhas, missões diárias, conquistas e rankings do Google Play Games, além de visuais coloridos que também pintam suas gotas no jogo.
 
 🧠 INTELIGENTE E JUSTO
-As perguntas se adaptam ao seu nível. Toda pontuação online é refeita e verificada no servidor — nada de ranking falso. As compras são só visuais: nada de pagar para ganhar.
+As perguntas se adaptam ao seu nível. O jogo inteiro funciona offline e sem conta. As compras são só visuais: nada de pagar para ganhar.
 
 📚 APRENDA
 Uma área de estudo tranquila, com lições passo a passo de adição, subtração, multiplicação, divisão, frações, porcentagem e mais. Ótimo para quem está na escola ou quer relembrar a matemática básica.

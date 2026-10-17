@@ -113,6 +113,7 @@ export function normalizeData(d, lang = 'ar') {
     time: normalizeChallenge({ ...(ch.time || {}), mode: 'time' }), survival: normalizeChallenge({ ...(ch.survival || {}), mode: 'survival' }),
     custom: normalizeChallenge({ ...(ch.custom || {}), mode: 'custom' }) };
   out.badgeProgress = d.badgeProgress && typeof d.badgeProgress === 'object' ? d.badgeProgress : {};
+  delete out.online;   // هوية الخادم القديمة (أُلغي الأونلاين) — لا نحتفظ بها
   out.v = DATA_VERSION;
   return out;
 }
@@ -204,22 +205,15 @@ function checkBadges(data, round) {
 /* ---------------- المهام اليومية ----------------
    كل مهمة تُحتسب من حدث لعب حقيقي (جولة سُجّلت نتيجتها)، لا من فتح شاشة أو بدء جولة.
    «إكمال» جولة من «تحدّيك الخاص» = انتهت بقاعدتها (الوقت أو المحاولات) بـ٥ إجابات صحيحة على الأقل (core/challenge.js).
-   needs: 'online' ← لا تُعرض إلا إذا كان الأونلاين متاحًا في هذا الإصدار. */
+   «تحدّي صديق» بلا خادم = أرسلت رمز تحدٍّ من جولة أنهيتها، أو أكملت تحدّيًا وصلك برمز، أو أنهيت غرفة على نفس الجوال. */
 export const MISSION_POOL = [
   { id: 'journey1', goal: 1 }, { id: 'correct20', goal: 20 }, { id: 'acc90', goal: 1 }, { id: 'streak8', goal: 1 },
   { id: 'weak10', goal: 10 }, { id: 'daily1', goal: 1 }, { id: 'rounds3', goal: 3 },
   { id: 'time1', goal: 1 }, { id: 'survive1', goal: 1 }, { id: 'custom1', goal: 1 },
-  { id: 'online1', goal: 1, needs: 'online' }, { id: 'friend1', goal: 1 },
+  { id: 'friend1', goal: 1 },
 ];
 export const MISSION_XP = 40;
 export const MISSION_PEARLS = 5;
-/** أنواع المباريات الأونلاين الحقيقية (ضد لاعبين أو على لوحة حقيقية) — مباراة «الشبح» لا تُحتسب */
-export const ONLINE_REAL = new Set(['duel', 'room', 'tournament', 'weekly']);
-
-let FEATURES = { online: false };
-/** يضبطه التطبيق عند الإقلاع: هل الأونلاين متاح في هذا الإصدار؟ */
-export function setFeatures(f) { FEATURES = { ...FEATURES, ...f }; }
-const available = (m) => !m.needs || !!FEATURES[m.needs];
 
 /** العملية الأضعف (الأقل دقة بعينة ≥ ١٠، وإلا الأقل تقديرًا) */
 export function weakestOp(data) {
@@ -236,21 +230,21 @@ const newMission = (data, m) => ({ id: m.id, goal: m.goal, progress: 0, done: fa
 export function ensureMissions(data, date = todayStr(), salt = '') {
   if (data.missions.date === date && data.missions.list.length) return repairMissions(data, date, salt);
   const rng = createRng(`missions:${date}:${salt}`);
-  const pool = rng.shuffle(MISSION_POOL.filter((m) => m.id !== 'daily1' && available(m)));
+  const pool = rng.shuffle(MISSION_POOL.filter((m) => m.id !== 'daily1'));
   const picks = [MISSION_POOL.find((m) => m.id === 'daily1'), pool[0], pool[1]];
   data.missions = { date, list: picks.map((m) => newMission(data, m)) };
   return true;
 }
 /**
- * مهام اليوم من إصدار قديم (معرّفات أُلغيت مثل survive10) أو مهمة غير متاحة الآن (الأونلاين):
+ * مهام اليوم من إصدار قديم (معرّفات أُلغيت مثل survive10 أو online1):
  * تُستبدل بمهمة صالحة. المكتملة تبقى مكتملة (لا تُسحب ولا تُمنح مرة ثانية).
  */
 function repairMissions(data, date, salt) {
-  const valid = (id) => { const m = MISSION_POOL.find((x) => x.id === id); return m && available(m); };
+  const valid = (id) => MISSION_POOL.some((x) => x.id === id);
   if (data.missions.list.every((m) => valid(m.id))) return false;
   const rng = createRng(`missions-fix:${date}:${salt}`);
   const used = new Set(data.missions.list.map((m) => m.id));
-  const spare = rng.shuffle(MISSION_POOL.filter((m) => m.id !== 'daily1' && available(m) && !used.has(m.id)));
+  const spare = rng.shuffle(MISSION_POOL.filter((m) => m.id !== 'daily1' && !used.has(m.id)));
   data.missions.list = data.missions.list.map((m) => {
     if (valid(m.id)) return m;
     const rep = spare.shift(); if (!rep) return null;
@@ -275,8 +269,7 @@ export function missionIncrement(m, round) {
     case 'time1': return custom && round.sub === 'time' && round.completed ? 1 : 0;
     case 'survive1': return custom && round.sub === 'survival' && round.completed ? 1 : 0;
     case 'custom1': return custom && round.sub === 'custom' && round.completed ? 1 : 0;
-    case 'online1': return round.mode === 'online' && ONLINE_REAL.has(round.onlineKind) && round.valid !== false ? 1 : 0;
-    case 'friend1': return round.mode === 'friend' || round.event === 'friendSent' || (round.mode === 'online' && round.onlineKind === 'challenge' && round.valid !== false) ? 1 : 0;
+    case 'friend1': return round.mode === 'friend' || round.event === 'friendSent' || round.event === 'friendAnswered' ? 1 : 0;
     default: return 0;
   }
 }
@@ -306,12 +299,12 @@ export const COSMETICS = {
     { id: 'sky', need: { level: 1 } }, { id: 'mint', need: { level: 2 } }, { id: 'rose', need: { level: 4 } },
     { id: 'violet', need: { level: 6 } }, { id: 'sun', need: { badge: 'world5' } }, { id: 'night', need: { badge: 'daily7' } },
     { id: 'ember', need: { ent: 'skins' } }, { id: 'lime', need: { ent: 'skins' } }, { id: 'glacier', need: { ent: 'skins' } }, { id: 'neon', need: { ent: 'skins' } },
-    { id: 'season', need: { ent: 'season' } },
+    { id: 'season', need: { badge: 'speedx3' } },
   ],
   acc: [
     { id: 'none', need: { level: 1 } }, { id: 'cap', need: { level: 3 } }, { id: 'sparkle', need: { level: 5 } },
     { id: 'phones', need: { level: 7 } }, { id: 'crown', need: { badge: 'world1' } }, { id: 'scarf', need: { badge: 'daily3' } },
-    { id: 'halo', need: { ent: 'skins' } }, { id: 'star', need: { ent: 'season' } },
+    { id: 'halo', need: { ent: 'skins' } }, { id: 'star', need: { badge: 'survive25' } },
   ],
 };
 export function isUnlocked(data, item, cat = 'skin') {
@@ -346,7 +339,7 @@ export function commitRound(data, round, date = todayStr()) {
   st.modes[round.mode] = (st.modes[round.mode] || 0) + 1;
   if ((round.bestStreak || 0) > st.bestStreak) st.bestStreak = round.bestStreak;
   if (st.days[date]) st.days[date].rounds++; else st.days[date] = { q: 0, c: 0, ms: 0, n: 0, rounds: 1 };
-  if (round.mode === 'friend' || (round.mode === 'online' && round.onlineKind === 'challenge')) st.friendMatches++;
+  if (round.mode === 'friend') st.friendMatches++;
 
   // الخبرة
   let xp = (round.correct || 0) * 10;
@@ -403,7 +396,7 @@ export function recordEvent(data, { id, type }, date = todayStr()) {
   data.committed.push(key);
   if (data.committed.length > 200) data.committed.splice(0, data.committed.length - 200);
   ensureMissions(data, date);
-  if (type === 'friendSent') data.stats.friendMatches++;
+  if (type === 'friendSent' || type === 'friendAnswered') data.stats.friendMatches++;
   const missions = progressMissions(data, { id: key, event: type, mode: 'event' }, date);
   const xp = missions.length * MISSION_XP, pearls = missions.length * MISSION_PEARLS;
   data.xp += xp; if (pearls) data.pearls = (data.pearls || 0) + pearls;

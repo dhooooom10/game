@@ -14,11 +14,9 @@ import { PRODUCTS, PEARL_PACKS, PEARL_PRICES, PEARL_SKINS, BOOST_ROUNDS, FREE_PE
 import { pearls, buyShield, buyBoost, buySkin, ownsSkin, freeAdLeft, grantAdPearls, MAX_SHIELDS } from '../core/wallet.js';
 import * as billing from '../net/billing.js';
 import * as ads from '../net/ads.js';
-import { track } from '../net/analytics.js';
 import { PLAY_URL } from '../config.js';
 
 const owns = (ent, id) => {
-  if (id === 'season_pass') return !!ent.season;
   if (PRODUCTS[id].consumable) return false;
   return (PRODUCTS[id].grants || []).every((g) => ent[g]);
 };
@@ -31,7 +29,6 @@ registerScreen('shop', (app) => {
   const wallet = h('section.card.wallet', h('div.w-main', h('span.w-ic', '💎'), h('div.grow', h('div.faint', t('wal.balance')), balance)));
   const box = h('div');
   el.append(wallet, box);
-  track('shop_open');
   const refreshBalance = () => { balance.textContent = num(pearls(data)); replayPop(balance); };
   const replayPop = (n) => { n.classList.remove('pop'); void n.offsetWidth; n.classList.add('pop'); };
 
@@ -100,7 +97,7 @@ registerScreen('shop', (app) => {
     const loading = h('div.loading', h('span.spinner'), t('net.loading'));
     box.append(loading);
     let list;
-    try { [list] = await Promise.all([billing.products(), billing.checkServer()]); }
+    try { list = await billing.products(); }
     catch { loading.replaceWith(h('p.note', t('shop.unavailable'))); return; }
     loading.remove();
     const ent = data.ent || {};
@@ -129,9 +126,8 @@ registerScreen('shop', (app) => {
 
     // الدائمة وتذكرة الموسم
     const sec = h('section.section', h('h2.section-title', '⭐ ', t('shop.permanent')));
-    for (const id of ['pro_bundle', 'remove_ads', 'skins_pack', 'season_pass']) {
+    for (const id of ['pro_bundle', 'remove_ads', 'skins_pack']) {
       const p = P(id); if (!p) continue;
-      if (id === 'season_pass' && !billing.seasonPassAvailable()) continue;
       const owned = owns(ent, id);
       const btn = h('button.btn' + (p.best ? '.gold' : '.primary'), { id: 'buy-' + id, type: 'button', disabled: owned, on: { click: () => buyFlow(id, btn) } }, owned ? t('shop.owned') : p.price);
       sec.append(h('section.card.shop-item' + (p.best ? '.best' : ''),

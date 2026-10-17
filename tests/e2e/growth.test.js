@@ -1,11 +1,10 @@
-/* ميزات الانتشار: مشاركة التحدي اليومي، تحدي صديق من جولة فردية، دعوة التطبيق */
+/* ميزات الانتشار: مشاركة التحدي اليومي، تحدي صديق برمز من جولة فردية، دعوة التطبيق */
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { launch, newPage, waitScreen } from './helpers.js';
-import { startServer } from '../../server/index.js';
+import { startServer, launch, newPage, waitScreen } from './helpers.js';
 
 let S, browser;
-before(async () => { S = await startServer({ registerLimit: 1000 }); browser = await launch(); });
+before(async () => { S = await startServer(); browser = await launch(); });
 after(async () => { await browser.close(); await S.close(); });
 
 async function page() {
@@ -16,7 +15,7 @@ async function page() {
 
 test('daily result: Wordle-style share text with number, grid and link', async () => {
   const p = await page();
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => {
     const answers = [{ correct: true, ms: 900 }, { correct: true, ms: 2600 }, { correct: false, timeout: true }, { correct: true, ms: null }];
@@ -28,17 +27,16 @@ test('daily result: Wordle-style share text with number, grid and link', async (
   const d = (await p.evaluate(() => window.__shared))[0];
   assert.match(d.text, /#[3٣]\n/);
   assert.match(d.text, /🟦🟩🟥🟦/);
-  assert.match(d.url, /[?&]d=2026-10-03/);
-  assert.match(d.url, /ref=share/);
+  assert.match(d.url, /play\.google\.com\/store\/apps\/details\?id=app\.qatra\.game/);
+  assert.match(d.url, /utm_source%3Dshare/);
   assert.deepEqual(p.errors, []);
 });
 
-test('challenge a friend from an offline round; the link opens the same drops for the friend', async () => {
+test('challenge a friend from any round: the code opens the exact same drops for the friend (no server)', async () => {
   const p = await page();
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
-  await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.go('rainPlay', { kind: 'custom', args: { mode: 'time', dur: 30, diff: 'easy' } }); });
-  // نلعب بإدخال الإجابات الصحيحة حتى تنتهي الجولة (أو نُسرّع المحرك)
+  await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.go('rainPlay', { kind: 'custom', seed: 4242, args: { mode: 'time', dur: 30, diff: 'easy' } }); });
   await p.waitForFunction(() => window.__mc.current?.rain?.()?.state?.tick > 0, null, { timeout: 8000 });
   for (let i = 0; i < 80; i++) {
     const done = await p.evaluate(() => {
@@ -54,55 +52,29 @@ test('challenge a friend from an offline round; the link opens the same drops fo
   await p.click('#challengeFriend');
   await p.waitForFunction(() => window.__shared.length > 0, null, { timeout: 8000 });
   const d = (await p.evaluate(() => window.__shared))[0];
-  const id = new URL(d.url).searchParams.get('c');
-  assert.ok(id);
-  // الصديق يفتح الرابط
+  assert.match(d.text, /QC-[A-Za-z0-9_-]+\.[0-9a-z]{3}/);
+  assert.match(d.url, /play\.google\.com/);
+  // الصديق يلصق الرسالة كاملة
   const f = await page();
-  await f.goto(S.url + '/?e2e=1&c=' + id);
-  await waitScreen(f, 'challenge');
-  await f.waitForSelector('text=⚔️');
+  await f.goto(S.url + '?e2e=1');
+  await waitScreen(f, 'home');
+  await f.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.go('friends'); });
+  await f.fill('#codeIn', d.text);
+  await f.click('#openCode');
+  await f.click('#playCode');
+  await waitScreen(f, 'rainPlay');
+  const r = await f.evaluate(() => ({ seed: window.__mc.stack.at(-1).params.seed, cfg: window.__mc.current.rain().cfg }));
+  assert.equal(r.seed, 4242, 'same seed = same drops');
+  const mine = await p.evaluate(async () => { const { challengeConfig } = await import('/src/core/challenge.js'); return challengeConfig({ mode: 'time', dur: 30, diff: 'easy' }); });
+  assert.deepEqual(JSON.parse(JSON.stringify(r.cfg)), JSON.parse(JSON.stringify(mine)), 'same rules');
+  assert.match(await f.textContent('main'), /⚔️/);
   assert.deepEqual(p.errors, []);
   assert.deepEqual(f.errors, []);
 });
 
-test('nations league: country auto-detected, ranking shown, home chip', async () => {
-  const p = await page();
-  await p.goto(S.url + '/?e2e=1');
-  await waitScreen(p, 'home');
-  await p.evaluate(() => window.__mc.go('nations'));
-  await waitScreen(p, 'nations');
-  // البلد يُقترح تلقائيًا من لغة الجهاز (ar-SA) عند إنشاء الهوية
-  await p.waitForSelector('.nat-me');
-  assert.match(await p.locator('.nat-me').innerText(), /السعودية/);
-  await p.evaluate(() => window.__mc.go('home', {}, { root: true }));
-  await p.waitForSelector('#natChip', { timeout: 8000 });
-  assert.deepEqual(p.errors, []);
-});
-
-test('clubs: create, invite link joins a second player, owner sees member', async () => {
-  const owner = await page();
-  await owner.goto(S.url + '/?e2e=1');
-  await waitScreen(owner, 'home');
-  await owner.evaluate(() => window.__mc.go('clubs'));
-  await owner.waitForSelector('#createClub');
-  await owner.fill('main input[maxlength="24"]', 'فصل التحدي');
-  await owner.click('#createClub');
-  await waitScreen(owner, 'club');
-  const code = (await owner.locator('#clubCode').innerText()).trim();
-  const m = await page();
-  await m.goto(S.url + `/?e2e=1&club=${code}`);
-  await waitScreen(m, 'clubJoin');
-  await m.click('#confirmJoin');
-  await waitScreen(m, 'club');
-  await owner.evaluate(() => window.__mc.refresh());
-  await owner.waitForFunction(() => document.querySelectorAll('.lb-row').length === 2, null, { timeout: 8000 });
-  assert.deepEqual(owner.errors, []);
-  assert.deepEqual(m.errors, []);
-});
-
 test('languages: full translations load on demand (Spanish), LTR, no missing-key fallbacks on home', async () => {
   const p = await page();
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => window.__mc.go('settings'));
   await waitScreen(p, 'settings');
@@ -122,7 +94,7 @@ test('languages: full translations load on demand (Spanish), LTR, no missing-key
 
 test('custom challenge: pick ops/speed/accel, play, wrong answer flashes red, speedup shows, record saved', async () => {
   const p = await page();
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; });
   await p.click('#modeCustom');
@@ -152,7 +124,7 @@ test('android back button: navigates inside the game, double press on home to ex
     window.__back = () => cb && cb();
     window.Capacitor = { isNativePlatform: () => true, isPluginAvailable: (n) => n === 'App', registerPlugin: () => appPlugin };
   });
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => window.__mc.go('settings'));
   await waitScreen(p, 'settings');

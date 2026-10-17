@@ -1,16 +1,15 @@
 /* التيربو ⚡ والحمّى 🔥 وخط الشبح و«كدت تكسرها» وشارة السرعة ودروع السلسلة */
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { launch, newPage, waitScreen } from './helpers.js';
-import { startServer } from '../../server/index.js';
+import { startServer, launch, newPage, waitScreen } from './helpers.js';
 
 let S, browser;
-before(async () => { S = await startServer({ registerLimit: 1000 }); browser = await launch(); });
+before(async () => { S = await startServer(); browser = await launch(); });
 after(async () => { await browser.close(); await S.close(); });
 
 test('turbo switch on home applies to the journey: ⚡ label, single-digit numbers, speed chip', async () => {
   const p = await newPage(browser);
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; });
   await p.click('.turbo-row');
@@ -39,7 +38,7 @@ test('turbo switch on home applies to the journey: ⚡ label, single-digit numbe
 
 test('ghost line chases your record live; results show near miss and speed badge', async () => {
   const p = await newPage(browser);
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => {
     const d = window.__mc.data; d.settings.tutorialDone = true; d.prefs.turbo = { on: false };
@@ -74,7 +73,7 @@ test('ghost line chases your record live; results show near miss and speed badge
 
 test('streak shield shows on the daily card and in the daily dialog', async () => {
   const p = await newPage(browser);
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => { const d = window.__mc.data; d.shields = 2; d.daily.last = '2026-01-01'; d.daily.streak = 4; window.__mc.go('home', {}, { root: true }); });
   await p.waitForSelector('.shield-chip');
@@ -83,21 +82,9 @@ test('streak shield shows on the daily card and in the daily dialog', async () =
   assert.deepEqual(p.errors, []);
 });
 
-test('online menu has the turbo arena and its matchmaking screen', async () => {
-  const p = await newPage(browser);
-  await p.goto(S.url + '/?e2e=1');
-  await waitScreen(p, 'home');
-  await p.evaluate(() => window.__mc.go('online'));
-  await p.waitForSelector('#turboBtn', { timeout: 15000 });
-  await p.click('#turboBtn');
-  await waitScreen(p, 'matchmaking');
-  await p.waitForSelector('.turbo-search');
-  assert.deepEqual(p.errors, []);
-});
-
 test('water level rises with every drop that lands; custom setup shows the number range (easy = single digits)', async () => {
   const p = await newPage(browser);
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.go('rainPlay', { kind: 'custom', args: { mode: 'survival', diff: 'easy' } }); });
   await waitScreen(p, 'rainPlay');

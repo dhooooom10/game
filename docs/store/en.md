@@ -21,19 +21,17 @@ Each drop carries a sum. Type the answer and it bursts. Miss one and it splashes
 • Free Practice — choose operations and difficulty, no pressure
 • Friend Battle — two players, one phone
 
-🌍 PLAY THE WORLD
-• Live matches against real players
-• Private rooms with a 6-digit code
-• Tournaments for seasons and special occasions
-• Nations League — every point you score lifts your country in the weekly world ranking
-• Clubs — create a club for your class, team or friends and climb the Club League
-• Challenge a friend with a link: they get exactly the same drops you had
+🤝 PLAY WITH FRIENDS
+• Challenge a friend with a code on WhatsApp: they play exactly the same drops and reply with their result
+• Same-phone room: 2–6 players take turns, racing the ghosts of those before
+• Face to face: two players at once on a split screen
+• Global and friends leaderboards with Google Play Games
 
 🏆 PROGRESS
 Stars, badges, daily missions, Google Play Games achievements and leaderboards, and colourful looks that also colour your drops in game.
 
 🧠 SMART & FAIR
-Questions adapt to your level. Every online score is re-played and verified on the server — no fake leaderboards. Purchases are cosmetic only: no pay-to-win.
+Questions adapt to your level. The whole game works offline with no account. Purchases are cosmetic only: no pay-to-win.
 
 📚 LEARN
 A calm learning section with step-by-step lessons for addition, subtraction, multiplication, division, fractions, percentages and more.

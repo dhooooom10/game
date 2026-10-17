@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRain, stormConfig, survivalConfig } from '../../public/src/core/rain.js';
 import { normalizeChallenge, challengeConfig, challengeRecordKey, migrateRecordKey, evaluateBadges, isCompleted, BADGE_RULES, COMPLETE_MIN_CORRECT } from '../../public/src/core/challenge.js';
-import { newProfileData, normalizeData, commitRound, recordEvent, missionIncrement, setFeatures, ensureMissions } from '../../public/src/core/progression.js';
+import { newProfileData, normalizeData, commitRound, recordEvent, missionIncrement, ensureMissions } from '../../public/src/core/progression.js';
 import { finishRainRun, migrateActiveRun } from '../../public/src/runs.js';
 
 /** لاعب آلي: يجيب عن أدنى قطرة بعد think نبضة؛ يتوقف عن الإجابة بعد stopAfter إصابة */
@@ -23,7 +23,7 @@ function play(cfg, seed, { think = 30, stopAfter = Infinity, wrongEvery = 0, max
   }
   return R.summary();
 }
-const D = (date = '2026-03-01') => { const d = newProfileData('ar'); setFeatures({ online: true }); ensureMissions(d, date); return d; };
+const D = (date = '2026-03-01') => { const d = newProfileData('ar'); ensureMissions(d, date); return d; };
 const setMissions = (d, ids) => { d.missions.list = ids.map((id) => ({ id, goal: id === 'rounds3' ? 3 : 1, progress: 0, done: false, claimed: false })); };
 
 test('normalize: legacy custom fields, conflicting settings and bad values are fixed', () => {
@@ -69,7 +69,6 @@ test('old player data (v2) loads with progress, records, badges and settings pre
     prefs: { time: { dur: 120, diff: 'hard' }, survival: { diff: 'easy' }, custom: { ops: ['mul'], level: 'medium', speed: 'insane', end: 'lives', accel: false } },
     missions: { date: '2026-03-01', list: [{ id: 'daily1', goal: 1, progress: 0, done: false, claimed: false }, { id: 'survive10', goal: 1, progress: 1, done: true, claimed: true }, { id: 'time1', goal: 1, progress: 0, done: false, claimed: false }] },
   };
-  setFeatures({ online: false });
   const d = normalizeData(old, 'ar');
   assert.equal(d.xp, 1234); assert.equal(d.journey.unlocked, 12); assert.equal(d.badges.speed20, '2026-02-01', 'earned badges kept');
   assert.equal(d.records['time:60:medium'].value, 18);
@@ -82,7 +81,7 @@ test('old player data (v2) loads with progress, records, badges and settings pre
   ensureMissions(d, '2026-03-01');
   assert.ok(d.missions.list.every((m) => m.id !== 'survive10'));
   assert.equal(d.missions.list.filter((m) => m.done).length, 1);
-  assert.ok(!d.missions.list.some((m) => m.id === 'online1'), 'online missions hidden when online is unavailable');
+  assert.ok(!d.missions.list.some((m) => m.id === 'online1'), 'no online missions (serverless)');
   // جولة نشطة قديمة: «time» ← custom بإعدادات مطابقة؛ والتيربو القديم لا يُستأنف
   const act = migrateActiveRun({ engine: 'rain', kind: 'time', args: { dur: 30, diff: 'easy' }, seed: 5, log: [], tick: 0 });
   assert.equal(act.kind, 'custom');
@@ -98,13 +97,10 @@ test('missions count only real completed play of the right kind', () => {
   assert.equal(missionIncrement(m('time1'), { ...time, completed: false }), 0, 'not completed (quit/too few)');
   assert.equal(missionIncrement(m('survive1'), { mode: 'custom', sub: 'survival', completed: true }), 1);
   assert.equal(missionIncrement(m('custom1'), { mode: 'custom', sub: 'custom', completed: true }), 1);
-  // تحدّي الصديق والأونلاين لا يُحتسبان «بقاء»
-  for (const k of ['challenge', 'duel', 'room']) assert.equal(missionIncrement(m('survive1'), { mode: 'online', onlineKind: k, valid: true }), 0);
-  assert.equal(missionIncrement(m('friend1'), { mode: 'online', onlineKind: 'challenge', valid: true }), 1);
-  assert.equal(missionIncrement(m('online1'), { mode: 'online', onlineKind: 'challenge', valid: true }), 0);
-  assert.equal(missionIncrement(m('online1'), { mode: 'online', onlineKind: 'ghost', valid: true }), 0, 'ghost is not a real opponent');
-  assert.equal(missionIncrement(m('online1'), { mode: 'online', onlineKind: 'duel', valid: true }), 1);
+  // غرفة الأصدقاء لا تُحتسب «بقاء»؛ وتحدّي الصديق يُحتسب للمهمة
+  assert.equal(missionIncrement(m('survive1'), { mode: 'friend' }), 0);
   assert.equal(missionIncrement(m('friend1'), { mode: 'friend' }), 1);
+  assert.equal(missionIncrement(m('friend1'), { event: 'friendAnswered' }), 1);
 });
 
 test('finishing rounds: completion, missions + pearls once, no duplicate rewards on replayed id', () => {

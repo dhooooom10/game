@@ -1,5 +1,8 @@
 # النشر وGoogle Play — Qatra Challenge
 
+> **تحديث 1.4.0:** اللعبة لم تعد تحتاج خادمًا. ابنِ التطبيق بـ `npm run android` فقط، واتبع [WHAT_YOU_NEED.md](WHAT_YOU_NEED.md).
+> أقسام الخادم أدناه (Docker، Caddy، Google Cloud، لوحة الإدارة) **للرجوع فقط** إن قررت لاحقًا إعادة الأونلاين.
+
 ## الصورة الكاملة
 
 ```
@@ -87,7 +90,7 @@ npm run dev            # http://localhost:8080 ، لوحة الإدارة: http:
 ### البناء
 ```bash
 npm install
-MC_SERVER=https://play.yourdomain.com npm run build:app   # ينسخ public/ إلى build/app-www ويضبط عنوان الخادم
+npm run build:app                                          # ينسخ public/ إلى build/app-www (بلا خادم)
 npx cap sync android
 cd android && ./gradlew bundleRelease                      # ينتج app/build/outputs/bundle/release/app-release.aab
 ```

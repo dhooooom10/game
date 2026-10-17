@@ -1,10 +1,10 @@
 /* =========================================================================
    جسر Google Play Games (يعمل فقط داخل تطبيق Android المبني بـ Capacitor).
    في المتصفح/PWA كل الدوال لا تفعل شيئًا وتعيد false — اللعبة لا تعتمد عليه.
+   يوفّر بلا أي خادم: لوحات صدارة عالمية وبين أصدقاء Play Games، وإنجازات.
    الإضافة الأصلية: android/app/src/main/java/.../PlayGamesPlugin.kt
    ========================================================================= */
 import { PGS } from './playgames-config.js';
-import { api } from './online.js';
 
 let plugin = null, authed = false, syncing = false, timer = 0;
 
@@ -30,24 +30,6 @@ export async function signIn({ interactive = false } = {}) {
     authed = !!r.authenticated;
   } catch { authed = false; }
   return authed;
-}
-
-/**
- * يربط ملف اللاعب الحالي بحساب Play على خادم اللعبة، أو يسترجع حسابًا مربوطًا سابقًا.
- * يحدّث data.online ويعيد true عند النجاح.
- */
-export async function linkAccount(app) {
-  const p = getPlugin();
-  if (!p || !PGS.webClientId || !authed) return false;
-  try {
-    const { authCode } = await p.requestServerSideAccess({ clientId: PGS.webClientId });
-    if (!authCode) return false;
-    const r = await api('POST', '/api/auth/playgames', { authCode });
-    const prev = app.data.online || {};
-    app.data.online = { id: r.id, token: r.token || prev.token, name: r.name, code: r.code, pgs: true };
-    app.save();
-    return !!app.data.online.token;
-  } catch { return false; }
 }
 
 const best = (records, prefix) => Object.entries(records || {}).filter(([k]) => k.startsWith(prefix)).reduce((m, [, v]) => Math.max(m, v.value || 0), 0);
@@ -91,10 +73,9 @@ export async function showAchievements() { const p = getPlugin(); if (p) try { a
 export const hasAchievements = () => Object.values(PGS.achievements).some(Boolean);
 export const hasLeaderboards = () => Object.values(PGS.leaderboards).some(Boolean);
 
-/** عند الإقلاع داخل التطبيق: دخول صامت ثم ربط ثم مزامنة */
+/** عند الإقلاع داخل التطبيق: دخول صامت ثم مزامنة الإنجازات والنتائج (بلا خادم: Google يحفظها) */
 export async function init(app) {
   if (!available()) return;
   if (!(await signIn())) return;
-  if (!app.data.online?.pgs) await linkAccount(app);
   sync(app);
 }

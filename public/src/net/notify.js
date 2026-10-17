@@ -1,9 +1,9 @@
 /* =========================================================================
    التذكيرات على الجهاز (Capacitor Local Notifications — داخل تطبيق Android فقط).
    • تذكير السلسلة: الساعة ٨ مساءً إن لم تلعب التحدي اليومي اليوم.
-   • تحديات الأصدقاء المنتظرة: بعد ٣ ساعات من مغادرة التطبيق إن بقيت تحديات لم تلعبها.
+   • تحديات الأصدقاء المنتظرة: بعد ٣ ساعات من مغادرة التطبيق إن بقيت رموز تحدٍّ فتحتها ولم تلعبها.
    تُعاد جدولتها كل مرة يغادر فيها اللاعب التطبيق، ولا تُرسل شيئًا إن أطفأها من الإعدادات.
-   الإشعارات الفورية من الخادم (Push) تحتاج Firebase — غير مفعّلة بعد (انظر docs/WHAT_YOU_NEED.md).
+   كلها محلية على الجهاز — لا خادم ولا Push.
    ========================================================================= */
 import { isNativeApp } from '../config.js';
 import { dailyStatus, todayStr } from '../core/progression.js';
@@ -40,8 +40,11 @@ export function nextStreakTime(data, now = new Date()) {
   return at;
 }
 
+/** تحديات وصلتك برمز ولم تلعبها بعد */
+export const pendingCodes = (data) => (data?.social?.list || []).filter((c) => c.dir === 'recv' && c.mine == null).length;
+
 /** يعيد جدولة التذكيرات (يُستدعى عند مغادرة التطبيق) */
-export async function reschedule(app, { pendingChallenges = app._pendingChallenges || 0 } = {}) {
+export async function reschedule(app, { pendingChallenges = pendingCodes(app.data) } = {}) {
   const p = getPlugin(); if (!p) return;
   try {
     await p.cancel({ notifications: [{ id: ID_STREAK }, { id: ID_FRIENDS }] });

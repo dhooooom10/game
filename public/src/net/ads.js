@@ -7,7 +7,6 @@
    ========================================================================= */
 import { MONEY, TEST_UNITS } from './monetization-config.js';
 import { isNativeApp } from '../config.js';
-import { track } from './analytics.js';
 
 let plugin = null, ready = false, canRequest = false, privacyRequired = false, initP = null;
 let rewardedLoaded = false, interLoaded = false;
@@ -68,7 +67,6 @@ export async function showRewarded() {
   rewardedLoaded = false;
   try {
     const item = await p.showRewardVideoAd();
-    track('ad_rewarded');
     return !!item;
   } catch { return false; } finally { setTimeout(preload, 1000); }
 }
@@ -88,7 +86,7 @@ export async function maybeInterstitial({ data, kind }) {
   if (roundsSinceInter < c.everyRounds) return false;
   if (Date.now() - lastInterAt < c.minSeconds * 1000) return false;
   interLoaded = false;
-  try { await p.showInterstitial(); roundsSinceInter = 0; lastInterAt = Date.now(); track('ad_interstitial'); return true; }
+  try { await p.showInterstitial(); roundsSinceInter = 0; lastInterAt = Date.now(); return true; }
   catch { return false; } finally { setTimeout(preload, 1000); }
 }
 

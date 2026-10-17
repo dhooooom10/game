@@ -11,13 +11,13 @@ import { randomSeed, createRng } from './core/rng.js';
 import { MAX_SHIELDS, addPearls, applyBoost } from './core/wallet.js';
 import { rainConfig, turbo, speedTier } from './core/rain.js';
 import { journeyRain, evaluateRainJourney, dailyRain } from './core/modes.js';
-import { normalizeChallenge, challengeConfig, challengeRecordKey, isCompleted, evaluateBadges, COMPLETE_MIN_CORRECT } from './core/challenge.js';
+import { normalizeChallenge, challengeConfig, challengeRecordKey, isCompleted, evaluateBadges, COMPLETE_MIN_CORRECT, NATURAL_ENDS } from './core/challenge.js';
 import { t } from './i18n.js';
 
 export const PERSISTED = new Set(['practice', 'lesson']);
-export const RAIN_PERSISTED = new Set(['journey', 'daily', 'custom']);
+export const RAIN_PERSISTED = new Set(['journey', 'daily', 'custom', 'levelDuel']);
 /** التيربو ⚡ للرحلة فقط (لا يُطبَّق على «تحدّيك الخاص» حتى لا تتراكب زيادات السرعة) */
-export const TURBO_KINDS = new Set(['journey']);
+export const TURBO_KINDS = new Set(['journey', 'levelDuel']);
 
 /**
  * جولة محفوظة من إصدار قديم (نمطا «time» و«survival» المستقلان) ← «تحدّيك الخاص» بالخيار نفسه.
@@ -202,6 +202,13 @@ export function buildRainRun(kind, args, data, seed = randomSeed()) {
       meta.label = challengeLabel(a); meta.tint = a.mode === 'time' ? '#FFC94A' : a.mode === 'survival' ? '#FF7BB0' : '#FF9F5A';
       break;
     }
+    case 'levelDuel': {
+      // مرحلة من رمز تحدّي صديق: نفس قطراته، بلا أثر على تقدّم رحلتك
+      const j = journeyRain(args.level);
+      cfg = j.cfg; meta.info = j.info; meta.tint = WORLDS[j.info.world].color;
+      meta.label = t('jr.levelN', { n: args.level });
+      break;
+    }
     case 'daily': {
       const d = dailyRain(args.date); cfg = d.cfg; seed = d.seed;
       meta.realtime = true;
@@ -217,8 +224,11 @@ export function buildRainRun(kind, args, data, seed = randomSeed()) {
   }
   // التيربو ⚡ (اختيار اللاعب): الرحلة فقط
   if (args.turbo && TURBO_KINDS.has(kind)) { cfg = turbo(cfg); meta.turbo = true; meta.label = '⚡ ' + meta.label; }
-  // الرقم الذي تطارده (خط الشبح في أعلى الشاشة)
-  if (kind === 'journey') { const v = data.journey?.best?.[args.level]; if (v) meta.chase = { value: v, by: 'score' }; }
+  // تحدّي صديق برمز: نطارد نتيجته، وبلا فرصة ثانية
+  if (args.answer) {
+    meta.duel = true; meta.label = '⚔️ ' + args.answer.from + ' · ' + meta.label;
+    meta.chase = { value: args.answer.score, by: 'score' };
+  } else if (kind === 'journey') { const v = data.journey?.best?.[args.level]; if (v) meta.chase = { value: v, by: 'score' }; }
   else if (kind === 'custom') { const v = data.records?.[challengeRecordKey(meta.challenge)]?.value; if (v) meta.chase = { value: v, by: 'popped' }; }
   return { cfg, seed, meta, id: `${kind}-${typeof seed === 'string' ? seed : seed.toString(36)}-${Date.now().toString(36)}` };
 }
@@ -261,6 +271,9 @@ export function finishRainRun(kind, args, run, sum, data, date = todayStr()) {
     view.mood = sum.popped >= 15 ? 'cheer' : 'happy';
     if (run.revived) view.notes.push(t('ch.revivedNote'));
     if (!completed) view.notes.push(t('ch.notCompleted', { n: COMPLETE_MIN_CORRECT }));
+  } else if (kind === 'levelDuel') {
+    round = { ...base, completed: NATURAL_ENDS.has(sum.endReason) };
+    view.title = t('jr.levelN', { n: args.level });
   } else if (kind === 'daily') {
     const bonus = accuracyBonus(sum.correct, sum.answered);
     const finalScore = sum.score + bonus;

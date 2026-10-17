@@ -1,17 +1,14 @@
 /* =========================================================================
    مشتريات Google Play — داخل تطبيق Android فقط (الإضافة الأصلية BillingPlugin.java).
-   التدفق: شراء ← الخادم يتحقق من Google ويُقرّ/يستهلك ← نطبّق الصلاحيات محليًا.
-   إن لم يُضبط التحقق على الخادم (501): نُقرّ من الجهاز ونمنح المنتجات الدائمة محليًا،
-   وتبقى تذكرة الموسم معطّلة (تحتاج الخادم).
+   بلا خادم: Google Play نفسه يتحقق من الدفع، والجهاز يُقرّ بالمنتجات الدائمة
+   ويستهلك حزم اللآلئ بعد منحها (وإلا تسترد Google المبلغ تلقائيًا بعد ٣ أيام).
    الاسترجاع: Google Play هو المرجع لملكية المنتجات الدائمة (يعمل بعد إعادة التثبيت).
    ========================================================================= */
 import { PRODUCTS, PRODUCT_IDS, grantsFrom } from '../core/products.js';
 import { grantPurchasePearls } from '../core/wallet.js';
 import { isNativeApp } from '../config.js';
-import { api, ensureIdentity, me } from './online.js';
-import { track } from './analytics.js';
 
-let plugin = null, catalog = null, serverBilling = null;
+let plugin = null, catalog = null;
 
 function getPlugin() {
   if (plugin) return plugin;
@@ -25,7 +22,7 @@ export const available = () => !!getPlugin();
 /** يطبّق الصلاحيات على بيانات اللاعب (دمج: لا نسحب ما مُنح سابقًا إلا عبر الاسترجاع الصريح) */
 export function applyEntitlements(app, ent, { replace = false } = {}) {
   const cur = app.data.ent || {};
-  const next = replace ? { ...ent } : { noAds: cur.noAds || ent.noAds, skins: cur.skins || ent.skins, pro: cur.pro || ent.pro, starter: cur.starter || ent.starter, season: ent.season !== undefined ? ent.season : cur.season || null };
+  const next = replace ? { ...ent } : { noAds: cur.noAds || ent.noAds, skins: cur.skins || ent.skins, pro: cur.pro || ent.pro, starter: cur.starter || ent.starter };
   app.data.ent = next;
   app.save();
   return next;
@@ -41,22 +38,12 @@ export async function products() {
   return catalog;
 }
 
-async function serverVerify(app, productId, token) {
-  await ensureIdentity(app);
-  const r = await api('POST', '/api/purchases/verify', { productId, token });
-  serverBilling = true;
-  return r.entitlements;
-}
-
-/** شراء منتج. يعيد { ok, status, entitlements } */
+/** شراء منتج. يعيد { ok, status, entitlements, pearls } */
 export async function buy(app, productId) {
   const p = getPlugin();
   if (!p) return { ok: false, status: 'unavailable' };
   await products();
-  track('shop_open');
-  let accountId = null;
-  try { await ensureIdentity(app); accountId = me()?.id || null; } catch { /* بلا اتصال: نكمل */ }
-  const r = await p.purchase({ id: productId, accountId });
+  const r = await p.purchase({ id: productId });
   if (r.status === 'owned') return { ok: true, status: 'owned', entitlements: await restore(app) };
   if (r.status !== 'ok') return { ok: false, status: r.status };
   const pur = r.purchase;
@@ -64,34 +51,16 @@ export async function buy(app, productId) {
   return finishPurchase(app, productId, pur);
 }
 
+/** يُنهي الشراء على الجهاز: استهلاك (حزم اللآلئ) أو إقرار (الدائمة)، ثم المنح مرة واحدة لكل رمز */
 async function finishPurchase(app, productId, pur) {
+  const prod = PRODUCTS[productId];
   try {
-    if (!(await checkServer())) throw Object.assign(new Error('billing_disabled'), { code: 'billing_disabled' });
-    const ent = await serverVerify(app, productId, pur.token);
-    track('purchase');
-    const entitlements = applyEntitlements(app, ent);
-    const pearls = grantPurchasePearls(app.data, productId, pur.token); app.save();
-    return { ok: true, status: 'ok', entitlements, pearls };
-  } catch (e) {
-    const prod = PRODUCTS[productId];
-    if (e.code === 'billing_disabled' && !prod.consumable) {
-      // الخادم لا يتحقق بعد: نُقرّ من الجهاز (وإلا تسترد Google المبلغ بعد ٣ أيام)
-      if (!pur.acknowledged) await getPlugin().acknowledge({ token: pur.token }).catch(() => {});
-      track('purchase');
-      const entitlements = applyEntitlements(app, grantsFrom([productId]));
-      const pearls = grantPurchasePearls(app.data, productId, pur.token); app.save();
-      return { ok: true, status: 'ok', entitlements, pearls };
-    }
-    if (e.code === 'billing_disabled' && prod.consumable && prod.pearls) {
-      // حزم اللآلئ قبل تفعيل الخادم: نستهلك من الجهاز ثم نمنح (مرة واحدة لكل رمز)
-      await getPlugin().consume({ token: pur.token });
-      track('purchase');
-      const pearls = grantPurchasePearls(app.data, productId, pur.token); app.save();
-      return { ok: true, status: 'ok', entitlements: app.data.ent || {}, pearls };
-    }
-    // سيُعاد التحقق عند الاسترجاع التالي (Google تحتفظ بالشراء)
-    return { ok: false, status: e.code || 'error' };
-  }
+    if (prod.consumable) await getPlugin().consume({ token: pur.token });
+    else if (!pur.acknowledged) await getPlugin().acknowledge({ token: pur.token });
+  } catch { return { ok: false, status: 'error' }; } // يُعاد عند الاسترجاع التالي (Google تحتفظ بالشراء)
+  const entitlements = prod.consumable ? (app.data.ent || {}) : applyEntitlements(app, grantsFrom([productId]));
+  const pearls = grantPurchasePearls(app.data, productId, pur.token); app.save();
+  return { ok: true, status: 'ok', entitlements, pearls };
 }
 
 /** استرجاع المشتريات (عند الإقلاع وبزر «استرجاع المشتريات») */
@@ -104,25 +73,12 @@ export async function restore(app) {
     if (pur.state !== 'purchased') continue;
     for (const id of pur.products) {
       if (!PRODUCTS[id]) continue;
-      if (PRODUCTS[id].consumable) { await finishPurchase(app, id, pur).catch(() => {}); continue; } // تذكرة لم تُستهلك بعد
+      if (PRODUCTS[id].consumable) { await finishPurchase(app, id, pur).catch(() => {}); continue; } // حزمة لم تُستهلك بعد
       owned.push(id);
       if (!pur.acknowledged) await finishPurchase(app, id, pur).catch(() => {});
       else grantPurchasePearls(app.data, id, pur.token); // لآلئ عرض البداية/الحزمة الكاملة (مرة لكل رمز)
     }
   }
-  // Google Play هو المرجع للمنتجات الدائمة (يلغي ما استُرد مبلغه)؛ التذكرة من الخادم
-  let ent = { ...grantsFrom(owned), season: app.data.ent?.season || null };
-  // تذكرة الموسم من الخادم (إن وُجدت هوية أونلاين)
-  if (app.data.online?.token) {
-    try { const r = await api('GET', '/api/me/entitlements'); serverBilling = r.billing; ent = { ...ent, season: r.entitlements.season }; } catch { /* بلا اتصال */ }
-  }
-  return applyEntitlements(app, ent, { replace: true });
+  // Google Play هو المرجع للمنتجات الدائمة (يلغي ما استُرد مبلغه)
+  return applyEntitlements(app, grantsFrom(owned), { replace: true });
 }
-
-/** تذكرة الموسم تحتاج تحقق الخادم: نعرضها فقط إن أكّد الخادم أنه مفعّل */
-export async function checkServer() {
-  if (serverBilling != null) return serverBilling;
-  try { const c = await api('GET', '/api/config', null, { timeout: 5000 }); serverBilling = !!c.billing; } catch { /* بلا اتصال */ }
-  return !!serverBilling;
-}
-export const seasonPassAvailable = () => serverBilling === true;

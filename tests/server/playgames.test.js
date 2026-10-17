@@ -188,13 +188,12 @@ test('analytics: anonymous daily activity, retention, sources, events whitelist,
   } finally { await s.close(); }
 });
 
-test('purchases: verified with Google (mocked), acknowledged/consumed, idempotent, not reusable, season pass marks leaderboard', async () => {
+test('purchases: verified with Google (mocked), acknowledged/consumed, idempotent, not reusable', async () => {
   const { generateKeyPairSync, createVerify } = await import('node:crypto');
   const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
   const sa = { client_email: 'svc@proj.iam.gserviceaccount.com', private_key: privateKey.export({ type: 'pkcs8', format: 'pem' }) };
   const calls = [];
   const store = { 'tok-ads-0000001': { productId: 'remove_ads', purchaseState: 0, acknowledgementState: 0, consumptionState: 0, orderId: 'GPA.1' },
-    'tok-pass-000001': { productId: 'season_pass', purchaseState: 0, acknowledgementState: 0, consumptionState: 0, orderId: 'GPA.2' },
     'tok-pend-000001': { productId: 'skins_pack', purchaseState: 2 } };
   const fetchImpl = async (url, opts = {}) => {
     const u = String(url); calls.push([opts.method || 'GET', u]);
@@ -217,7 +216,7 @@ test('purchases: verified with Google (mocked), acknowledged/consumed, idempoten
     const a = await s.api('POST', '/api/register', { name: 'مشتري' });
     const b = await s.api('POST', '/api/register', { name: 'آخر' });
     assert.equal((await s.api('GET', '/api/config')).billing, true);
-    let r = await s.api('POST', '/api/purchases/verify', { productId: 'remove_ads', token: 'tok-ads-0000001' }, a.token);
+    const r = await s.api('POST', '/api/purchases/verify', { productId: 'remove_ads', token: 'tok-ads-0000001' }, a.token);
     assert.equal(r.entitlements.noAds, true);
     assert.equal(store['tok-ads-0000001'].acknowledgementState, 1, 'acknowledged on server');
     assert.equal((await s.api('POST', '/api/purchases/verify', { productId: 'remove_ads', token: 'tok-ads-0000001' }, a.token)).entitlements.noAds, true, 'idempotent');
@@ -225,16 +224,8 @@ test('purchases: verified with Google (mocked), acknowledged/consumed, idempoten
     assert.equal((await s.api('POST', '/api/purchases/verify', { productId: 'skins_pack', token: 'tok-pend-000001' }, a.token)).status, 402, 'pending is not granted');
     assert.equal((await s.api('POST', '/api/purchases/verify', { productId: 'skins_pack', token: 'tok-unknown-0001' }, a.token)).status, 400);
     assert.equal((await s.api('POST', '/api/purchases/verify', { productId: 'gems', token: 'tok-ads-0000001' }, a.token)).status, 400);
-    r = await s.api('POST', '/api/purchases/verify', { productId: 'season_pass', token: 'tok-pass-000001' }, a.token);
-    assert.ok(r.entitlements.season);
-    assert.equal(store['tok-pass-000001'].consumptionState, 1, 'season pass consumed');
     const ent = (await s.api('GET', '/api/me/entitlements', null, a.token)).entitlements;
-    assert.deepEqual({ noAds: ent.noAds, skins: ent.skins, season: !!ent.season }, { noAds: true, skins: false, season: true });
-    // علامة التذكرة في لوحة الصدارة
-    const { isoWeek } = await import('../../server/services.js');
-    s.db.run("INSERT INTO runs(id, player_id, kind, seed, cfg, started, submitted, score, valid, week) VALUES ('rx',?,?,?,?,?,?,?,1,?)", a.id, 'weekly', 's', '{}', s.clock.t, s.clock.t, 99, isoWeek(s.clock.t));
-    const lb = await s.api('GET', '/api/leaderboard/weekly');
-    assert.equal(lb.list[0].pass, true);
+    assert.deepEqual({ noAds: ent.noAds, skins: ent.skins }, { noAds: true, skins: false });
   } finally { await s.close(); }
 });
 

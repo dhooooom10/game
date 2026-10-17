@@ -1,11 +1,10 @@
 /* الربح: المتجر وGoogle Play Billing والإعلانات بإضافات أصلية مزيّفة (محاكاة تطبيق Android) */
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { launch, newPage, waitScreen } from './helpers.js';
-import { startServer } from '../../server/index.js';
+import { startServer, launch, newPage, waitScreen } from './helpers.js';
 
 let S, browser;
-before(async () => { S = await startServer({ registerLimit: 1000 }); browser = await launch(); });
+before(async () => { S = await startServer(); browser = await launch(); });
 after(async () => { await browser.close(); await S.close(); });
 
 async function nativePage({ owned = [] } = {}) {
@@ -37,7 +36,7 @@ async function nativePage({ owned = [] } = {}) {
 
 test('web: shop invites to the Android app, no ads', async () => {
   const p = await newPage(browser);
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => window.__mc.go('shop'));
   await waitScreen(p, 'shop');
@@ -47,7 +46,7 @@ test('web: shop invites to the Android app, no ads', async () => {
 
 test('app: buy remove ads + skins (server verification off → device acknowledges), premium skin unlocks, restore', async () => {
   const p = await nativePage();
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => window.__mc.go('shop'));
   await p.waitForSelector('#buy-remove_ads');
@@ -65,7 +64,7 @@ test('app: buy remove ads + skins (server verification off → device acknowledg
   assert.equal(unlocked, true);
   // جهاز جديد: الاسترجاع من Google Play
   const q = await nativePage({ owned: ['pro_bundle'] });
-  await q.goto(S.url + '/?e2e=1');
+  await q.goto(S.url + '?e2e=1');
   await waitScreen(q, 'home');
   await q.waitForFunction(() => window.__mc.data.ent?.pro === true && window.__mc.data.ent?.noAds === true, null, { timeout: 8000 });
   assert.deepEqual(p.errors, []);
@@ -74,7 +73,7 @@ test('app: buy remove ads + skins (server verification off → device acknowledg
 
 test('app: rewarded second chance in survival, double XP, interstitial respects caps and remove-ads', async () => {
   const p = await nativePage();
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.go('rainPlay', { kind: 'custom', args: { mode: 'survival', diff: 'hard' } }); });
   // لا نجيب: تنفد القلوب فيظهر عرض الفرصة الثانية

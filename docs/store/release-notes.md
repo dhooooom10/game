@@ -1,5 +1,23 @@
 # ما الجديد — نص جاهز لحقل «ملاحظات الإصدار» في Google Play
 
+## الإصدار 1.4.0 (رقم البناء 9)
+
+### العربية (ar)
+```
+⚔️ تحدَّ صديقك برمز في واتساب: يلعب نفس قطراتك بالضبط ويرد عليك بنتيجته
+👥 غرفة على نفس الجوال: من 2 إلى 6 لاعبين بالتناوب مع شبح من سبقك
+🏆 لوحات الصدارة والإنجازات عبر Google Play Games
+📴 اللعبة كلها تعمل بلا إنترنت وبلا حساب
+```
+
+### English (en-US)
+```
+⚔️ Challenge a friend with a code on WhatsApp: they play your exact drops and reply with their result
+👥 Same-phone room: 2–6 players take turns, racing the ghosts of those before
+🏆 Leaderboards and achievements with Google Play Games
+📴 The whole game works offline, no account needed
+```
+
 ## الإصدار 1.3.0 (رقم البناء 8)
 
 ### العربية (ar)

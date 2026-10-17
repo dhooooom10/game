@@ -949,3 +949,30 @@ button.badge.goal { font: inherit; color: inherit; cursor: pointer; border: 1px 
 .notif-row .ni { font-size: 1.3rem; }
 .left-box .left-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: .88rem; border-top: 1px solid var(--line); }
 .left-box .left-row:first-of-type { border-top: 0; }
+
+/* ---------- الأصدقاء بلا خادم: رموز التحدي، الغرفة على نفس الجوال ---------- */
+.on-btn { position: relative; }
+.btn-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn-row .grow { flex: 1; min-width: 0; }
+.fr2-actions { display: grid; gap: 8px; margin-top: 12px; }
+.fr2-act { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; text-align: start; cursor: pointer; transition: transform .15s; }
+.fr2-act:active { transform: scale(.98); }
+.fr2-act.gold { border-color: rgba(255, 201, 74, .6); background: linear-gradient(100deg, color-mix(in srgb, #FFC94A 16%, var(--surface)), var(--surface)); }
+.fr2-act .ic { font-size: 1.8rem; }
+.fr2-act b { display: block; font-weight: 900; }
+.fr2-act small { display: block; color: var(--muted); font-size: .8rem; }
+.code-in { min-height: 64px; resize: vertical; font-family: ui-monospace, monospace; font-size: .85rem; }
+.code-card { margin-top: 12px; display: grid; gap: 10px; }
+.code-card .t { font-weight: 900; }
+.code-box { padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--line-strong); background: var(--surface-2); font-family: ui-monospace, monospace; font-size: .8rem; word-break: break-all; user-select: all; }
+.note.bad { color: var(--bad); }
+.duel-card { margin-top: 12px; text-align: center; }
+.duel-card .t { font-weight: 900; font-size: 1.1rem; }
+.duel-card.win { border-color: rgba(61, 220, 151, .6); }
+.duel-card.lose { border-color: rgba(255, 90, 110, .45); }
+.duel-score { font-family: var(--font-display); font-size: 2rem; font-weight: 800; margin-top: 4px; }
+.duel-score b { color: var(--primary); }
+.party-names { display: grid; gap: 8px; }
+.party-name { display: flex; align-items: center; gap: 8px; }
+.party-name .dot, .party-board .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.party-board { display: grid; gap: 6px; margin-top: 12px; }

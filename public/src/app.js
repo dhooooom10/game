@@ -2,15 +2,13 @@
    تطبيق قطرة — الحالة العامة، التنقل بين الشاشات، الحفظ، والنوافذ.
    ========================================================================= */
 import { createBackend, createStore, verifyPass } from './core/storage.js';
-import { ensureMissions, todayStr, levelFromXp, setFeatures } from './core/progression.js';
+import { ensureMissions, todayStr, levelFromXp } from './core/progression.js';
 import { setLocale, t, LANGS, detectLang, isRtl, loadLang, isLoaded } from './i18n.js';
 import { h, clear, icon } from './ui/dom.js';
 import { setLevels, setHaptics, sfx, unlockAudio, startMusic, pauseAll, resumeAll } from './ui/audio.js';
 import { setMotion, toast } from './ui/fx.js';
-import { useIdentity, onlineAvailable } from './net/online.js';
 import * as notify from './net/notify.js';
 import * as pgs from './net/playgames.js';
-import * as analytics from './net/analytics.js';
 
 export const VERSION = '2.0.0';
 
@@ -41,10 +39,8 @@ export const app = {
   },
 
   loadProfile(id) {
-    setFeatures({ online: onlineAvailable() });
     this.pid = id;
     this.data = this.store.load(id);
-    useIdentity(this.data);
     if (ensureMissions(this.data, todayStr(), id)) this.save();
     this.applyLook();
   },
@@ -114,10 +110,10 @@ export const app = {
     clear(this.nav);
     if (!active) { this.nav.hidden = true; return; }
     this.nav.hidden = false;
-    const items = [['home', 'home', 'nav.home'], ['journey', 'map', 'nav.journey'], ['online', 'users', 'nav.online'], ['progress', 'chart', 'nav.progress'], ['locker', 'trophy', 'nav.locker']];
+    const items = [['home', 'home', 'nav.home'], ['journey', 'map', 'nav.journey'], ['friends', 'users', 'nav.friends'], ['progress', 'chart', 'nav.progress'], ['locker', 'trophy', 'nav.locker']];
     const inner = h('div.inner');
     for (const [name, ic, key] of items) {
-      inner.appendChild(h('button' + (name === 'online' ? '.nav-hero' : ''), {
+      inner.appendChild(h('button' + (name === 'friends' ? '.nav-hero' : ''), {
         aria: { current: active === name ? 'page' : null }, 'data-nav': name,
         on: { click: () => { sfx.tap(); if (active !== name || this.stack.length > 1) this.go(name, {}, { root: true }); } },
       }, icon(ic), h('span', t(key))));
@@ -221,9 +217,6 @@ export async function boot() {
     app.go('home', {}, { root: true });
   }
   // إحصاءات مجهولة: يوم نشاط + مصدر الزيارة (يمكن إيقافها من الإعدادات)
-  analytics.configure(app);
-  if (navigator.onLine !== false) analytics.flush();
-  document.addEventListener('visibilitychange', () => { if (document.hidden) analytics.flush(); });
   // تطبيق Android: الإعلانات (بعد الموافقة) واسترجاع المشتريات من Google Play
   import('./net/ads.js').then((m) => m.init()).catch(() => {});
   import('./net/billing.js').then((m) => m.available() && m.restore(app)).catch(() => {});

@@ -12,13 +12,10 @@ import * as ads from '../net/ads.js';
 import { WORLDS, worldOf, DAILY_COUNT } from '../core/modes.js';
 import { createSession } from '../core/session.js';
 import { isNativeApp, PLAY_URL } from '../config.js';
-import { flag, countryName } from '../core/country.js';
-import { track } from '../net/analytics.js';
 import { nextJourneyLevel, buildRun, finishRun, PERSISTED, RAIN_PERSISTED, buildRainRun, finishRainRun, MAX_SHIELDS, migrateActiveRun, challengeLabel } from '../runs.js';
 import { normalizeChallenge, COMPLETE_MIN_CORRECT } from '../core/challenge.js';
 import { replayRain } from '../core/rain.js';
-import { loadConfig, api } from '../net/online.js';
-import { eventCard } from './online.js';
+import { ensureSocial } from '../core/social.js';
 
 registerScreen('home', (app) => {
   const data = app.data;
@@ -34,14 +31,13 @@ registerScreen('home', (app) => {
     h('div.who',
       h('div.name', name ? t('home.hello', { name }) : t('home.helloAnon')),
       h('div.lvl', h('span.lvl-badge', t('home.level', { n: lv.level })), h('div.bar.gold', { role: 'progressbar', aria: { valuenow: Math.round(lv.pct * 100), valuemin: 0, valuemax: 100, label: t('home.xp', { a: lv.into, b: lv.need }) } }, xpFill))),
-    data.online?.token ? h('button.icon-btn.bell', { id: 'homeBell', type: 'button', aria: { label: t('notif.title') }, on: { click: () => { sfx.tap(); app.go('notifications'); } } }, '🔔') : null,
     h('button.pearl-chip', { id: 'homePearls', type: 'button', aria: { label: t('wal.balance') }, on: { click: () => { sfx.tap(); app.go('shop'); } } }, '💎 ', num(data.pearls || 0), h('span.plus', '+')),
     h('button.icon-btn', { aria: { label: t('nav.settings') }, 'data-go': 'settings', on: { click: () => { sfx.tap(); app.go('settings'); } } }, icon('gear'))));
 
   if (!app.store.persistent) el.appendChild(h('p.note.warn', { role: 'alert' }, '⚠️ ' + t('home.storageWarn')));
   // زائر من رابط على جوال Android في المتصفح: دعوة هادئة لتحميل التطبيق (يمكن إخفاؤها)
   if (!isNativeApp() && /Android/i.test(navigator.userAgent) && !localStorage.getItem('mc_hideApp') && data.stats.rounds >= 1) {
-    const bar = h('a.getapp', { href: PLAY_URL, target: '_blank', rel: 'noopener', on: { click: () => track('app_banner') } },
+    const bar = h('a.getapp', { href: PLAY_URL, target: '_blank', rel: 'noopener' },
       h('span.ga-i', '▶'), h('span.ga-t', h('b', t('share.getApp')), h('small', t('share.getAppSub'))),
       h('button.ga-x', { type: 'button', aria: { label: t('common.close') }, on: { click: (e) => { e.preventDefault(); e.stopPropagation(); try { localStorage.setItem('mc_hideApp', '1'); } catch { /* ignore */ } bar.remove(); } } }, '✕'));
     el.appendChild(bar);
@@ -72,23 +68,20 @@ registerScreen('home', (app) => {
       h('div.hs', h('div.v', bestSpeed ? '⚡ ' + speedText(bestSpeed) : '—'), h('div.l', t('home.bestSpeed'))),
       h('div.hs', h('div.v', '🔥 ' + num(ds.streak)), h('div.l', t('home.streak'))))));
 
-  // الأونلاين: قلب التطبيق — مباشرة تحت «العب الآن»
-  const onBtn = (id, emoji, title, sub, fn) => h('button.on-btn', { id, type: 'button', on: { click: () => { sfx.tap(); fn(); } } },
-    h('span.ob-ic', emoji), h('span.ob-t', title), h('span.ob-d', sub));
-  el.appendChild(h('section.online-hero.section', { aria: { label: t('online.title') } },
-    h('div.oh-top', h('span.oh-live', h('i'), t('home.onlineLive')), h('h2', t('online.title')),
-      h('button.link', { id: 'modeOnline', type: 'button', on: { click: () => { sfx.tap(); app.go('online'); } } }, t('home.onlineAll'), ' ›')),
+  // مع الأصدقاء (بلا خادم): تحدٍّ برمز في واتساب، إدخال رمز، غرفة على نفس الجوال
+  const pendingCodes = ensureSocial(data).list.filter((c) => c.dir === 'recv' && c.mine == null).length;
+  const onBtn = (id, emoji, title, sub, fn, badge) => h('button.on-btn', { id, type: 'button', on: { click: () => { sfx.tap(); fn(); } } },
+    h('span.ob-ic', emoji), h('span.ob-t', title), h('span.ob-d', sub), badge ? h('span.badge-count.floating', { id: 'friendsBadge' }, num(badge)) : null);
+  el.appendChild(h('section.online-hero.section', { aria: { label: t('fr2.title') } },
+    h('div.oh-top', h('h2', '👥 ', t('fr2.title')),
+      h('button.link', { id: 'modeFriends', type: 'button', on: { click: () => { sfx.tap(); app.go('friends'); } } }, t('home.friendsAll'), ' ›')),
     h('div.oh-grid',
-      onBtn('homeQuick', '⚔️', t('net.quick'), t('home.quickSub'), () => app.go('matchmaking')),
-      onBtn('homeTurbo', '⚡', t('net.turbo'), t('home.turboSub'), () => app.go('matchmaking', { mode: 'turbo' })),
-      onBtn('homeFriends', '🤝', t('fh.title'), t('home.friendsSub'), () => app.go('friendsHub')))));
+      onBtn('homeChallenge', '⚔️', t('fr2.challenge'), t('home.challengeSub'), () => app.go('friendCompose')),
+      onBtn('homeCode', '📥', t('code.enterShort'), t('home.codeSub'), () => app.go('friends'), pendingCodes),
+      onBtn('homeParty', '👥', t('party.title'), t('home.partySub'), () => app.go('party')))));
 
   // التيربو ⚡: تسارع مرعب بأرقام سهلة — للرحلة
   el.appendChild(h('section.section', turboRow(app)));
-
-  // بطاقات المناسبات والبطولات الجارية (تظهر عند توفر الاتصال فقط)
-  const eventsSlot = h('div.events-slot');
-  el.appendChild(eventsSlot);
 
   function playNow() {
     sfx.tap();
@@ -163,8 +156,7 @@ registerScreen('home', (app) => {
       case 'survive1': return ch('survival');
       case 'custom1': return ch('custom');
       case 'daily1': return openDaily();
-      case 'online1': return app.go('online');
-      case 'friend1': return app.go('friendsHub');
+      case 'friend1': return app.go('friends');
       case 'weak10': return app.go('play', { kind: 'practice', args: { opts: { topics: [m.op || 'add'], level: 'auto', format: 'mixed', timer: false, length: 10 } } });
       case 'acc90': case 'streak8': case 'correct20': return ch('time');
       default: return playNow();
@@ -178,40 +170,13 @@ registerScreen('home', (app) => {
     h('div.mode-grid',
       card('modeJourney', 'map', '#38D6F5', t('mode.journey'), t('mode.journeySub'), `★ ${num(totalStars)}/${num(300)}`, () => app.go('journey'), true),
       card('modeCustom', 'bolt', '#FF9F5A', t('mode.custom'), t('mode.customSub'), null, () => app.go('setupCustom')),
-      card('modeFriend', 'users', '#9B8CFF', t('fh.title'), t('fh.sub'), null, () => app.go('friendsHub')),
+      card('modeFriend', 'users', '#9B8CFF', t('fr2.title'), t('fr2.sub'), null, () => app.go('friends')),
       card('modePractice', 'target', '#3DDC97', t('mode.practice'), t('mode.practiceSub'), null, () => app.go('practice'), true))));
 
   return {
     el, nav: 'home',
     afterMount: () => {
       // استئناف جولة انقطعت (تحديث الصفحة أو إغلاق التطبيق)
-      if (navigator.onLine !== false) {
-        loadConfig().then((c) => {
-          for (const a of c.announcements.slice(0, 1)) eventsSlot.appendChild(h('div.announce', '📢 ', app.settings.lang === 'ar' ? a.text_ar : (a.text_en || a.text_ar)));
-          for (const ev of c.events.slice(0, 2)) eventsSlot.appendChild(eventCard(ev));
-        }).catch(() => {});
-        // ترتيب دولتك هذا الأسبوع (للاعبين الذين دخلوا الأونلاين)
-        if (data.online?.token) api('GET', '/api/nations').then((n) => {
-          if (!n.mine?.country) return;
-          eventsSlot.appendChild(h('button.nat-chip', { id: 'natChip', on: { click: () => { sfx.tap(); app.go('nations'); } } },
-            h('span.nat-f', flag(n.mine.country)), h('span.grow', h('b', countryName(n.mine.country, app.settings.lang)), ' · ',
-              n.mine.rank ? t('nat.rank', { n: num(n.mine.rank) }) : t('nat.noRank')), h('small', t('nat.myPoints', { n: num(n.mine.myPoints) }))));
-        }).catch(() => {});
-      }
-      // تحديات الأصدقاء المنتظرة + مزامنة تقدّم الرحلة
-      if (data.online?.token && navigator.onLine !== false) {
-        import('./friendsHub.js').then((m) => m.syncProgress(app)).catch(() => {});
-        api('GET', '/api/notifications').then((n) => {
-          const b = document.getElementById('homeBell');
-          if (b && n.unread) b.append(h('span.badge-count.floating', { id: 'bellBadge' }, num(n.unread)));
-        }).catch(() => {});
-        api('GET', '/api/inbox').then((ib) => {
-          app._pendingChallenges = ib.pending || 0;   // لتذكير الجهاز عند مغادرة التطبيق
-          if (!ib.pending) return;
-          const b = document.getElementById('homeFriends');
-          if (b) b.append(h('span.badge-count.floating', { id: 'friendsBadge' }, num(ib.pending)));
-        }).catch(() => {});
-      }
       // جولة محفوظة من إصدار قديم (الوقت/البقاء المستقلان) ← «تحدّيك الخاص» بنفس القواعد، أو تُلغى إن تعذّر ذلك
       let active = app.store.loadActive(app.pid);
       const migrated = migrateActiveRun(active);
@@ -224,7 +189,7 @@ registerScreen('home', (app) => {
 
 function offerResume(active) {
   const official = active.kind === 'daily' && active.args?.official;
-  const modeName = active.kind === 'lesson' ? t('mode.lesson') : active.kind === 'custom' ? challengeLabel(normalizeChallenge(active.args)) : t('mode.' + active.kind);
+  const modeName = active.kind === 'lesson' ? t('mode.lesson') : active.kind === 'custom' ? challengeLabel(normalizeChallenge(active.args)) : active.kind === 'levelDuel' ? t('jr.levelN', { n: active.args.level }) : t('mode.' + active.kind);
   app.modal((box, close) => {
     box.append(h('h2', t('game.resumeTitle')), h('p.note', t('game.resumeBody', { mode: modeName })),
       official ? h('p.note', t('game.quitDaily')) : null,

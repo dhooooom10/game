@@ -1,19 +1,18 @@
 /* «تحدّيك الخاص» الموحّد في متصفح حقيقي: الوصول والإكمال للأنماط الثلاثة، المهام والشارات،
    منع التعارض، الاستئناف بعد إعادة التحميل بلا مكافأة مكررة، بيانات لاعب قديم، التيربو والسرعة،
-   الإشعارات داخل التطبيق والرتب. */
+   وتذكيرات الجهاز. */
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { launch, newPage, waitScreen } from './helpers.js';
-import { startServer } from '../../server/index.js';
+import { startServer, launch, newPage, waitScreen } from './helpers.js';
 
 let S, browser;
-before(async () => { S = await startServer({ registerLimit: 1000 }); browser = await launch(); });
+before(async () => { S = await startServer(); browser = await launch(); });
 after(async () => { await browser.close(); await S.close(); });
 
 async function fresh({ clock = false } = {}) {
   const p = await newPage(browser);
   if (clock) await p.clock.install();
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.save(); });
   return p;
@@ -170,25 +169,6 @@ test('an old (v2) player loads with progress kept and lands on the new screens w
   assert.deepEqual(p.errors, []);
 });
 
-test('notifications: a friend challenge shows on the bell and opens the friends hub; rank card in Online', async () => {
-  const A = await fresh(), B = await fresh();
-  for (const P of [A, B]) { await P.evaluate(() => window.__mc.go('friendsHub')); await P.waitForSelector('#myCode'); }
-  await B.fill('.fh-add input', (await A.textContent('#myCode')).trim());
-  await B.click('#addFriend');
-  await B.waitForSelector('[data-challenge]');
-  await A.evaluate(() => window.__mc.go('home', {}, { root: true }));
-  await A.waitForSelector('#bellBadge', { timeout: 8000 });
-  await A.click('#homeBell');
-  await waitScreen(A, 'notifications');
-  await A.waitForSelector('.notif-row[data-kind="friend_added"]');
-  await A.click('.notif-row');
-  await waitScreen(A, 'friendsHub');
-  await A.evaluate(() => window.__mc.go('online'));
-  await A.waitForSelector('#rankCard', { timeout: 10000 });
-  assert.match(await A.textContent('#rankCard'), /تحديد المستوى/);
-  assert.deepEqual([...A.errors, ...B.errors], []);
-});
-
 test('device reminders: scheduled on leaving the app (streak at 8 pm + pending friend challenges), none when turned off', async () => {
   const p = await newPage(browser);
   await p.addInitScript(() => {
@@ -200,10 +180,10 @@ test('device reminders: scheduled on leaving the app (streak at 8 pm + pending f
     const plugins = { LocalNotifications: ln };
     window.Capacitor = { isNativePlatform: () => true, isPluginAvailable: (n) => n in plugins, registerPlugin: (n) => plugins[n] };
   });
-  await p.goto(S.url + '/?e2e=1');
+  await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   const hide = () => p.evaluate(() => { Object.defineProperty(document, 'hidden', { value: true, configurable: true }); document.dispatchEvent(new Event('visibilitychange')); });
-  await p.evaluate(() => { window.__mc._pendingChallenges = 2; window.__mc.data.daily.streak = 4; window.__mc.data.daily.last = new Date().toISOString().slice(0, 10); });
+  await p.evaluate(() => { window.__mc.data.social = { uid: 'me0001', list: [{ id: 'a', dir: 'recv', mine: null }, { id: 'b', dir: 'recv', mine: null }, { id: 'c', dir: 'recv', mine: 5 }] }; window.__mc.data.daily.streak = 4; window.__mc.data.daily.last = new Date().toISOString().slice(0, 10); });
   await hide();
   await p.waitForFunction(() => window.__sched.length > 0);
   const list = await p.evaluate(() => window.__sched[0]);

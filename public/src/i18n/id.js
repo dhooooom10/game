@@ -52,7 +52,7 @@ export default {
   "ch.notCompleted": "Belum lengkap untuk misi: perlu minimal {n} benar",
   "m.survive1": "Selesaikan tantangan bertahan",
   "m.custom1": "Selesaikan tantangan kustom",
-  "m.online1": "Selesaikan pertandingan online",
+
   "m.friend1": "Selesaikan tantangan teman",
   "mr.journey1": "Lulus level perjalanan mana pun",
   "mr.correct20": "Jawaban benarmu hari ini di mode apa pun",
@@ -64,7 +64,7 @@ export default {
   "mr.time1": "Sampai waktu habis, minimal {n} benar",
   "mr.survive1": "Sampai kesempatan habis, minimal {n} benar",
   "mr.custom1": "Pengaturan kustom apa pun, selesai sesuai aturan dengan {n}+ benar",
-  "mr.online1": "Pertandingan cepat, ruang, turnamen, atau mingguan — diverifikasi server (hantu tidak dihitung)",
+
   "mr.friend1": "Kirim tantangan, mainkan yang kamu terima, atau main dengan teman di HP ini",
   "lock.prog.speed20": "Percobaan terbaik: {a}/{n} soal · {acc}% · rata-rata {s} dtk",
   "lock.prog.survive25": "Percobaan terbaik: {a}/{n} benar",
@@ -74,72 +74,42 @@ export default {
   "set.notify": "Pengingat",
   "set.notifySub": "Rentetan harian dan tantangan teman yang tertunda",
   "set.notifyDenied": "Izin ditolak — aktifkan notifikasi di pengaturan HP",
-  "notif.title": "Notifikasi",
-  "notif.empty": "Belum ada notifikasi",
-  "notif.challenge": "{name} menantangmu: kalahkan {n} poin",
-  "notif.resultWon": "{name} memainkan tantanganmu: kamu {a}, dia {b} — kamu menang 🏆",
-  "notif.resultLost": "{name} mengalahkan tantanganmu: kamu {a}, dia {b} — balas!",
-  "notif.resultDraw": "{name} seri denganmu: {a} – {b}",
-  "notif.friendAdded": "{name} menambahkanmu sebagai teman",
+
+
+
+
   "notif.streak": "Rentetan {n} harimu terancam 🔥 Mainkan tantangan hari ini",
   "notif.daily": "Tantangan hari ini menunggumu 💧",
   "notif.friends": "Ada {n} tantangan teman menunggumu ⚔️",
-  "rank.bronze": "Perunggu",
-  "rank.silver": "Perak",
-  "rank.gold": "Emas",
-  "rank.diamond": "Berlian",
-  "rank.legend": "Legenda",
-  "rank.placement": "Pertandingan penempatan",
-  "rank.placementLeft": "{n} pertandingan cepat lagi untuk melihat peringkatmu",
-  "rank.toNext": "{n} poin menuju {r}",
-  "rank.top": "Peringkat tertinggi — pertahankan",
-  "rank.how": "Peringkat dari rating pertandingan cepat musim ini (hantu tidak dihitung)",
-  "rank.change.up": "Kamu naik ke {r}!",
-  "rank.change.down": "Kamu turun ke {r} — kembali lebih kuat",
-  "rank.seasonEnd": "{s} telah berakhir",
-  "rank.finalRank": "Peringkat akhirmu: {r}",
-  "rank.claim": "Klaim +{n} 💎",
-  "rank.claimed": "Kamu dapat {n} mutiara 💎",
-  "rank.alreadyClaimed": "Kamu sudah mengklaim hadiah ini",
+
+
+
+
+
+
+
+
+
   "home.bestSpeed": "Kecepatan tertinggi",
-  "home.onlineLive": "LANGSUNG",
-  "home.onlineAll": "Semua online",
-  "home.quickSub": "Lawan nyata",
-  "home.turboSub": "Super cepat",
-  "home.friendsSub": "Tantang teman",
-  "fh.title": "Tantangan teman",
-  "fh.sub": "Temanmu dan tantangan kalian",
-  "fh.levelN": "Level {n}",
-  "fh.customLabel": "Kustom",
-  "fh.sendCode": "Kirim kodeku",
-  "fh.added": "Teman ditambahkan 🤝",
-  "fh.inbox": "Tantangan untukmu",
-  "fh.fromX": "{name} menantangmu",
-  "fh.beat": "kalahkan {n} poin",
-  "fh.play": "Main",
-  "fh.empty": "Belum ada teman. Kirim kodemu atau ketik kode temanmu di atas.",
-  "fh.h2h": "Kamu {w} – {l}",
-  "fh.challenge": "Tantang",
-  "fh.race": "Balapan perjalanan antar teman",
-  "fh.sent": "Tantangan terkirim",
-  "fh.toX": "Untuk {name}",
-  "fh.yourScore": "skormu {n}",
-  "fh.waiting": "Menunggu",
-  "fh.local": "Main bersama teman di HP ini",
-  "fh.res.win": "Menang",
-  "fh.res.lose": "Kalah",
-  "fh.res.draw": "Seri",
-  "fh.newTitle": "Tantang {name}",
-  "fh.newSub": "Pilih jenis tantangan",
-  "fh.tabCustom": "Kustom",
-  "fh.tabLevel": "Level",
-  "fh.howCustom": "Mainkan rondemu dulu; lalu {name} mendapat tetesan yang sama dan mencoba mengalahkanmu.",
-  "fh.playSend": "Main dan kirim",
-  "fh.pickLevel": "Pilih level yang sudah kamu capai",
-  "fh.howLevel": "Kamu main level {n}, lalu {name} dengan tetesan sama — poin terbanyak menang.",
-  "fh.sending": "Mengirim tantangan ke {name}…",
-  "fh.sent1": "Tantangan terkirim ke {name} — harus melewati {n}",
-  "fh.sendFail": "Belum bisa dikirim — periksa koneksi dan coba lagi",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   "wal.earned": "mutiara didapat",
   "wal.boosted": "XP ganda +{n}",
   "wal.balance": "Mutiaramu",
@@ -193,8 +163,7 @@ export default {
   "res.speedTier.4": "Kecepatan berlian",
   "res.speedBest": "Kecepatan tertinggimu sepanjang masa!",
   "res.speedPrev": "Kecepatan terbaikmu: {x}",
-  "net.turbo": "Arena turbo",
-  "net.turboSub": "Duel dengan percepatan gila dan angka mudah — siapa yang bertahan?",
+
   "badge.fever": "Demam",
   "badge.feverD": "Masuk mode demam dengan 10 jawaban benar beruntun",
   "badge.gift": "Kejutan",
@@ -694,158 +663,85 @@ export default {
   'jrr.boss': 'Bos: {n} tetesan dengan tetesan spesial',
   'jrr.rule.hearts': 'Bintang = sisa nyawa (★★★ jika tidak ada tetesan yang jatuh)',
   'jrr.rule.sprint': 'Bintang berdasarkan sisa waktu: ★★★ 35% · ★★ 15%',
-  'net.err.offline': 'Tidak bisa terhubung ke server saat ini.',
-  'net.err.generic': 'Terjadi kesalahan, coba lagi.',
-  'net.err.unauthorized': 'Sesi berakhir, coba lagi.',
-  'net.err.banned': 'Akun ini ditangguhkan.',
-  'net.err.rate_limited': 'Terlalu banyak permintaan, tunggu sebentar.',
-  'net.err.name_length': 'Nama harus 2–16 karakter.',
-  'net.err.name_chars': 'Gunakan huruf dan angka saja.',
-  'net.err.name_blocked': 'Nama itu tidak diizinkan.',
-  'net.err.code_not_found': 'Tidak ada pemain dengan kode itu.',
-  'net.err.self': 'Itu kodemu sendiri!',
-  'net.err.too_many': 'Batas teman tercapai.',
-  'net.err.room_not_found': 'Tidak ada ruang dengan kode itu.',
-  'net.err.room_full': 'Ruangnya sudah penuh.',
-  'net.err.room_busy': 'Ada pertandingan berjalan di ruang itu, tunggu sampai selesai.',
-  'net.err.need_players': 'Kamu butuh minimal dua pemain.',
-  'net.err.not_active': 'Turnamen sedang tidak berlangsung.',
-  'net.err.no_attempts': 'Semua percobaanmu sudah terpakai.',
-  'net.err.not_found': 'Tidak ditemukan atau sudah kedaluwarsa.',
-  'net.err.already_submitted': 'Sudah dikirim.',
-  'net.err.timeout': 'Waktu habis.',
-  'net.err.run_not_found': 'Permainan tidak ditemukan.',
-  'net.dur.dh': '{d}h {h}j',
-  'net.dur.hm': '{h}j {m}m',
-  'net.dur.m': '{m} mnt',
-  'net.offlineTitle': 'Gagal terhubung',
-  'net.offlineHint': 'Main solo dan belajar bisa offline; mode online butuh koneksi.',
-  'net.retry': 'Coba lagi',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   'net.loading': 'Menghubungkan…',
-  'net.emotes': 'Reaksi',
-  'net.season': 'Musim',
-  'net.rating': 'Rating',
-  'net.myCode': 'Kode pertemananmu:',
-  'net.rename': 'Nama online-mu',
-  'net.nameRules': '2–16 karakter, tanpa simbol atau kata kasar.',
-  'net.quick': 'Main cepat',
-  'net.quickSub': 'Lawan sungguhan selevel denganmu — tetesan sama untuk keduanya',
-  'net.rooms': 'Ruang teman',
-  'net.roomsSub': 'Ruang berkode hingga 8 pemain',
-  'net.tournaments': 'Turnamen',
-  'net.tournamentsSub': 'Event musiman dan hari raya',
-  'net.weekly': 'Badai mingguan',
-  'net.weeklySub': 'Satu menit untuk puncak klasemen minggu ini',
-  'net.leaderboards': 'Papan peringkat',
-  'net.leaderboardsSub': 'Hasil asli dan terverifikasi',
-  'net.friends': 'Teman',
-  'net.friendsSub': 'Tambahkan lewat kode dan bertanding',
-  'net.myRewards': 'Hadiahku',
-  'net.rank': 'Peringkat {n}',
-  'net.safety': 'Mode online aman untuk anak: tanpa chat teks, hanya reaksi bawaan. Setiap skor dihitung ulang oleh server agar tetap adil.',
-  'net.endsIn': 'Berakhir dalam {d}',
-  'net.startsIn': 'Dimulai dalam {d}',
-  'net.live': 'Langsung',
-  'net.soon': 'Segera',
-  'net.ended': 'Selesai',
-  'net.searching': 'Mencari lawan selevel denganmu…',
-  'net.ghostNote': 'Jika tidak ada yang tersedia dalam beberapa detik, kamu akan berpacu melawan “bayangan”: rekaman permainan asli pemain lain.',
-  'net.noPlayers': 'Belum ada pemain yang tersedia — coba lagi sebentar lagi.',
-  'net.roomMatch': 'Pertandingan ruang',
-  'net.vsGhost': 'vs bayangan {name}',
-  'net.roomCode': 'Kode ruang',
-  'net.createRoom': 'Buat ruang',
-  'net.createRoomSub': 'Kamu dapat kode 6 digit untuk dibagikan ke teman.',
-  'net.joinRoom': 'Gabung dengan kode',
-  'net.codeLen': 'Kodenya 6 digit',
-  'net.join': 'Gabung',
-  'net.room': 'Ruang',
-  'net.shareCode': 'Bagikan kode ini',
-  'net.share': 'Bagikan',
-  'net.roomInvite': 'Gabung ke ruangku di Qatra Challenge! Kode: {code}',
-  'net.players': 'Pemain',
-  'net.you': 'kamu',
-  'net.teamRed': 'Tim merah',
-  'net.teamBlue': 'Tim biru',
-  'net.roomMode': 'Mode ruang',
-  'net.race': 'Balapan',
-  'net.teams': 'Tim',
-  'net.specials': 'Tetesan spesial',
-  'net.startRoom': 'Mulai pertandingan',
-  'net.needTwo': 'Kamu butuh minimal dua pemain',
-  'net.waitHost': 'Menunggu host memulai…',
-  'net.copied': 'Tautan disalin',
-  'net.noTournaments': 'Belum ada turnamen saat ini',
-  'net.noTournamentsSub': 'Turnamen diumumkan saat musim dan momen spesial — nantikan ya!',
-  'net.tournament': 'Turnamen',
-  'net.rules': 'Aturan',
-  'net.stormSecs': 'Badai {n} detik',
-  'net.attempts': 'Percobaan',
-  'net.attemptsLeft': 'Sisa {n} dari {m}',
-  'net.unlimited': 'Tak terbatas',
-  'net.sameStorm': 'Tetesan sama untuk semua',
-  'net.yesSame': 'Ya',
-  'net.noSame': 'Tidak — kesulitan setara',
-  'net.prize': 'Hadiah',
-  'net.topN': 'untuk {n} teratas',
-  'net.myBest': 'Terbaikmu',
-  'net.playTournament': 'Main sekarang',
-  'net.tLeaderboard': 'Klasemen turnamen',
-  'net.lbEmpty': 'Belum ada hasil — jadilah yang pertama!',
-  'net.lbReal': 'Hanya hasil asli',
-  'net.lb.weekly': 'Minggu',
-  'net.lb.season': 'Musim',
-  'net.lb.daily': 'Hari ini',
-  'net.lb.friends': 'Teman',
-  'net.lb.alltime': 'Sepanjang masa',
-  'net.lbDesc.weekly': 'Skor badai mingguan terbaik (direset setiap minggu).',
-  'net.lbDesc.season': 'Rating main cepat untuk musim ini.',
-  'net.lbDesc.daily': 'Hasil resmi tantangan harian hari ini.',
-  'net.lbDesc.friends': 'Kamu dan teman-temanmu di badai mingguan.',
-  'net.lbDesc.alltime': 'Skor terverifikasi tertinggi sepanjang masa.',
-  'net.friendCode': 'Kode teman',
-  'net.addMe': 'Tambahkan aku di Qatra Challenge! Kodeku: {code}',
-  'net.addFriend': 'Tambah teman',
-  'net.add': 'Tambah',
-  'net.noFriends': 'Belum punya teman — bagikan kodemu!',
-  'net.onlineNow': 'Sedang online',
-  'net.weeklyBest': 'Terbaik minggu ini: {n}',
-  'net.noWeekly': 'Belum main minggu ini',
-  'net.removeFriend': 'Hapus teman?',
-  'net.challenge': 'Tantang',
-  'net.challengeFrom': 'Tantangan dari {name}',
-  'net.challengeBeat': 'Kalahkan {n} poin di badai yang sama!',
-  'net.challengeNote': 'Kamu akan memainkan tetesan yang persis sama dengan temanmu.',
-  'net.acceptChallenge': 'Terima tantangan',
-  'net.takers': 'Yang menerima',
-  'net.playAgain': 'Main lagi',
-  'net.backToRoom': 'Kembali ke ruang',
-  'net.makeChallenge': 'Tantang teman dengan badai ini',
-  'net.challengeShare': 'Skorku {n} di Qatra Challenge — bisa kalahkan aku?',
-  'net.popped': 'Dipecahkan',
-  'net.missed': 'Jatuh',
-  'net.waitingResults': 'Menunggu hasil…',
-  'net.waitingOthers': 'Menunggu pemain lain selesai.',
-  'net.teamWon': 'Timmu menang!',
-  'net.teamLost': 'Tim lawan menang',
-  'net.youWon': 'Kamu menang! 🏆',
-  'net.rankN': 'Peringkat {n}',
-  'net.invalid': 'Permainan ini tidak masuk peringkat (waktu atau kecepatan tidak wajar).',
-  'net.standings': 'Klasemen',
-  'net.dnf': 'tidak selesai',
-  'net.checking': 'Memeriksa skormu…',
-  'net.scoreSaved': 'Skor tersimpan!',
-  'net.beatChallenge': 'Kamu mengalahkan {name}!',
-  'net.lostChallenge': 'Kamu belum mengalahkan {name} kali ini',
-  'net.yourRank': 'Peringkatmu: {n}',
-  'net.notSaved': 'Skor tidak tersimpan',
-  'nav.online': 'Online',
-  'home.eventJoin': 'Ikut sekarang',
-  'net.privacy': 'Kebijakan privasi',
-  'net.deleteAccount': 'Hapus akun online-ku',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   'shop.title': 'Toko',
   'shop.sub': 'Dukung game ini dan dapatkan tampilan premium',
-  'shop.previewTitle': 'Tampilan toko — juga mewarnai tetesanmu di dalam game',
+
   'shop.appOnly': 'Toko ada di aplikasi Android',
   'shop.appOnlyBody': 'Pembelian tersedia lewat Google Play di aplikasi Android. Game lengkapnya juga gratis di sini.',
   'shop.unavailable': 'Tidak bisa terhubung ke Google Play saat ini. Coba lagi nanti.',
@@ -858,16 +754,14 @@ export default {
   'shop.restored': 'Pembelianmu sudah dipulihkan',
   'shop.fair': 'Semua pembelian hanya kosmetik atau kemudahan: tidak ada keuntungan di pertandingan, turnamen, atau papan peringkat.',
   'shop.needShop': 'Dari toko',
-  'shop.needSeason': 'Season Pass',
-  'shop.passHolder': 'Pemilik Season Pass',
+
   'shop.p.pro_bundle': 'Paket Lengkap',
   'shop.p.pro_bundleD': 'Tanpa iklan interstisial + semua tampilan toko (4 warna dan lingkaran cahaya) — sekali bayar, selamanya.',
   'shop.p.remove_ads': 'Hapus Iklan',
   'shop.p.remove_adsD': 'Tanpa iklan di antara ronde, selamanya. Iklan berhadiah tetap opsional.',
   'shop.p.skins_pack': 'Paket Warna Hujan',
   'shop.p.skins_packD': 'Bara, Limau, Gletser, Neon + Lingkaran cahaya — mewarnai karakter dan tetesanmu di dalam game.',
-  'shop.p.season_pass': 'Season Pass',
-  'shop.p.season_passD': 'Warna Emas Musim, Bintang Musim, dan ✦ di samping namamu di papan peringkat selama musim ini.',
+
   'ads.reviveTitle': 'Kesempatan kedua?',
   'ads.reviveBody': 'Tonton iklan singkat dan lanjutkan dengan satu nyawa tambahan — tetesan di dekat tanah dibersihkan.',
   'ads.reviveYes': 'Tonton & lanjut',
@@ -875,82 +769,121 @@ export default {
   'ads.doubleXp': 'XP ganda (+{n})',
   'ads.doubled': 'Digandakan: +{n} XP',
   'ads.privacy': 'Opsi privasi iklan',
-  'club.title': 'Klub',
-  'club.sub': 'Grupmu sendiri: kelas, tim, teman, atau keluarga',
-  'club.mine': 'Klubku',
-  'club.none': 'Kamu belum masuk klub. Buat klub atau gabung dengan kode.',
-  'club.members': '{n} anggota',
-  'club.name': 'Nama klub',
-  'club.namePh': 'mis. Kelas 3B atau Juara Kantor',
-  'club.create': 'Buat klub',
-  'club.createHint': 'Kamu akan dapat kode 6 karakter untuk dibagikan ke anggota.',
-  'club.createBtn': 'Buat',
-  'club.code': 'Kode klub',
-  'club.join': 'Gabung dengan kode',
-  'club.joinBtn': 'Gabung',
-  'club.joinTitle': 'Kamu diundang ke sebuah klub',
-  'club.privacy': 'Saat bergabung, pemilik klub bisa melihat nama, poin, jumlah ronde, akurasi, dan waktu aktif terakhirmu. Kamu bisa keluar kapan saja.',
-  'club.league': 'Liga Klub',
-  'club.leagueHow': 'Poin klub = jumlah poin 30 anggota teratasnya minggu ini (klub dengan 3+ anggota).',
-  'club.leagueEmpty': 'Belum ada poin klub minggu ini.',
-  'club.weekPts': '{n} poin minggu ini',
-  'club.invite': 'Gabung ke klubku “{name}” di Qatra Challenge 💧 Kode: {code}',
-  'club.inviteBtn': 'Undang anggota',
-  'club.ownerNote': 'Kamu pemiliknya: kamu bisa melihat aktivitas tiap anggota minggu ini dan mengeluarkan anggota.',
-  'club.week': 'Peringkat minggu ini',
-  'club.stats': '{runs} ronde · akurasi {acc}% · aktif {days} hari',
-  'club.today': 'hari ini',
-  'club.daysAgo': '{n} hari lalu',
-  'club.remove': 'Keluarkan anggota',
-  'club.play': 'Main untuk klubmu',
-  'club.delete': 'Hapus klub',
-  'club.leave': 'Keluar dari klub',
-  'net.err.club_not_found': 'Tidak ada klub dengan kode ini',
-  'net.err.club_full': 'Klub ini sudah penuh',
-  'net.err.too_many_clubs': 'Kamu sudah mencapai batas klub',
-  'net.err.not_member': 'Kamu bukan anggota klub ini',
-  'net.err.owner_only': 'Khusus pemilik',
-  'nat.title': 'Liga Negara',
-  'nat.sub': 'Main untuk mengangkat negaramu di peringkat dunia',
-  'nat.pick': 'Pilih negaramu',
-  'nat.pickNote': 'Disarankan dari pengaturan perangkatmu (tanpa lokasi). Poinmu minggu ini dihitung untuk negaramu.',
-  'nat.join': 'Gabung liga',
-  'nat.myCountry': 'Negaraku',
-  'nat.rank': '#{n} minggu ini',
-  'nat.noRank': 'Belum ada poin minggu ini',
-  'nat.myPoints': 'Kontribusimu: {n}',
-  'nat.myRank': '#{n} di negaramu',
-  'nat.how': 'Setiap hari, skor online terbaikmu dihitung (mingguan, pertandingan, turnamen, harian). Poin negara = jumlah poin 100 pemain teratasnya. Direset setiap minggu.',
-  'nat.play': 'Main sekarang untuk negaramu',
-  'nat.board': 'Peringkat negara',
-  'nat.empty': 'Belum ada poin minggu ini — jadilah yang pertama!',
-  'nat.players': '{n} pemain',
-  'nat.change': 'Ganti negara',
-  'nat.changeNote': 'Kamu bisa ganti negara sekali setiap 7 hari.',
-  'nat.locked': 'Kamu baru saja ganti — coba lagi dalam 7 hari.',
-  'net.err.bad_country': 'Negara tidak valid',
-  'net.err.country_locked': 'Kamu baru saja ganti — coba lagi dalam 7 hari.',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   'share.title': 'Bagikan',
-  'set.analytics': 'Statistik penggunaan anonim',
-  'set.analyticsSub': 'Membantu kami memperbaiki game: hanya hari aktif dan jumlah ronde — tanpa nama atau akun.',
-  'share.reshare': 'Bagikan tantangan ini',
+
+
   'share.daily': 'Bagikan hasilmu',
   'share.dailyTitle': 'Qatra Challenge 💧 Harian #{n}',
   'share.dailyLine': '{drops} tetesan · akurasi {acc}% · {score} poin',
   'share.challenge': 'Tantang teman dengan tetesan yang sama',
   'share.challengeHot': 'Tantang teman: bisakah dia mengalahkan {n}?',
-  'share.challengeText': 'Skorku {n} di Qatra Challenge 💧 Bisa kalahkan aku dengan tetesan yang sama?',
+
   'share.copied': 'Disalin — tempel di chat mana saja',
   'share.failed': 'Gagal membagikan',
   'share.getApp': 'Unduh aplikasinya di Google Play',
   'share.getAppSub': 'Main lebih lancar, ada pencapaian, kemajuan tersimpan',
-  'net.pgsAch': 'Pencapaian Google Play',
-  'net.pgsLb': 'Papan peringkat Google Play',
-  'net.pgsLinked': 'Terhubung ke Google Play Games — kemajuanmu tersimpan di perangkat mana pun.',
-  'net.deleteTitle': 'Hapus akun online?',
-  'net.deleteBody': 'Nama, skor, teman, dan hadiahmu akan dihapus permanen dari server. Kemajuan lokalmu tetap ada di perangkat ini.',
-  'net.deleted': 'Akun online-mu sudah dihapus',
-  'online.title': 'Online',
-  'online.sub': 'Pertandingan langsung · ruang · turnamen · papan peringkat',
-  'online.quitBody': 'Skormu saat ini dihitung dan pertandinganmu berakhir.',
+
+
+
+
+
+  "nav.friends": "Teman",
+  "fr2.title": "Teman",
+  "fr2.sub": "Tantangan kode · ruang satu ponsel",
+  "fr2.challenge": "Tantang teman",
+  "fr2.challengeSub": "Main, lalu kirim kodemu — tetesannya sama persis",
+  "fr2.face": "Tatap muka",
+  "fr2.faceSub": "Dua pemain sekaligus di layar terbagi",
+  "fr2.record": "Rekormu dengan teman",
+  "fr2.empty": "Tantang teman atau masukkan kode untuk memulai rekormu.",
+  "fr2.wld": "M {w} · K {l} · S {d}",
+  "fr2.composeSub": "Pilih tantangan, lalu mainkan dulu",
+  "fr2.tabCustom": "Kustom",
+  "fr2.tabLevel": "Level",
+  "fr2.how": "Kamu main dulu, lalu dapat kode agar temanmu memainkan tetesan yang sama persis.",
+  "fr2.playFirst": "Main & kirim",
+  "fr2.pickLevel": "Pilih level yang terbuka",
+  "code.howTo": "Buka Qatra Challenge → Teman → Masukkan kode",
+  "code.share": "Bagikan kode",
+  "code.copy": "Salin",
+  "code.enter": "Masukkan kode yang kamu terima",
+  "code.enterShort": "Masukkan kode",
+  "code.enterSub": "Tempel seluruh pesan temanmu atau kodenya saja (diawali QC atau QR).",
+  "code.paste": "Tempel",
+  "code.pasteFail": "Gagal menempel — tempel kodenya secara manual",
+  "code.open": "Buka kode",
+  "code.bad": "Kode tidak valid atau tidak lengkap. Pastikan kamu menyalin semuanya.",
+  "code.own": "Itu tantanganmu sendiri — kirim ke teman!",
+  "code.fromX": "Tantangan dari {name}",
+  "code.beat": "Kalahkan {n} poin",
+  "code.play": "Main",
+  "code.again": "Lagi",
+  "code.unknown": "Kode hasil ini untuk tantangan yang tidak dikirim dari profil ini.",
+  "code.res.win": "Kamu mengalahkan {name}!",
+  "code.res.lose": "{name} mengalahkanmu!",
+  "code.res.draw": "Seri dengan {name}",
+  "code.vs.win": "Kamu mengalahkan {name}!",
+  "code.vs.lose": "{name} menang kali ini",
+  "code.vs.draw": "Seri dengan {name}",
+  "code.received": "Tantangan diterima",
+  "code.sent": "Tantangan terkirim",
+  "code.yourScore": "Skormu {n}",
+  "code.waiting": "Menunggu kode hasil temanmu",
+  "code.inviteText": "⚔️ Aku menantangmu di Qatra Challenge! Skorku {n} di {label}. Bisa kalahkan aku dengan tetesan yang sama?",
+  "code.yourCode": "Kode tantanganmu",
+  "code.afterShare": "Setelah temanmu main, ia mengirim kode hasil — masukkan di Teman untuk melihat siapa yang menang.",
+  "code.sendBack": "Kirim hasilmu ke {name}",
+  "code.resultText": "🏁 Aku sudah main tantanganmu, {name}, skorku {n}! Masukkan kode ini untuk melihat siapa yang menang:",
+  "pgs.title": "Google Play Games",
+  "pgs.sub": "Papan peringkat global dan teman, plus pencapaian.",
+  "pgs.lb": "Papan peringkat",
+  "pgs.ach": "Pencapaian",
+  "party.title": "Ruang satu ponsel",
+  "party.sub": "2–6 pemain bergiliran",
+  "party.pN": "Pemain {n}",
+  "party.remove": "Hapus pemain",
+  "party.add": "Tambah pemain",
+  "party.players": "Pemain",
+  "party.rules": "Aturan ronde",
+  "party.how": "Setiap pemain main gilirannya dengan tetesan yang sama dan melihat bayangan pemain sebelumnya. Skor tertinggi menang.",
+  "party.prev": "{name} mencetak {n}",
+  "party.turnN": "Giliran {a} dari {b}",
+  "party.endTitle": "Akhiri ruang?",
+  "party.endBody": "Hasil ronde ini akan hilang.",
+  "party.end": "Akhiri ruang",
+  "party.tiebreak": "Poin sama? Tetesan terbanyak menang.",
+  "party.again": "Ronde baru",
+  "party.quitBody": "Giliranmu berakhir dengan skor saat ini.",
+  "home.friendsAll": "Semua",
+  "home.challengeSub": "Tetesan sama, satu kode",
+  "home.codeSub": "Tantangan atau hasil",
+  "home.partySub": "2–6 pemain",
 };

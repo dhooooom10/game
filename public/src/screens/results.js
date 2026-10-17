@@ -6,14 +6,15 @@ import { sfx, buzz } from '../ui/audio.js';
 import { countUp, confetti, reducedMotion } from '../ui/fx.js';
 import { t } from '../i18n.js';
 import { levelFromXp, xpForLevel, BADGES, recordEvent } from '../core/progression.js';
+import { addSent, setMyAnswer, makeResultCode, ensureSocial, outcome } from '../core/social.js';
+import { codeCard, codeLabel } from './friends.js';
 import { TOTAL_LEVELS, WORLDS, worldOf } from '../core/modes.js';
 import { findPath } from '../core/curriculum.js';
 import { dailyShareText, shareText, shareUrl } from '../ui/share.js';
 import { toast } from '../ui/fx.js';
-import { track } from '../net/analytics.js';
 import * as ads from '../net/ads.js';
 import { speedText } from './rain.js';
-import { BADGE_RULES } from '../core/challenge.js';
+import { BADGE_RULES, NATURAL_ENDS } from '../core/challenge.js';
 
 registerScreen('results', (app, { view }) => {
   const data = app.data;
@@ -133,37 +134,47 @@ registerScreen('results', (app, { view }) => {
     el.appendChild(tipCard);
   }
 
-  // تحدٍّ لصديق من القائمة: نرسل الجولة تلقائيًا (الخادم يعيد تشغيلها) ونعرض الحالة
-  const sendTo = view.args?.sendTo;
-  if (sendTo) {
-    const st = h('section.card.send-card', { id: 'sendStatus' }, h('span.spinner'), ' ', t('fh.sending', { name: sendTo.name }));
-    el.appendChild(st);
-    const meta = view.kind === 'journey' ? { kind: 'level', level: view.args.level } : { kind: 'custom', label: [view.args.ops?.map((o) => t('op.' + o)).join(' '), t('diff.' + view.args.level), t('cus.speed.' + view.args.speed)].filter(Boolean).join(' · ') };
-    (async () => {
-      try {
-        if (!view.replay) throw Object.assign(new Error('x'), { code: 'run_invalid' });
-        const net = await import('../net/online.js');
-        await net.ensureIdentity(app);
-        const r = await net.api('POST', `/api/friends/${sendTo.id}/challenge`, { ...view.replay, meta });
-        track('share_challenge');
-        // مهمة «أكمل تحدّي صديق»: بعد قبول الخادم فقط، ومرة واحدة لكل تحدٍّ
-        const ev = recordEvent(data, { id: 'fc:' + r.id, type: 'friendSent' });
-        app.save();
-        if (ev.missions?.length) st.after(h('div.gift-list', ...ev.missions.map((m) => h('span.chip.ok', '✅ ', t('m.' + m.id, { g: m.goal, op: '' }))), h('span.chip.gold', '\u2066+' + num(ev.pearls) + ' 💎\u2069')));
-        clear(st).append('✅ ', t('fh.sent1', { name: sendTo.name, n: num(r.score) }));
-        st.classList.add('ok');
-      } catch (e) {
-        clear(st).append('⚠️ ', t('fh.sendFail'));
-        st.classList.add('bad');
-      }
-    })();
+  // تحدّي الأصدقاء بالرموز (بلا خادم)
+  const answer = view.args?.answer;
+  const codeKind = view.kind === 'custom' ? 'custom' : view.kind === 'journey' ? 'level' : null;
+  const codeArgs = codeKind === 'custom' ? view.challenge : codeKind === 'level' ? { level: view.args.level, turbo: !!view.args.turbo } : null;
+  const canChallenge = !answer && codeKind && view.seed != null && !view.revived && sum.score > 0;
+  const missionChips = (ev) => (ev.missions?.length ? h('div.gift-list', ...ev.missions.map((m) => h('span.chip.ok', '✅ ', t('m.' + m.id, { g: m.goal, op: '' }))), ev.pearls ? h('span.chip.gold', '\u2066+' + num(ev.pearls) + ' 💎\u2069') : null) : null);
+  let codeSlot = null;
+  /** يحوّل هذه الجولة إلى رمز تحدٍّ: صديقك يلعب نفس القطرات ويحاول تجاوز نتيجتك */
+  function challengeCard() {
+    const { challenge, code } = addSent(data, { runId: view.seed, name: app.playerName, kind: codeKind, args: codeArgs, seed: view.seed, score: sum.score, popped: sum.popped });
+    // مهمة «تحدَّ صديقًا»: مرة واحدة لكل تحدٍّ
+    const ev = recordEvent(data, { id: 'fs:' + challenge.id, type: 'friendSent' });
+    app.save();
+    const label = codeLabel(codeKind, codeArgs);
+    return h('div', codeCard({ id: 'challengeCode', title: '⚔️ ' + t('code.yourCode'), text: t('code.inviteText', { n: num(sum.score), label }), code }),
+      h('p.note', t('code.afterShare')), missionChips(ev));
+  }
+  if (answer) {
+    // لعبت تحدّي صديق: من فاز؟ + رمز نتيجتك لترسله له
+    const done = NATURAL_ENDS.has(sum.endReason);
+    const c = setMyAnswer(data, answer.id, { score: sum.score, popped: sum.popped }) || { mine: sum.score, minePopped: sum.popped };
+    const o = outcome(sum.score, answer.score);
+    const ev = done ? recordEvent(data, { id: 'fa:' + answer.id, type: 'friendAnswered' }) : { missions: [] };
+    app.save();
+    const code = makeResultCode({ uid: ensureSocial(data).uid, name: app.playerName, id: answer.id, score: c.mine, popped: c.minePopped });
+    el.appendChild(h('section.card.duel-card.' + o, { id: 'duelResult', 'data-outcome': o },
+      h('div.t', o === 'win' ? '🏆 ' : o === 'lose' ? '💧 ' : '🤝 ', t('code.vs.' + o, { name: answer.from })),
+      h('div.duel-score', h('b', num(sum.score)), ' – ', h('span', num(answer.score)))));
+    el.appendChild(codeCard({ id: 'resultCode', title: '📤 ' + t('code.sendBack', { name: answer.from }), text: t('code.resultText', { n: num(c.mine), name: answer.from }), code }));
+    const mc = missionChips(ev); if (mc) el.appendChild(mc);
+    if (o === 'win') view.celebrate = true;
+  } else if (canChallenge && view.args?.makeCode) {
+    codeSlot = challengeCard();
+    el.appendChild(codeSlot);
   }
 
   // الأزرار: إعادة اللعب مباشرة دائمًا متاحة
   const btns = h('div.stack', { style: { marginTop: '18px' } });
   const replayBtn = (label, primary = true) => h('button.btn.block.lg' + (primary ? '.primary' : ''), { id: 'replayBtn', on: { click: () => {
     sfx.tap();
-    if (view.engine === 'rain') { const { sendTo: _s, ...args } = view.args || {}; return app.go('rainPlay', { kind: view.kind, args: view.kind === 'daily' ? { ...args, official: false } : args }, { replace: true }); }
+    if (view.engine === 'rain') { const { makeCode: _m, ...args } = view.args || {}; return app.go('rainPlay', { kind: view.kind, args: view.kind === 'daily' ? { ...args, official: false } : args, seed: args.answer ? view.seed : undefined }, { replace: true }); }
     app.go('play', { kind: view.kind, args: view.kind === 'daily' ? { ...view.args, official: false } : view.args }, { replace: true });
   } } }, icon('refresh'), label);
   if (view.kind === 'journey') {
@@ -181,26 +192,20 @@ registerScreen('results', (app, { view }) => {
   } else if (view.kind === 'daily') {
     btns.append(h('button.btn.block.lg.primary', { id: 'shareDaily', on: { click: () => {
       sfx.tap();
-      track('share_daily');
       shareText(dailyShareText({ date: view.args.date, score: view.score, sum }), shareUrl({ d: view.args.date }));
     } } }, icon('upload'), t('share.daily')), replayBtn(t('daily.practice'), false));
   } else {
     btns.append(replayBtn(t('res.retry')));
   }
-  // تحدَّ صديقًا: يحوّل هذه الجولة نفسها إلى رابط يلعبه صديقك بنفس القطرات
-  if (view.replay && view.score > 0) {
+  // تحدَّ صديقًا: يحوّل هذه الجولة نفسها إلى رمز يلعبه صديقك بنفس القطرات
+  if (canChallenge && !codeSlot) {
     const good = view.celebrate || view.record || view.firstRecord || view.passed;
-    const chBtn = h('button.btn.block' + (good ? '.challenge-hot' : ''), { id: 'challengeFriend', on: { click: async () => {
-      sfx.tap(); chBtn.disabled = true;
-      try {
-        const net = await import('../net/online.js');
-        await net.ensureIdentity(app);
-        const r = await net.api('POST', '/api/challenges/local', view.replay);
-        track('share_challenge');
-        await shareText(t('share.challengeText', { n: num(r.score) }), shareUrl({ c: r.id }));
-      } catch (e) { toast(e?.code === 'offline' ? t('net.offlineTitle') : t('share.failed')); }
-      chBtn.disabled = false;
-    } } }, '⚔️ ', good ? t('share.challengeHot', { n: num(view.score) }) : t('share.challenge'));
+    const chBtn = h('button.btn.block' + (good ? '.challenge-hot' : ''), { id: 'challengeFriend', on: { click: () => {
+      sfx.tap();
+      codeSlot = challengeCard();
+      chBtn.replaceWith(codeSlot);
+      codeSlot.querySelector('[data-share]')?.click();
+    } } }, '⚔️ ', good ? t('share.challengeHot', { n: num(sum.score) }) : t('share.challenge'));
     btns.insertBefore(chBtn, btns.children[1] || null);
   }
   btns.append(h('button.btn.block.ghost', { on: { click: () => { sfx.tap(); app.go('home', {}, { root: true }); } } }, icon('home'), t('res.home')));
@@ -211,7 +216,6 @@ registerScreen('results', (app, { view }) => {
     // عند مغادرة النتائج (التالي/إعادة/الرئيسية): إعلان بيني فقط إن سمحت حدود التكرار
     destroy: () => { ads.maybeInterstitial({ data, kind: view.kind }); },
     afterMount: () => {
-      track('round');
       countUp(scoreEl, view.score, { fmt: num, ms: 1000 });
       if (view.celebrate || (rw && (rw.levelAfter > rw.levelBefore || rw.badges.length))) {
         setTimeout(() => { sfx.fanfare(); buzz([20, 60, 20]); confetti(); }, reducedMotion() ? 0 : 300);
