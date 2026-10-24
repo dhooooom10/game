@@ -51,7 +51,6 @@ test('time challenge: reachable from home in two taps, completes at time-out, co
   assert.equal(d.missions.list.find((m) => m.id === 'survive1').done, false);
   assert.equal(d.missions.list.find((m) => m.id === 'custom1').done, false);
   assert.match(await p.locator('main').innerText(), /انتهى الوقت/);
-  await p.waitForSelector('#progressLeft', { timeout: 3000 }); // التقدّم المتبقي (البقاء والتخصيص لم يكتملا)
   assert.deepEqual(p.errors, []);
 });
 
@@ -59,6 +58,7 @@ test('survival from the mission row: preselected, ends when tries run out; under
   const p = await fresh({ clock: true });
   await setMissions(p, ['survive1']);
   await p.evaluate(() => window.__mc.go('home', {}, { root: true }));
+  await p.click('#missionsRow');
   await p.click('[data-mission="survive1"]');
   await waitScreen(p, 'setupCustom');
   await p.waitForSelector('#ch-survival.on');
@@ -157,10 +157,11 @@ test('an old (v2) player loads with progress kept and lands on the new screens w
   assert.equal(d.records['time:60:medium'].value, 22);
   assert.ok(d.records['legacy:survival:medium:turbo']);
   assert.equal(d.prefs.challenge.time.dur, 120);
-  await p.click('#nav [data-nav="progress"]');
+  await p.click('#homeProgress');
   await waitScreen(p, 'progress');
   assert.match(await p.locator('main').innerText(), /٢٢|22/);
-  await p.click('#nav [data-nav="locker"]');
+  await p.evaluate(() => window.__mc.go('home', {}, { root: true }));
+  await p.click('.profile-bar .avatar');
   await waitScreen(p, 'locker');
   await p.click('[data-badge="speed20"]');
   await waitScreen(p, 'setupCustom');

@@ -54,9 +54,11 @@ test('app: buy remove ads + skins (server verification off → device acknowledg
   assert.equal(await p.locator('#buy-season_pass').count(), 0, 'season pass hidden without server billing');
   await p.click('#buy-remove_ads');
   await p.waitForFunction(() => window.__mc.data.ent?.noAds === true);
+  await p.click('#buyOkClose');
   await p.waitForSelector('#buy-remove_ads[disabled]');
   await p.click('#buy-skins_pack');
   await p.waitForFunction(() => window.__mc.data.ent?.skins === true);
+  await p.click('#buyOkClose');
   const calls = await p.evaluate(() => window.__calls.filter((c) => c[0] === 'ack').length);
   assert.equal(calls, 2, 'each non-consumable acknowledged');
   // المظهر المميز صار متاحًا في الخزانة

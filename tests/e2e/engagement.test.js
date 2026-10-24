@@ -7,20 +7,20 @@ let S, browser;
 before(async () => { S = await startServer(); browser = await launch(); });
 after(async () => { await browser.close(); await S.close(); });
 
-test('turbo switch on home applies to the journey: ⚡ label, single-digit numbers, speed chip', async () => {
+test('level 1 is lively from the start: fast drops with easy sums; difficulty then grows through the equations', async () => {
   const p = await newPage(browser);
   await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; });
-  await p.click('.turbo-row');
-  assert.equal(await p.evaluate(() => window.__mc.data.prefs.turbo.on), true);
-  assert.equal(await p.getAttribute('.turbo-row', 'data-on'), 'true');
+  assert.equal(await p.locator('.turbo-row').count(), 0, 'no turbo switch any more');
   await p.click('#playNow');
   await waitScreen(p, 'rainPlay');
   const cfg = await p.evaluate(() => window.__mc.current.rain().cfg);
-  assert.equal(cfg.turbo, true); assert.ok(cfg.accel >= 0.14);
-  assert.ok(Object.values(cfg.tiers).every((t) => t <= 2));
-  await p.waitForSelector('.hud-sub .label:has-text("⚡")');
+  assert.ok(cfg.travel <= 7.5, 'drops fall fast from level 1'); assert.ok(cfg.accel >= 0.05);
+  assert.ok(Object.values(cfg.tiers).every((t) => t <= 2), 'with easy numbers');
+  const later = await p.evaluate(async () => { const m = await import('/src/core/modes.js'); const a = m.journeyRain(1).cfg, b = m.journeyRain(60).cfg; return { a: Math.max(...Object.values(a.tiers)), b: Math.max(...Object.values(b.tiers)), ops: Object.keys(b.tiers).length, ta: a.travel, tb: b.travel }; });
+  assert.ok(later.b > later.a && later.ops >= 3, 'harder equations later');
+  assert.ok(later.ta - later.tb < 1.6, 'speed grows only a little');
   await p.waitForSelector('.speed-chip:not([hidden])');
   // نقفز في المحرك: الحمّى عبر ١٠ إصابات متتالية، ثم التسارع
   const ev = await p.evaluate(() => {
@@ -71,12 +71,11 @@ test('ghost line chases your record live; results show near miss and speed badge
   assert.deepEqual(p.errors, []);
 });
 
-test('streak shield shows on the daily card and in the daily dialog', async () => {
+test('streak shield shows in the daily dialog', async () => {
   const p = await newPage(browser);
   await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => { const d = window.__mc.data; d.shields = 2; d.daily.last = '2026-01-01'; d.daily.streak = 4; window.__mc.go('home', {}, { root: true }); });
-  await p.waitForSelector('.shield-chip');
   await p.click('#dailyCard');
   await p.waitForSelector('.shield-box');
   assert.deepEqual(p.errors, []);

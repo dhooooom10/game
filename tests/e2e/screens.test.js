@@ -20,7 +20,7 @@ test('every screen renders without errors and without horizontal overflow at 320
     await waitScreen(page, name);
     assert.ok(await noHorizontalOverflow(page), `overflow on ${name}`);
     // كل زر ظاهر له اسم مقروء
-    const unnamed = await page.evaluate(() => [...document.querySelectorAll('#app button, #nav button')].filter((b) => b.offsetParent && !(b.innerText.trim() || b.getAttribute('aria-label'))).length);
+    const unnamed = await page.evaluate(() => [...document.querySelectorAll('#app button, #nav button')].filter((b) => b.offsetParent && !b.closest('details:not([open])') && !(b.innerText.trim() || b.getAttribute('aria-label'))).length);
     assert.equal(unnamed, 0, `unnamed buttons on ${name}`);
   }
   for (const kind of [['journey', { level: 57 }], ['custom', { mode: 'time', dur: 60, diff: 'hard' }], ['custom', { mode: 'survival', diff: 'hard' }], ['custom', { mode: 'custom', ops: ['mul', 'div'], level: 'expert', speed: 'insane', dur: 0, lives: 3 }]]) {
@@ -41,12 +41,10 @@ test('every screen renders without errors and without horizontal overflow at 320
 test('bottom navigation tabs and settings work; language switch to English flips direction', async () => {
   const page = await newPage(browser);
   await page.goto(URL_);
-  for (const [nav, name] of [['journey', 'journey'], ['progress', 'progress'], ['locker', 'locker'], ['home', 'home']]) {
+  for (const [nav, name] of [['journey', 'journey'], ['friends', 'friends'], ['shop', 'shop'], ['home', 'home'], ['settings', 'settings']]) {
     await page.click(`#nav [data-nav="${nav}"]`);
     await waitScreen(page, name);
   }
-  await page.click('[data-go="settings"]');
-  await waitScreen(page, 'settings');
   await page.selectOption('select', 'en');
   await page.waitForFunction(() => document.documentElement.dir === 'ltr');
   assert.match(await page.locator('h1').innerText(), /Settings/);
@@ -58,14 +56,13 @@ test('bottom navigation tabs and settings work; language switch to English flips
 test('progress page: clear empty state, then real metrics after playing', async () => {
   const page = await newPage(browser);
   await page.goto(URL_);
-  await page.click('#nav [data-nav="progress"]');
+  await page.click('#homeProgress');
   await waitScreen(page, 'progress');
   assert.match(await page.locator('main').innerText(), /لا توجد بيانات بعد/);
   await page.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.save(); });
   await go(page, 'play', { kind: 'practice', args: { opts: { topics: ['add', 'mul'], level: 3, format: 'mixed', timer: false, length: 10 } } });
   await playRound(page, (i) => i % 4 !== 0);
   await waitScreen(page, 'results');
-  await page.click('#nav [data-nav="progress"]').catch(() => go(page, 'progress'));
   await go(page, 'progress');
   await waitScreen(page, 'progress');
   const txt = await page.locator('main').innerText();

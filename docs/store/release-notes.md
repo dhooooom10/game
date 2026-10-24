@@ -1,5 +1,23 @@
 # ما الجديد — نص جاهز لحقل «ملاحظات الإصدار» في Google Play
 
+## الإصدار 1.5.0 (رقم البناء 13)
+
+### العربية (ar)
+```
+✨ تصميم أبسط: «العب الآن» في الواجهة وخيارات أقل في كل صفحة
+⚡ حماس من المرحلة الأولى: قطرات أسرع بأرقام سهلة، والصعوبة تكبر بالمعادلات
+🧭 شريط سفلي جديد: الرئيسية · الرحلة · الأصدقاء · المتجر · الإعدادات
+🛍️ متجر أوضح وشراء آمن مع رسالة نجاح فورية
+```
+
+### English (en-US)
+```
+✨ Simpler design: Play front and center, fewer options on every page
+⚡ Exciting from level 1: faster drops with easy numbers; difficulty grows through the equations
+🧭 New bottom bar: Home · Journey · Friends · Shop · Settings
+🛍️ Clearer shop, safer purchases with an instant success message
+```
+
 ## الإصدار 1.4.3 (رقم البناء 12)
 
 ### العربية (ar)

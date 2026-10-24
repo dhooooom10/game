@@ -10,7 +10,7 @@ export const PGS = {
     first: '', streak10: '', streak25: '', correct100: '', correct1000: '', perfect: '',
     speed20: '', survive25: '', daily3: '', daily7: '', world1: '', world5: '', world10: '',
     allstars: '', allround: '', friend: '', scholar: '', rain: '',
-    fever: '', gift: '', speedx2: '', speedx3: '', turbo: '',
+    fever: '', gift: '', speedx2: '', speedx3: '',
   },
 
   // لوحات الصدارة في Play Games (العالمية وبين الأصدقاء — بلا خادم خاص)

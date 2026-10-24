@@ -147,6 +147,8 @@ registerScreen('setupCustom', (app, params = {}) => {
       } } }, icon('play'), t('ch.start', { m: t('ch.' + mode) })));
   }
   paintTiles(); paint();
+  // التدريب الحر والدروس (هادئة، بلا إعلانات) — رابط واحد صغير بدل بطاقة في الرئيسية
+  el.append(h('button.btn.ghost.block', { id: 'openPractice', type: 'button', style: { marginTop: '14px' }, on: { click: () => { sfx.tap(); app.go('practice'); } } }, '📚 ', t('mode.practice')));
   return { el };
 });
 

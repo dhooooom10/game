@@ -10,7 +10,7 @@ import { setMotion, toast } from './ui/fx.js';
 import * as notify from './net/notify.js';
 import * as pgs from './net/playgames.js';
 
-export const VERSION = '1.4.1';
+export const VERSION = '1.5.0';
 
 /* ---------------- سجل الأخطاء (على الجهاز فقط) ----------------
    آخر الأخطاء تُحفظ محليًا ليتمكن اللاعب من نسخها وإرسالها من الإعدادات. لا يُرسل شيء تلقائيًا. */
@@ -137,7 +137,7 @@ export const app = {
     clear(this.nav);
     if (!active) { this.nav.hidden = true; return; }
     this.nav.hidden = false;
-    const items = [['home', 'home', 'nav.home'], ['journey', 'map', 'nav.journey'], ['friends', 'users', 'nav.friends'], ['progress', 'chart', 'nav.progress'], ['locker', 'trophy', 'nav.locker']];
+    const items = [['home', 'home', 'nav.home'], ['journey', 'map', 'nav.journey'], ['friends', 'users', 'nav.friends'], ['shop', 'bag', 'nav.shop'], ['settings', 'gear', 'nav.settings']];
     const inner = h('div.inner');
     for (const [name, ic, key] of items) {
       inner.appendChild(h('button' + (name === 'friends' ? '.nav-hero' : ''), {

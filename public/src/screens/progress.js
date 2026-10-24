@@ -21,7 +21,7 @@ registerScreen('progress', (app) => {
       h('button.btn.primary', { on: { click: () => { sfx.tap(); app.go('home', {}, { root: true }); setTimeout(() => document.getElementById('playNow')?.click(), 50); } } }, icon('play'), t('home.play'))));
     if (data.legacy && data.legacy.games) el.appendChild(h('p.note', t('prog.legacy', { g: num(data.legacy.games), p: num(data.legacy.popped) })));
     el.appendChild(howBox());
-    return { el, nav: 'progress' };
+    return { el, nav: 'home' };
   }
 
   // المؤشرات الرئيسية
@@ -76,7 +76,7 @@ registerScreen('progress', (app) => {
 
   if (data.legacy && data.legacy.games) el.appendChild(h('p.note', t('prog.legacy', { g: num(data.legacy.games), p: num(data.legacy.popped) })));
   el.appendChild(howBox());
-  return { el, nav: 'progress' };
+  return { el, nav: 'home' };
 });
 
 const kpi = (v, l) => h('div.stat', h('div.v', v), h('div.l', l));

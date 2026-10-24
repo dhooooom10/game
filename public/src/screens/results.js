@@ -8,13 +8,13 @@ import { t } from '../i18n.js';
 import { levelFromXp, xpForLevel, BADGES, recordEvent } from '../core/progression.js';
 import { addSent, setMyAnswer, makeResultCode, ensureSocial, outcome } from '../core/social.js';
 import { codeCard, codeLabel } from './friends.js';
-import { TOTAL_LEVELS, WORLDS, worldOf } from '../core/modes.js';
+import { TOTAL_LEVELS } from '../core/modes.js';
 import { findPath } from '../core/curriculum.js';
 import { dailyShareText, shareText, shareUrl } from '../ui/share.js';
 import { toast } from '../ui/fx.js';
 import * as ads from '../net/ads.js';
 import { speedText } from './rain.js';
-import { BADGE_RULES, NATURAL_ENDS } from '../core/challenge.js';
+import { NATURAL_ENDS } from '../core/challenge.js';
 
 registerScreen('results', (app, { view }) => {
   const data = app.data;
@@ -62,11 +62,10 @@ registerScreen('results', (app, { view }) => {
   const stats = [
     [num(Math.round(sum.accuracy * 100)) + (app.settings.digits === 'arabic' ? '٪' : '%'), t('res.accuracy')],
     [t('res.of', { a: num(sum.correct), b: num(sum.answered + sum.skipped) }), t('res.correct')],
-    [fmtSec(sum.avgMs), t('res.avgTime')],
     [num(sum.bestStreak), t('res.bestStreak')],
   ];
   if (view.kind === 'journey' && view.info?.kind === 'sprint' && sum.timeLeftMs != null) stats[2] = [fmtSec(sum.timeLeftMs), t('res.timeLeft')];
-  el.appendChild(h('div.stat-grid.four', ...stats.map(([v, l]) => h('div.stat', h('div.v', v), h('div.l', l)))));
+  el.appendChild(h('div.stat-grid.three', ...stats.map(([v, l]) => h('div.stat', h('div.v', v), h('div.l', l)))));
 
   // المكافآت والخبرة
   const rw = view.rewards;
@@ -108,24 +107,9 @@ registerScreen('results', (app, { view }) => {
     }
   }
 
-  // التقدّم المتبقي: مهام اليوم غير المكتملة، والبرق/الصامد إن كانت الجولة مؤهلة
-  {
-    const left = (data.missions.list || []).filter((m) => !m.done);
-    const be = rw?.applied ? view.badgeEval : null;
-    const rows = [];
-    for (const m of left) rows.push(h('div.left-row', h('span', '🎯'), h('span.grow', t('m.' + m.id, { g: m.goal, op: m.op ? t('op.' + m.op) : '' })), h('b', `${num(m.progress)}/${num(m.goal)}`)));
-    if (be) for (const id of ['speed20', 'survive25']) {
-      if (data.badges[id] || !be[id]?.eligible) continue;
-      const p = be[id].progress, R = BADGE_RULES[id];
-      rows.push(h('div.left-row', h('span', id === 'speed20' ? '⚡' : '🛡️'), h('span.grow', t('badge.' + id), ' — ', id === 'speed20'
-        ? t('lock.prog.speed20', { a: num(p.answered), n: num(R.minAnswered), acc: num(Math.round(p.acc * 100)), s: num(((p.avgMs || 0) / 1000).toFixed(1)) })
-        : t('lock.prog.survive25', { a: num(p.correct), n: num(R.minCorrect) }))));
-    }
-    if (rows.length) el.appendChild(h('section.card.section.left-box', { id: 'progressLeft' }, h('h2.section-title', t('res.leftTitle')), ...rows));
-  }
-
   // نصيحة التحسّن
-  if (view.tip && view.kind !== 'tutorial') {
+  // نصيحة فقط عند الإخفاق (لا نُثقل شاشة الفوز)
+  if (view.tip && view.kind !== 'tutorial' && view.passed === false) {
     const tipText = t(view.tip.key, { op: view.tip.op ? t('op.' + view.tip.op) : '' });
     const tipCard = h('section.card.tip', { style: { marginTop: '14px' } }, h('span.ti', icon('sparkle')), h('div', h('div', { style: { fontWeight: 800 } }, t('res.tipTitle')), h('div.note', tipText)));
     if (view.tip.op && ['add', 'sub', 'mul', 'div', 'order', 'frac', 'percent', 'power'].includes(view.tip.op)) {
@@ -172,43 +156,47 @@ registerScreen('results', (app, { view }) => {
 
   // الأزرار: إعادة اللعب مباشرة دائمًا متاحة
   const btns = h('div.stack', { style: { marginTop: '18px' } });
-  const replayBtn = (label, primary = true) => h('button.btn.block.lg' + (primary ? '.primary' : ''), { id: 'replayBtn', on: { click: () => {
-    sfx.tap();
+  // صف صغير للأزرار الثانوية (إعادة، تحدَّ صديقًا، الرئيسية) بدل أزرار كثيرة كبيرة
+  const row = h('div.res-actions');
+  const small = (id, ic, label, fn) => h('button.res-act', { id, type: 'button', on: { click: () => { sfx.tap(); fn(); } } }, h('span.ra-ic', ic), h('span', label));
+  const replayBtn = (label) => h('button.btn.block.lg.primary', { id: 'replayBtn', on: { click: () => { sfx.tap(); replay(); } } }, icon('refresh'), label);
+  const replaySmall = () => small('replayBtn', '🔁', t('res.retry'), () => replay());
+  function replay() {
     if (view.engine === 'rain') { const { makeCode: _m, ...args } = view.args || {}; return app.go('rainPlay', { kind: view.kind, args: view.kind === 'daily' ? { ...args, official: false } : args, seed: args.answer ? view.seed : undefined }, { replace: true }); }
     app.go('play', { kind: view.kind, args: view.kind === 'daily' ? { ...view.args, official: false } : view.args }, { replace: true });
-  } } }, icon('refresh'), label);
+  }
   if (view.kind === 'journey') {
     const L = view.args.level;
     if (view.passed && L < TOTAL_LEVELS) {
-      btns.append(h('button.btn.block.lg.primary', { on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'journey', args: { level: L + 1, turbo: !!view.args.turbo } }, { replace: true }); } } }, icon('play'), t('res.next')), replayBtn(t('res.retry'), false));
+      btns.append(h('button.btn.block.lg.primary', { id: 'nextBtn', on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'journey', args: { level: L + 1 } }, { replace: true }); } } }, icon('play'), t('res.next')));
+      row.append(replaySmall());
     } else btns.append(replayBtn(t('res.retry')));
-    btns.append(h('button.btn.block.ghost', { on: { click: () => { sfx.tap(); app.go('world', { w: worldOf(L) }, { replace: true }); } } }, icon('map'), t('jr.worldN', { n: worldOf(L) + 1 }) + ' · ' + t('world.' + WORLDS[worldOf(L)].key)));
   } else if (view.kind === 'lesson') {
     const path = findPath(view.args.pid);
     const hasNext = view.passed && view.args.li + 1 < path.lessons.length;
-    if (hasNext) btns.append(h('button.btn.block.lg.primary', { on: { click: () => { sfx.tap(); app.go('play', { kind: 'lesson', args: { pid: view.args.pid, li: view.args.li + 1 } }, { replace: true }); } } }, icon('play'), t('res.nextLesson')), replayBtn(t('res.retry'), false));
+    if (hasNext) { btns.append(h('button.btn.block.lg.primary', { on: { click: () => { sfx.tap(); app.go('play', { kind: 'lesson', args: { pid: view.args.pid, li: view.args.li + 1 } }, { replace: true }); } } }, icon('play'), t('res.nextLesson'))); row.append(replaySmall()); }
     else btns.append(replayBtn(t('res.retry')));
-    btns.append(h('button.btn.block.ghost', { on: { click: () => { sfx.tap(); app.go('lessonPath', { pid: view.args.pid }, { replace: true }); } } }, t('common.back')));
   } else if (view.kind === 'daily') {
     btns.append(h('button.btn.block.lg.primary', { id: 'shareDaily', on: { click: () => {
       sfx.tap();
       shareText(dailyShareText({ date: view.args.date, score: view.score, sum }), shareUrl({ d: view.args.date }));
-    } } }, icon('upload'), t('share.daily')), replayBtn(t('daily.practice'), false));
+    } } }, icon('upload'), t('share.daily')));
+    row.append(small('replayBtn', '🔁', t('daily.practice'), () => replay()));
   } else {
     btns.append(replayBtn(t('res.retry')));
   }
   // تحدَّ صديقًا: يحوّل هذه الجولة نفسها إلى رمز يلعبه صديقك بنفس القطرات
   if (canChallenge && !codeSlot) {
-    const good = view.celebrate || view.record || view.firstRecord || view.passed;
-    const chBtn = h('button.btn.block' + (good ? '.challenge-hot' : ''), { id: 'challengeFriend', on: { click: () => {
-      sfx.tap();
+    const chBtn = small('challengeFriend', '⚔️', t('res.challengeShort'), () => {
       codeSlot = challengeCard();
-      chBtn.replaceWith(codeSlot);
+      el.insertBefore(codeSlot, btns);
+      chBtn.remove();
       codeSlot.querySelector('[data-share]')?.click();
-    } } }, '⚔️ ', good ? t('share.challengeHot', { n: num(sum.score) }) : t('share.challenge'));
-    btns.insertBefore(chBtn, btns.children[1] || null);
+    });
+    row.append(chBtn);
   }
-  btns.append(h('button.btn.block.ghost', { on: { click: () => { sfx.tap(); app.go('home', {}, { root: true }); } } }, icon('home'), t('res.home')));
+  row.append(small('homeBtn', '🏠', t('res.home'), () => app.go('home', {}, { root: true })));
+  btns.append(row);
   el.appendChild(btns);
 
   return {

@@ -98,8 +98,9 @@ test('streak shields save a missed day and are consumed; gifts grant xp or shiel
   assert.deepEqual(openGifts(newProfileData('en'), 10, 'run-x'), out, 'deterministic per run');
 });
 
-test('new badges: fever, gift, speed and turbo', () => {
+test('new badges: fever, gift and speed (turbo badge retired with the turbo switch)', () => {
   const d = newProfileData('en');
   const rw = commitRound(d, { id: 'r1', mode: 'journey', passed: true, score: 100, correct: 22, answered: 22, bestStreak: 12, perOp: {}, speedX: 3.1, fevers: 1, gifts: 1, turbo: true });
-  for (const b of ['fever', 'gift', 'speedx2', 'speedx3', 'turbo']) assert.ok(rw.badges.includes(b), b);
+  for (const b of ['fever', 'gift', 'speedx2', 'speedx3']) assert.ok(rw.badges.includes(b), b);
+  assert.ok(!rw.badges.includes('turbo'));
 });

@@ -71,5 +71,5 @@ registerScreen('locker', (app, params) => {
     return p ? t('lock.prog.survive25', { a: num(p.correct), n: num(r.minCorrect) }) : t('lock.prog.none');
   }
   paint();
-  return { el, nav: 'locker' };
+  return { el, nav: 'home' };
 });

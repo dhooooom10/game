@@ -301,7 +301,7 @@ const ar = {
   "shop.failed": "تعذّرت العملية. لم يُخصم شيء إن لم تكتمل.",
   "shop.restore": "استرجاع المشتريات",
   "shop.restored": "تم استرجاع مشترياتك",
-  "shop.fair": "كل المشتريات زينة وراحة فقط: لا تمنح أي أفضلية في المباريات أو البطولات أو لوحات الصدارة.",
+  "shop.fair": "كل المشتريات زينة وراحة فقط: لا تمنح أي أفضلية في النقاط أو لوحات الصدارة.",
   "shop.needShop": "من المتجر",
 
   "shop.p.pro_bundle": "الباقة الكاملة",
@@ -619,6 +619,17 @@ const ar = {
   "resume.min": "قبل {n} د",
   "resume.hour": "قبل {n} س",
   "resume.day": "قبل {n} يوم",
+  "nav.shop": "المتجر",
+  "home.dailyShort": "مرة كل يوم",
+  "home.customShort": "الوقت · البقاء · تخصيص",
+  "home.missionsReward": "كل مهمة تمنحك لآلئ وخبرة.",
+  "set.more": "المزيد",
+  "res.challengeShort": "تحدَّ صديقًا",
+  "shop.tabBuy": "اشترِ",
+  "shop.tabSpend": "استخدم لآلئك",
+  "shop.buying": "جارٍ الشراء…",
+  "shop.successTitle": "تم الشراء بنجاح!",
+  "shop.great": "رائع!",
 };
 
 const en = {
@@ -909,7 +920,7 @@ const en = {
   "shop.failed": "Couldn't complete. You aren't charged unless it completes.",
   "shop.restore": "Restore purchases",
   "shop.restored": "Your purchases were restored",
-  "shop.fair": "All purchases are cosmetic or convenience only: no advantage in matches, tournaments or leaderboards.",
+  "shop.fair": "All purchases are cosmetic or convenience only: no advantage in scores or leaderboards.",
   "shop.needShop": "From the shop",
 
   "shop.p.pro_bundle": "Complete Bundle",
@@ -1227,6 +1238,17 @@ const en = {
   "resume.min": "{n} min ago",
   "resume.hour": "{n} h ago",
   "resume.day": "{n} d ago",
+  "nav.shop": "Shop",
+  "home.dailyShort": "Once a day",
+  "home.customShort": "Time · Survival · Custom",
+  "home.missionsReward": "Every mission gives you pearls and XP.",
+  "set.more": "More",
+  "res.challengeShort": "Challenge",
+  "shop.tabBuy": "Buy",
+  "shop.tabSpend": "Use pearls",
+  "shop.buying": "Buying…",
+  "shop.successTitle": "Purchase complete!",
+  "shop.great": "Great!",
 };
 
 /* لغات النسخة السابقة: العناوين الأساسية فقط (والباقي بالإنجليزية) */

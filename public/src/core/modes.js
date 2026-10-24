@@ -230,14 +230,16 @@ export function journeyRain(level) {
   for (const [op, t] of Object.entries(info.tiers)) if (op !== 'order') tiers[op] = t;
   const formats = w >= 4 ? { input: 4, missing: 1 } : { input: 1 };
   const target = info.kind === 'boss' ? 16 + w : 10 + Math.floor(w * 0.8) + (i > 5 ? 1 : 0);
-  const travel = Math.max(6.5, 10.5 - w * 0.35 - i * 0.06);
-  const spawn = Math.max(1.5, 3.3 - w * 0.15 - i * 0.03);
-  const maxDrops = Math.min(4, 2 + Math.floor((w + (i > 6 ? 1 : 0)) / 3));
+  // الحماس من المرحلة الأولى: قطرات سريعة بأرقام سهلة، والصعوبة تكبر بالمعادلات (العمليات والأرقام) عبر العوالم،
+  // بينما تزيد السرعة بخطوات صغيرة فقط
+  const travel = Math.max(5.6, 7.2 - w * 0.12 - i * 0.02);
+  const spawn = Math.max(1.5, 2.3 - w * 0.06 - i * 0.01);
+  const maxDrops = Math.min(4, 3 + Math.floor(w / 4));
   let timeLimit = null;
   if (info.kind === 'sprint') timeLimit = Math.ceil((target * spawn * 1.25 + travel) / 5) * 5;
-  // تسارع تدريجي داخل المرحلة يكبر مع العوالم: ٣٪ كل ١٠ ثوانٍ في العالم الأول حتى ٨٪ في الأخير (والزعيم أسرع)
-  const accel = +(Math.min(0.08, 0.03 + w * 0.005 + (info.kind === 'boss' ? 0.01 : 0))).toFixed(3);
-  const cfg = rainConfig({ tiers, formats, travel, spawn, maxDrops, target, lives: 3, timeLimit, accel, specials: info.kind === 'boss' || w >= 6 });
+  // تسارع داخل المرحلة: ٥٪ كل ١٠ ثوانٍ من البداية حتى ٨٪ في العوالم الأخيرة (والزعيم أسرع)
+  const accel = +(Math.min(0.08, 0.05 + w * 0.003 + (info.kind === 'boss' ? 0.01 : 0))).toFixed(3);
+  const cfg = rainConfig({ tiers, formats, travel, spawn, maxDrops, target, lives: 3, timeLimit, accel, specials: true });
   return { info: { ...info, target, timeLimitMs: timeLimit ? timeLimit * 1000 : null, goal: target }, cfg };
 }
 

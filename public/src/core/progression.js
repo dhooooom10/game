@@ -173,7 +173,7 @@ export const BADGES = [
   { id: 'speed20', icon: '⚡' }, { id: 'survive25', icon: '🛡️' }, { id: 'daily3', icon: '📅' }, { id: 'daily7', icon: '🗓️' },
   { id: 'world1', icon: '🌦️' }, { id: 'world5', icon: '🌊' }, { id: 'world10', icon: '👑' }, { id: 'allstars', icon: '🌟' },
   { id: 'allround', icon: '🧭' }, { id: 'friend', icon: '🤝' }, { id: 'scholar', icon: '🎓' }, { id: 'rain', icon: '💧' },
-  { id: 'fever', icon: '🔥' }, { id: 'gift', icon: '🎁' }, { id: 'speedx2', icon: '🏎️' }, { id: 'speedx3', icon: '🚀' }, { id: 'turbo', icon: '⚡' },
+  { id: 'fever', icon: '🔥' }, { id: 'gift', icon: '🎁' }, { id: 'speedx2', icon: '🏎️' }, { id: 'speedx3', icon: '🚀' },
 ];
 
 function checkBadges(data, round) {
@@ -209,7 +209,6 @@ function checkBadges(data, round) {
   give('gift', round && (round.gifts || 0) >= 1);
   give('speedx2', round && (round.speedX || 1) >= 2);
   give('speedx3', round && (round.speedX || 1) >= 3);
-  give('turbo', round && round.turbo && round.passed);                                   // اجتز مرحلة بالتيربو
   return earn;
 }
 

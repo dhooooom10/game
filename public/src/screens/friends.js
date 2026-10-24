@@ -56,23 +56,19 @@ registerScreen('friends', (app, params) => {
   const s = ensureSocial(data);
   const el = h('main', topbar(t('fr2.title'), t('fr2.sub')));
 
-  // ١) ثلاث طرق للعب مع أصدقائك
+  // ١) طريقتان فقط للعب مع أصدقائك
   el.append(h('section.fr2-actions',
     action('friendCompose', '⚔️', t('fr2.challenge'), t('fr2.challengeSub'), 'gold'),
-    action('party', '👥', t('party.title'), t('party.sub')),
-    action('friendSetup', '📱', t('fr2.face'), t('fr2.faceSub'))));
+    action('party', '👥', t('party.title'), t('party.sub'))));
 
   // ٢) إدخال رمز وصلك
-  const input = h('textarea.input.code-in', { id: 'codeIn', rows: 2, dir: 'ltr', placeholder: 'QC-… / QR-…', aria: { label: t('code.enter') } });
+  const input = h('input.input.code-in', { id: 'codeIn', dir: 'ltr', placeholder: t('code.enter'), aria: { label: t('code.enter') }, on: { keydown: (e) => { if (e.key === 'Enter') open(); } } });
   const out = h('div', { id: 'codeOut' });
   const pasteBtn = navigator.clipboard?.readText ? h('button.btn', { type: 'button', on: { click: async () => {
     try { input.value = await navigator.clipboard.readText(); open(); } catch { toast(t('code.pasteFail')); }
   } } }, t('code.paste')) : null;
-  el.append(h('section.card.section',
-    h('h2.section-title', '📥 ', t('code.enter')), h('p.note', t('code.enterSub')),
-    input,
-    h('div.btn-row', { style: { marginTop: '8px' } },
-      h('button.btn.primary.grow', { id: 'openCode', type: 'button', on: { click: () => { sfx.tap(); open(); } } }, t('code.open')), pasteBtn),
+  el.append(h('section.section.code-entry',
+    h('div.btn-row', input, h('button.btn.primary', { id: 'openCode', type: 'button', on: { click: () => { sfx.tap(); open(); } } }, t('code.open')), pasteBtn),
     out));
 
   const lists = h('div'); el.append(lists);
@@ -114,7 +110,7 @@ registerScreen('friends', (app, params) => {
     if (recv.length) {
       const pend = recv.filter((c) => c.mine == null);
       const sec = h('section.section', h('h2.section-title', '⚔️ ', t('code.received'), pend.length ? h('span.badge-count', num(pend.length)) : null));
-      for (const c of recv.slice(0, 10)) {
+      for (const c of recv.slice(0, 5)) {
         const o = outcome(c.mine, c.theirs);
         sec.append(h('div.ch-card' + (o ? '.' + o : '.pending'),
           h('span.ch-ic', o ? RES_IC[o] : c.kind === 'level' ? '🗺️' : '⚔️'),
@@ -128,7 +124,7 @@ registerScreen('friends', (app, params) => {
     // تحدياتي المرسلة: الردود ونتيجتي، وإعادة مشاركة الرمز
     if (sent.length) {
       const sec = h('section.section', h('h2.section-title', '📤 ', t('code.sent')));
-      for (const c of sent.slice(0, 10)) {
+      for (const c of sent.slice(0, 5)) {
         const reps = (c.replies || []).map((r) => {
           const o = outcome(c.mine, r.score);
           return h('span.chip' + (o === 'win' ? '.ok' : ''), RES_IC[o], ' ', r.name || '?', ' ', num(r.score));
@@ -148,19 +144,19 @@ registerScreen('friends', (app, params) => {
 
     // الحصيلة مع كل صديق
     const rec = friendsRecord(data);
+    if (!rec.length && !recv.length && !sent.length) { lists.append(h('p.note.center', t('fr2.empty'))); }
     const fr = h('section.section', h('h2.section-title', '🤝 ', t('fr2.record'), h('small', num(rec.length))));
-    if (!rec.length) fr.append(h('section.card.empty-state', h('div', { style: { fontSize: '2.4rem' } }, '🤝'), h('p.note', t('fr2.empty'))));
     for (const f of rec) fr.append(h('div.friend-row', { 'data-friend': f.uid },
       h('span.ch-ic', '🙂'), h('div.grow', h('div.t', f.name || '?'), h('div.d', t('fr2.wld', { w: num(f.w), l: num(f.l), d: num(f.d) }))),
       h('span.chip' + (f.w > f.l ? '.ok' : ''), f.w > f.l ? '👑' : f.w < f.l ? '💪' : '🤝')));
-    lists.append(fr);
+    if (rec.length) lists.append(fr);
 
     // Google Play Games: لوحات صدارة عالمية وبين الأصدقاء، وإنجازات (بلا خادم)
     if (pgs.available()) {
       const row = h('div.btn-row');
       if (pgs.hasLeaderboards()) row.append(h('button.btn.ghost.grow', { type: 'button', on: { click: async () => { if (await pgs.signIn({ interactive: true })) pgs.showLeaderboards(); } } }, '📈 ', t('pgs.lb')));
       if (pgs.hasAchievements()) row.append(h('button.btn.ghost.grow', { type: 'button', on: { click: async () => { if (await pgs.signIn({ interactive: true })) pgs.showAchievements(); } } }, '🏅 ', t('pgs.ach')));
-      if (row.children.length) lists.append(h('section.card.section', h('h2.section-title', '🎮 ', t('pgs.title')), h('p.note', t('pgs.sub')), row));
+      if (row.children.length) lists.append(h('section.section', row));
     }
   }
 
@@ -176,7 +172,7 @@ registerScreen('friends', (app, params) => {
   }
 
   paintLists();
-  return { el, afterMount: () => { if (params.code) { input.value = params.code; open(params.code); params.code = null; } } };
+  return { el, nav: 'friends', afterMount: () => { if (params.code) { input.value = params.code; open(params.code); params.code = null; } } };
 });
 
 /* =========================================================================

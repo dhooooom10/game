@@ -2,7 +2,7 @@
    يخزّن اللعبة محليًا لتعمل بلا إنترنت بعد أول زيارة.
    قائمة الملفات ورقم الإصدار يولّدهما: node scripts/build-sw.mjs */
 
-const CACHE = 'qatra-84a2a514f5';
+const CACHE = 'qatra-68dd703006';
 const ASSETS = [
   './',
   './admin.html',
@@ -74,7 +74,6 @@ const ASSETS = [
   './src/ui/fx.js',
   './src/ui/mascot.js',
   './src/ui/share.js',
-  './src/ui/turbo.js',
   './styles/admin.css',
   './styles/main.css'
 ];

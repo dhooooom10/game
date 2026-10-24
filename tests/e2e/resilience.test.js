@@ -55,6 +55,7 @@ test('a screen that fails to build goes back safely, and the problem appears in 
   await waitScreen(p, 'journey');
   await p.waitForSelector('text=تعذّر فتح هذه الشاشة');
   await p.evaluate(() => window.__mc.go('settings'));
+  await p.click('#settingsMore summary');
   await p.waitForSelector('#errLog #copyErrors');
   assert.match(await p.textContent('#errLog'), /سجل المشكلات/);
   const log = await p.evaluate(() => JSON.parse(localStorage.getItem('mc2:errors')));

@@ -1,4 +1,4 @@
-/* الشاشة الرئيسية: زر «العب الآن» واضح، المستوى والتقدّم وأفضل النتائج، التحدي اليومي، المهام، والأنماط. */
+/* الشاشة الرئيسية — بسيطة: زر «العب الآن» كبير، التحدي اليومي و«تحدّيك الخاص»، وسطر لمهام اليوم. */
 import { app, registerScreen } from '../app.js';
 import { h, icon, num } from '../ui/dom.js';
 import { mascotSVG } from '../ui/mascot.js';
@@ -6,7 +6,6 @@ import { sfx } from '../ui/audio.js';
 import { reducedMotion, toast } from '../ui/fx.js';
 import { t } from '../i18n.js';
 import { levelFromXp, dailyStatus, todayStr, shieldsNeeded } from '../core/progression.js';
-import { turboRow, turboOn } from '../ui/turbo.js';
 import { speedText } from './rain.js';
 import * as ads from '../net/ads.js';
 import { WORLDS, worldOf, DAILY_COUNT } from '../core/modes.js';
@@ -15,7 +14,6 @@ import { isNativeApp, PLAY_URL } from '../config.js';
 import { nextJourneyLevel, buildRun, finishRun, buildRainRun, finishRainRun, MAX_SHIELDS, migrateActiveRun, challengeLabel, validActive } from '../runs.js';
 import { normalizeChallenge, COMPLETE_MIN_CORRECT } from '../core/challenge.js';
 import { replayRain } from '../core/rain.js';
-import { ensureSocial } from '../core/social.js';
 
 registerScreen('home', (app) => {
   const data = app.data;
@@ -28,11 +26,10 @@ registerScreen('home', (app) => {
   const xpFill = h('i', { style: { width: lv.pct * 100 + '%' } });
   el.appendChild(h('header.profile-bar',
     h('button.avatar', { aria: { label: t('nav.locker') }, on: { click: () => { sfx.tap(); app.go('locker'); } }, html: mascotSVG({ skin: cos.skin, acc: cos.acc, size: 40, label: t('mascot.name') }) }),
-    h('div.who',
+    h('button.who', { type: 'button', id: 'homeProgress', aria: { label: t('nav.progress') }, on: { click: () => { sfx.tap(); app.go('progress'); } } },
       h('div.name', name ? t('home.hello', { name }) : t('home.helloAnon')),
       h('div.lvl', h('span.lvl-badge', t('home.level', { n: lv.level })), h('div.bar.gold', { role: 'progressbar', aria: { valuenow: Math.round(lv.pct * 100), valuemin: 0, valuemax: 100, label: t('home.xp', { a: lv.into, b: lv.need }) } }, xpFill))),
-    h('button.pearl-chip', { id: 'homePearls', type: 'button', aria: { label: t('wal.balance') }, on: { click: () => { sfx.tap(); app.go('shop'); } } }, '💎 ', num(data.pearls || 0), h('span.plus', '+')),
-    h('button.icon-btn', { aria: { label: t('nav.settings') }, 'data-go': 'settings', on: { click: () => { sfx.tap(); app.go('settings'); } } }, icon('gear'))));
+    h('button.pearl-chip', { id: 'homePearls', type: 'button', aria: { label: t('wal.balance') }, on: { click: () => { sfx.tap(); app.go('shop'); } } }, '💎 ', num(data.pearls || 0), h('span.plus', '+'))));
 
   if (!app.store.persistent) el.appendChild(h('p.note.warn', { role: 'alert' }, '⚠️ ' + t('home.storageWarn')));
   // زائر من رابط على جوال Android في المتصفح: دعوة هادئة لتحميل التطبيق (يمكن إخفاؤها)
@@ -71,37 +68,23 @@ registerScreen('home', (app) => {
       h('div.hs', h('div.v', bestSpeed ? '⚡ ' + speedText(bestSpeed) : '—'), h('div.l', t('home.bestSpeed'))),
       h('div.hs', h('div.v', '🔥 ' + num(ds.streak)), h('div.l', t('home.streak'))))));
 
-  // مع الأصدقاء (بلا خادم): تحدٍّ برمز في واتساب، إدخال رمز، غرفة على نفس الجوال
-  const pendingCodes = ensureSocial(data).list.filter((c) => c.dir === 'recv' && c.mine == null).length;
-  const onBtn = (id, emoji, title, sub, fn, badge) => h('button.on-btn', { id, type: 'button', on: { click: () => { sfx.tap(); fn(); } } },
-    h('span.ob-ic', emoji), h('span.ob-t', title), h('span.ob-d', sub), badge ? h('span.badge-count.floating', { id: 'friendsBadge' }, num(badge)) : null);
-  el.appendChild(h('section.online-hero.section', { aria: { label: t('fr2.title') } },
-    h('div.oh-top', h('h2', '👥 ', t('fr2.title')),
-      h('button.link', { id: 'modeFriends', type: 'button', on: { click: () => { sfx.tap(); app.go('friends'); } } }, t('home.friendsAll'), ' ›')),
-    h('div.oh-grid',
-      onBtn('homeChallenge', '⚔️', t('fr2.challenge'), t('home.challengeSub'), () => app.go('friendCompose')),
-      onBtn('homeCode', '📥', t('code.enterShort'), t('home.codeSub'), () => app.go('friends'), pendingCodes),
-      onBtn('homeParty', '👥', t('party.title'), t('home.partySub'), () => app.go('party')))));
-
-  // التيربو ⚡: تسارع مرعب بأرقام سهلة — للرحلة
-  el.appendChild(h('section.section', turboRow(app)));
-
   function playNow() {
     sfx.tap();
     if (!data.settings.tutorialDone) return app.go('rainPlay', { kind: 'tutorial', args: {} });
-    app.go('rainPlay', { kind: 'journey', args: { level: L, turbo: turboOn(data) } });
+    app.go('rainPlay', { kind: 'journey', args: { level: L } });
   }
 
-  // التحدي اليومي
-  const dots = h('div.streak-dots', { aria: { hidden: 'true' } }, ...Array.from({ length: 7 }, (_, i) => h('i' + (i < Math.min(7, ds.streak) ? '.on' : ''))));
-  el.appendChild(h('section.section',
-    h('button.daily-card' + (ds.done ? '.done' : ''), { id: 'dailyCard', on: { click: openDaily } },
-      h('span.di', icon(ds.done ? 'check' : 'calendar')),
-      h('span.dt',
-        h('div.dn', t('daily.title')),
-        h('div.dd', ds.done ? `${t('daily.done', { score: num(ds.result.score) })} · ${t('daily.comeBack')}` : t('daily.sub', { n: DAILY_COUNT })),
-        dots),
-      h('span.pill-col', h('span.chip.gold', '🔥 ' + num(ds.streak)), data.shields ? h('span.chip.shield-chip', { aria: { label: t('shield.count', { n: data.shields }) } }, '🛡️ ' + num(data.shields)) : null))));
+  // بطاقتان فقط: التحدي اليومي و«تحدّيك الخاص»
+  el.appendChild(h('section.section.quick-grid',
+    h('button.quick-card' + (ds.done ? '.done' : ''), { id: 'dailyCard', type: 'button', on: { click: openDaily } },
+      h('span.qc-ic', ds.done ? '✅' : '📅'),
+      h('span.qc-t', t('daily.title')),
+      h('span.qc-d', ds.done ? t('daily.done', { score: num(ds.result.score) }) : t('home.dailyShort')),
+      h('span.chip.gold', '🔥 ' + num(ds.streak))),
+    h('button.quick-card', { id: 'modeCustom', type: 'button', on: { click: () => { sfx.tap(); app.go('setupCustom'); } } },
+      h('span.qc-ic', '🎛️'),
+      h('span.qc-t', t('mode.custom')),
+      h('span.qc-d', t('home.customShort')))));
 
   function openDaily() {
     sfx.tap();
@@ -136,22 +119,31 @@ registerScreen('home', (app) => {
     return box;
   }
 
-  // مهام اليوم
-  const ms = data.missions.list;
-  const allDone = ms.length && ms.every((m) => m.done);
-  const mbox = h('section.card.section', { aria: { label: t('home.missions') } }, h('h2.section-title', t('home.missions'), h('small', allDone ? t('home.missionsDone') : `${num(ms.filter((m) => m.done).length)}/${num(ms.length)}`)));
-  for (const m of ms) {
-    const fill = h('i', { style: { width: (m.progress / m.goal) * 100 + '%' } });
-    // المهمة زر يفتح نمطها الصحيح بالإعداد المناسب مباشرة
-    mbox.appendChild(h('button.mission' + (m.done ? '.done' : ''), { type: 'button', 'data-mission': m.id, disabled: m.done,
-      aria: { label: t('m.' + m.id, { g: m.goal, op: m.op ? t('op.' + m.op) : '' }) + (m.done ? ' ✓' : '') },
-      on: { click: () => { sfx.tap(); goMission(m); } } },
-      h('span.mi', m.done ? icon('check') : icon('target')),
-      h('div.mt', t('m.' + m.id, { g: m.goal, op: m.op ? t('op.' + m.op) : '' }), h('div.md', t('mr.' + m.id, { n: COMPLETE_MIN_CORRECT })),
-        h('div.bar.ok', { role: 'progressbar', aria: { valuenow: m.progress, valuemax: m.goal, valuemin: 0 } }, fill)),
-      h('span.mx', m.done ? '✓' : `${num(m.progress)}/${num(m.goal)}`)));
+  // مهام اليوم: سطر واحد يفتح القائمة
+  const ms = data.missions.list || [];
+  const doneN = ms.filter((m) => m.done).length;
+  const mFill = h('i', { style: { width: (ms.length ? doneN / ms.length : 0) * 100 + '%' } });
+  el.appendChild(h('button.missions-row.section', { id: 'missionsRow', type: 'button', on: { click: openMissions } },
+    h('span.mr-ic', doneN === ms.length && ms.length ? '🏆' : '🎯'),
+    h('span.grow', h('b', t('home.missions')), h('div.bar.ok', { role: 'progressbar', aria: { valuenow: doneN, valuemax: ms.length, valuemin: 0 } }, mFill)),
+    h('span.mx', `${num(doneN)}/${num(ms.length)}`)));
+  function openMissions() {
+    sfx.tap();
+    app.modal((box, close) => {
+      box.append(h('h2', '🎯 ', t('home.missions')));
+      for (const m of ms) {
+        const fill = h('i', { style: { width: (m.progress / m.goal) * 100 + '%' } });
+        box.append(h('button.mission' + (m.done ? '.done' : ''), { type: 'button', 'data-mission': m.id, disabled: m.done,
+          aria: { label: t('m.' + m.id, { g: m.goal, op: m.op ? t('op.' + m.op) : '' }) + (m.done ? ' ✓' : '') },
+          on: { click: () => { sfx.tap(); close(); goMission(m); } } },
+          h('span.mi', m.done ? icon('check') : icon('target')),
+          h('div.mt', t('m.' + m.id, { g: m.goal, op: m.op ? t('op.' + m.op) : '' }), h('div.md', t('mr.' + m.id, { n: COMPLETE_MIN_CORRECT })),
+            h('div.bar.ok', { role: 'progressbar', aria: { valuenow: m.progress, valuemax: m.goal, valuemin: 0 } }, fill)),
+          h('span.mx', m.done ? '✓' : `${num(m.progress)}/${num(m.goal)}`)));
+      }
+      box.append(h('p.note', '💎 ', t('home.missionsReward')), h('button.btn.ghost.block', { on: { click: () => close() } }, t('common.close')));
+    });
   }
-  el.appendChild(mbox);
   function goMission(m) {
     const ch = (mode) => app.go('setupCustom', { mode });
     switch (m.id) {
@@ -165,16 +157,6 @@ registerScreen('home', (app) => {
       default: return playNow();
     }
   }
-
-  // الأنماط
-  const card = (id, ic, color, title, sub, recordText, onClick, wide = false) => h('button.mode-card' + (wide ? '.wide' : ''), { id, style: { '--mc': color }, on: { click: () => { sfx.tap(); onClick(); } } },
-    h('span.mi', icon(ic)), h('div', { style: { flex: wide ? '1' : null } }, h('div.mn', title), h('div.md', sub)), recordText ? h('span.mr', recordText) : null);
-  el.appendChild(h('section.section', h('h2.section-title', t('home.modes')),
-    h('div.mode-grid',
-      card('modeJourney', 'map', '#38D6F5', t('mode.journey'), t('mode.journeySub'), `★ ${num(totalStars)}/${num(300)}`, () => app.go('journey'), true),
-      card('modeCustom', 'bolt', '#FF9F5A', t('mode.custom'), t('mode.customSub'), null, () => app.go('setupCustom')),
-      card('modeFriend', 'users', '#9B8CFF', t('fr2.title'), t('fr2.sub'), null, () => app.go('friends')),
-      card('modePractice', 'target', '#3DDC97', t('mode.practice'), t('mode.practiceSub'), null, () => app.go('practice'), true))));
 
   return {
     el, nav: 'home',

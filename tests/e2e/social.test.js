@@ -40,20 +40,23 @@ const popUntil = async (P, n) => {
 };
 const QUICK = { mode: 'custom', ops: ['add'], level: 'easy', speed: 'fast', dur: 0, lives: 1, accel: false };
 
-test('home: friends card sits right under Play (challenge / enter code / same-phone room), friends tab', async () => {
+test('home is simple (Play + two cards + missions); friends tab offers code challenge and same-phone room', async () => {
   const p = await newPage(browser);
   await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
-  await p.waitForSelector('.online-hero #homeChallenge');
-  const order = await p.evaluate(() => { const secs = [...document.querySelectorAll('main > section')]; return [secs.findIndex((x) => x.classList.contains('hero')), secs.findIndex((x) => x.classList.contains('online-hero'))]; });
-  assert.equal(order[1], order[0] + 1, 'friends directly after the hero');
-  await p.waitForSelector('#nav button.nav-hero[data-nav="friends"]');
-  assert.equal(await p.locator('#homeBell, #homeQuick, #homeTurbo').count(), 0, 'no online leftovers');
-  await p.click('#homeChallenge');
+  // الرئيسية بسيطة: «العب الآن» + بطاقتان + سطر المهام فقط
+  await p.waitForSelector('#playNow');
+  assert.equal(await p.locator('main .quick-card').count(), 2);
+  assert.equal(await p.locator('#homeBell, #homeQuick, #homeTurbo, .turbo-row, .mode-grid, .online-hero').count(), 0, 'no clutter');
+  // الأصدقاء في الشريط السفلي: تحدٍّ برمز أو غرفة على نفس الجوال
+  await p.click('#nav button.nav-hero[data-nav="friends"]');
+  await waitScreen(p, 'friends');
+  assert.equal(await p.locator('.fr2-act').count(), 2);
+  await p.click('[data-go="friendCompose"]');
   await waitScreen(p, 'friendCompose');
   await p.waitForSelector('#rangeHint');
-  await p.evaluate(() => window.__mc.go('home', {}, { root: true }));
-  await p.click('#homeParty');
+  await p.evaluate(() => window.__mc.go('friends', {}, { root: true }));
+  await p.click('[data-go="party"]');
   await waitScreen(p, 'party');
   assert.deepEqual(p.errors, []);
 });
@@ -148,11 +151,16 @@ test('shop: pearl pack, starter pack once, spend on a shield and a single skin',
   await p.waitForSelector('#buy-pearls_l');
   await p.click('#buy-pearls_l');
   await p.waitForFunction(() => window.__mc.data.pearls === 1400);
+  await p.waitForSelector('.buy-ok');   // نافذة نجاح واضحة
+  assert.match(await p.textContent('.buy-ok'), /١٤٠٠|1400/);
+  await p.click('#buyOkClose');
   assert.ok(await p.evaluate(() => window.__calls.some((c) => c[0] === 'consume')), 'pack consumed so it can be bought again');
   await p.click('#buy-starter_pack');
   await p.waitForFunction(() => window.__mc.data.pearls === 1900 && window.__mc.data.ent.noAds && window.__mc.data.ent.starter);
+  await p.click('#buyOkClose');
   await p.waitForSelector('#buy-pearls_l');
   assert.equal(await p.locator('#buy-starter_pack').count(), 0, 'starter offer disappears after purchase');
+  await p.click('#tabSpend');
   await p.click('#spend-shield');
   await p.waitForFunction(() => window.__mc.data.shields === 1);
   await p.click('#skin-ember');

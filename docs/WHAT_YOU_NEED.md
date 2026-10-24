@@ -26,7 +26,7 @@
 | اسم الحزمة | الحالي `app.qatra.game` | غيّره **قبل أول رفع فقط**. مكانه في `capacitor.config.json` و`android/app/build.gradle` ومسار مجلد Java | لا |
 | **Play Games Project ID** (أرقام فقط) | Play Console ← Play Games Services ← Setup and management ← Configuration | `android/app/src/main/res/values/playgames.xml` | لا |
 | بصمة **SHA-1** لمفتاح التوقيع | Play Console ← Test and release ← App integrity ← App signing (ومفتاح الرفع أيضًا) | Play Games Services ← Credentials ← بيانات اعتماد **Android** | لا |
-| معرّفات الإنجازات (٢٣) | Play Games Services ← Achievements | `public/src/net/playgames-config.js` ← `achievements` | لا |
+| معرّفات الإنجازات (٢٢) | Play Games Services ← Achievements | `public/src/net/playgames-config.js` ← `achievements` | لا |
 | معرّفات لوحات الصدارة (٤) | Play Games Services ← Leaderboards | `playgames-config.js` ← `leaderboards` | لا |
 | AdMob App ID ومعرّفا الوحدتين | AdMob (القسم ٥) | `monetization.xml` و`monetization-config.js` | لا |
 | **مفتاح التوقيع** (keystore) وكلمة مروره | Android Studio عند أول «Generate Signed Bundle» | خارج المستودع، مع نسخة احتياطية | **نعم.** إن ضاع لن تستطيع إصدار تحديثات، إلا إذا فعّلت Play App Signing |
@@ -63,9 +63,8 @@
 | `gift` | مفاجأة | افتح قطرة غامضة |
 | `speedx2` | سرعة مضاعفة | اصمد حتى سرعة ×2 |
 | `speedx3` | سرعة الضوء | اصمد حتى سرعة ×3 |
-| `turbo` | تيربو | اجتز مرحلة في الرحلة والتيربو مفعّل |
 
-تحتاج كل لعبة Play Games إلى **٥ إنجازات على الأقل** قبل النشر، وهنا ٢٣. وكل إنجاز يحتاج أيقونة مربعة بحجم 512×512.
+تحتاج كل لعبة Play Games إلى **٥ إنجازات على الأقل** قبل النشر، وهنا ٢٢. وكل إنجاز يحتاج أيقونة مربعة بحجم 512×512.
 
 ## ٤) لوحات الصدارة في Play Console
 

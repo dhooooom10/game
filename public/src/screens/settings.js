@@ -39,27 +39,29 @@ registerScreen('settings', (app) => {
   el.append(h('section.card',
     h('h2.section-title', t('set.sound')),
     row(t('set.sfx'), null, sw(s.sfx > 0, t('set.sfx'), (v) => { s.sfx = v ? (s._sfxPrev || 0.8) : 0; if (!v) s._sfxPrev = +sfxRange.value || 0.8; sfxRange.value = s.sfx; setLevels({ sfx: s.sfx }); app.save(); if (v) sfx.correct(); })),
-    h('div.field', h('div.label', h('span', icon('volume'), ' ', t('set.sfxVol'))), sfxRange),
-    row(t('set.haptics'), hapticsSupported() ? null : t('set.hapticsNA'), hapticsSupported() ? sw(s.haptics, t('set.haptics'), (v) => { s.haptics = v; app.save(); app.applyLook(); buzz(30); }) : h('span.faint', '—'))));
+    hapticsSupported() ? row(t('set.haptics'), null, sw(s.haptics, t('set.haptics'), (v) => { s.haptics = v; app.save(); app.applyLook(); buzz(30); })) : null,
+    // تذكيرات الجهاز (السلسلة اليومية وتحديات الأصدقاء) — داخل التطبيق فقط
+    notify.available() ? row(t('set.notify'), t('set.notifySub'), sw(s.notify !== false, t('set.notify'), async (v) => {
+      s.notify = v; app.save();
+      if (v && !(await notify.requestPermission())) toast(t('set.notifyDenied'));
+    })) : null));
+
+  // كل ما سواها داخل «المزيد» (مطويّ)
+  const more = h('details.card.more-box', { id: 'settingsMore' }, h('summary', '⚙️ ', t('set.more')));
+  el.append(more);
 
   // سهولة الاستخدام
-  el.append(h('section.card',
+  more.append(h('div.more-sec',
     h('h2.section-title', t('set.accessibility')),
     h('div.field', h('div.label', t('set.motion')), seg([['system', t('set.motionSystem')], ['reduce', t('set.motionReduce')], ['full', t('set.motionFull')]], s.motion || 'system', (v) => { s.motion = v; app.save(); app.applyLook(); }, t('set.motion'))),
     row(t('set.contrast'), null, sw(s.contrast, t('set.contrast'), (v) => { s.contrast = v; app.save(); app.applyLook(); })),
     row(t('set.bigText'), null, sw(s.bigText, t('set.bigText'), (v) => { s.bigText = v; app.save(); app.applyLook(); })),
     row(t('set.autoSubmit'), t('set.autoSubmitSub'), sw(s.autoSubmit !== false, t('set.autoSubmit'), (v) => { s.autoSubmit = v; app.save(); })),
-    // تذكيرات الجهاز (السلسلة اليومية وتحديات الأصدقاء) — داخل التطبيق فقط
-    notify.available() ? row(t('set.notify'), t('set.notifySub'), sw(s.notify !== false, t('set.notify'), async (v) => {
-      s.notify = v; app.save();
-      if (v && !(await notify.requestPermission())) toast(t('set.notifyDenied'));
-    })) : null,
-    h('button.btn.block', { id: 'settingsShop', style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('shop'); } } }, '🛍️ ', t('shop.title') + ' · ' + t('shop.restore')),
     ads.privacyOptionsRequired() ? h('button.btn.block', { style: { marginTop: '10px' }, on: { click: () => ads.showPrivacyOptions() } }, t('ads.privacy')) : null,
     h('button.btn.block', { style: { marginTop: '10px' }, on: { click: () => { sfx.tap(); app.go('rainPlay', { kind: 'tutorial', args: {} }); } } }, icon('book'), t('set.tutorial'))));
 
   // الملفات الشخصية
-  el.append(h('section.card',
+  more.append(h('div.more-sec',
     h('h2.section-title', t('set.profiles'), h('small', profile?.name || t('prof.player'))),
     h('button.btn.block', { id: 'openProfiles', on: { click: () => { sfx.tap(); app.go('profiles'); } } }, icon('users'), t('prof.title'))));
 
@@ -71,7 +73,7 @@ registerScreen('settings', (app) => {
     try { const txt = await f.text(); app.data = app.store.importData(app.pid, txt); app.applyLook(); toast(t('set.importOk')); app.refresh(); }
     catch { toast(t('set.importBad'), { kind: 'bad' }); }
   } } });
-  el.append(h('section.card',
+  more.append(h('div.more-sec',
     h('h2.section-title', t('set.data')),
     h('p.note', t('set.dataNote')),
     app.store.persistent ? null : h('p.note.warn', t('set.dataNoPersist')),
@@ -93,7 +95,7 @@ registerScreen('settings', (app) => {
 
   // سجل المشكلات: يُنسخ ويُرسل للمطوّر يدويًا (لا يُرسل شيء تلقائيًا)
   const errs = readErrors();
-  const errBox = h('section.card', { id: 'errLog' }, h('h2.section-title', '🧰 ', t('set.errors'), h('small', String(errs.length))),
+  const errBox = h('div.more-sec', { id: 'errLog' }, h('h2.section-title', '🧰 ', t('set.errors'), h('small', String(errs.length))),
     h('p.note', errs.length ? t('set.errorsSub') : t('set.errorsNone')));
   if (errs.length) errBox.append(h('div.btn-row',
     h('button.btn.grow', { id: 'copyErrors', type: 'button', on: { click: async () => {
@@ -102,11 +104,11 @@ registerScreen('settings', (app) => {
       try { await navigator.clipboard.writeText(text); toast(t('share.copied')); } catch { toast(t('share.failed')); }
     } } }, t('set.errorsCopy')),
     h('button.btn.ghost', { type: 'button', on: { click: () => { sfx.tap(); clearErrors(); app.refresh(); } } }, t('set.errorsClear'))));
-  el.append(errBox);
+  more.append(errBox);
 
-  el.append(h('section.card', h('h2.section-title', t('set.about')),
+  more.append(h('div.more-sec', h('h2.section-title', t('set.about')),
     h('p.note', t('app.name') + ' — ', t('app.tagline')), h('p.note', tRaw('set.credits')), h('p.faint', t('set.version', { v: VERSION }))));
-  return { el };
+  return { el, nav: 'settings' };
 });
 
 /* ---------------- الملفات الشخصية ---------------- */

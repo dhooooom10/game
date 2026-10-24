@@ -986,3 +986,42 @@ button.badge.goal { font: inherit; color: inherit; cursor: pointer; border: 1px 
 .resume-card .icon-btn { width: 40px; height: 40px; }
 @keyframes rc-in { from { opacity: 0; transform: translateY(-6px); } }
 @media (prefers-reduced-motion: reduce) { .resume-card { animation: none; } }
+
+/* ---------- التبسيط: الرئيسية، النتائج، الإعدادات، المتجر ---------- */
+.profile-bar button.who { background: none; border: 0; padding: 0; color: inherit; font: inherit; text-align: start; cursor: pointer; flex: 1; min-width: 0; }
+.play-btn { animation: play-pulse 2.2s ease-in-out infinite; }
+@keyframes play-pulse { 0%, 100% { box-shadow: 0 10px 28px -8px rgba(255, 201, 74, .55); transform: scale(1); } 50% { box-shadow: 0 14px 40px -6px rgba(255, 201, 74, .85); transform: scale(1.025); } }
+@media (prefers-reduced-motion: reduce) { .play-btn { animation: none; } }
+:root[data-motion="reduce"] .play-btn { animation: none; }
+.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.quick-card { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px; border-radius: 20px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; text-align: start; cursor: pointer; min-height: 118px; transition: transform .15s; }
+.quick-card:active { transform: scale(.97); }
+.quick-card .qc-ic { font-size: 1.7rem; }
+.quick-card .qc-t { font-weight: 900; }
+.quick-card .qc-d { font-size: .78rem; color: var(--muted); line-height: 1.35; flex: 1; }
+.quick-card.done { border-color: rgba(61, 220, 151, .45); }
+.missions-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; text-align: start; }
+.missions-row .mr-ic { font-size: 1.5rem; }
+.missions-row .bar { height: 8px; margin-top: 6px; }
+.missions-row .mx { font-weight: 900; }
+.modal .mission { margin-bottom: 8px; }
+.stat-grid.three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.res-actions { display: flex; gap: 8px; justify-content: center; margin-top: 4px; }
+.res-act { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; }
+.res-act .ra-ic { font-size: 1.3rem; }
+.more-box > summary { cursor: pointer; font-weight: 900; padding: 4px 0; list-style: none; }
+.more-box > summary::-webkit-details-marker { display: none; }
+.more-box > summary::after { content: ' ▾'; color: var(--muted); }
+.more-box[open] > summary::after { content: ' ▴'; }
+.more-sec { padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--line); }
+.note.center { text-align: center; }
+.code-entry .btn-row { flex-wrap: nowrap; }
+.code-entry .code-in { flex: 1; min-width: 0; min-height: 48px; }
+.shop-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 12px 0; padding: 5px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
+.shop-tabs button { min-height: 44px; border-radius: 12px; border: 0; background: none; color: var(--muted); font: inherit; font-weight: 900; cursor: pointer; }
+.shop-tabs button[aria-selected="true"] { background: var(--surface-2); color: var(--ink); box-shadow: var(--shadow-sm); }
+.buying { opacity: .85; pointer-events: none; }
+.modal.buy-ok { text-align: center; }
+.buy-ok .bo-ic { font-size: 3.2rem; animation: bo-pop .5s cubic-bezier(.2, 1.6, .4, 1); }
+.buy-ok .bo-pearls { font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--accent); }
+@keyframes bo-pop { from { transform: scale(.3); opacity: 0; } }

@@ -28,7 +28,13 @@ registerScreen('shop', (app) => {
   const el = h('main', topbar(t('shop.title'), t('shop.sub')));
   const wallet = h('section.card.wallet', h('div.w-main', h('span.w-ic', '💎'), h('div.grow', h('div.faint', t('wal.balance')), balance)));
   const box = h('div');
-  el.append(wallet, box);
+  // تبويبان فقط: «اشترِ» (Google Play) و«استخدم لآلئك»
+  let tab = 'buy';
+  const tabBtn = (id, v, label) => h('button', { id, type: 'button', role: 'tab', 'aria-selected': String(tab === v), on: { click: () => { sfx.tap(); tab = v; paintTabs(); paint(); } } }, label);
+  const tabs = h('div.shop-tabs', { role: 'tablist' }, tabBtn('tabBuy', 'buy', '🛍️ ' + t('shop.tabBuy')), tabBtn('tabSpend', 'spend', '💎 ' + t('shop.tabSpend')));
+  const paintTabs = () => { for (const b of tabs.children) b.setAttribute('aria-selected', String(b.id === (tab === 'buy' ? 'tabBuy' : 'tabSpend'))); };
+  el.append(wallet, tabs, box);
+  let busy = false;   // شراء واحد في كل مرة (لا ضغط مزدوج = لا شراء مزدوج)
   const refreshBalance = () => { balance.textContent = num(pearls(data)); replayPop(balance); };
   const replayPop = (n) => { n.classList.remove('pop'); void n.offsetWidth; n.classList.add('pop'); };
 
@@ -50,7 +56,7 @@ registerScreen('shop', (app) => {
   function spendSection() {
     const item = (id, ic, title, desc, price, can, doBuy, done = false) => {
       const b = h('button.btn.sm' + (done ? '' : '.primary'), { id: 'spend-' + id, type: 'button', disabled: done, on: { click: () => {
-        if (pearls(data) < price) { sfx.wrong(); toast(t('wal.notEnough')); return document.getElementById('packs')?.scrollIntoView({ behavior: 'smooth' }); }
+        if (pearls(data) < price) { sfx.wrong(); toast(t('wal.notEnough')); tab = 'buy'; paintTabs(); return paint(); }
         if (!can()) { sfx.wrong(); return toast(t('wal.cannot')); }
         if (doBuy()) { app.save(); sfx.reward(); refreshBalance(); toast(t('wal.bought')); paint(); }
       } } }, done ? t('shop.owned') : pearlTxt(price));
@@ -77,18 +83,39 @@ registerScreen('shop', (app) => {
 
   /* ---------- مشتريات Google Play ---------- */
   async function buyFlow(id, btn) {
-    sfx.tap(); btn.disabled = true;
-    try {
-      const r = await billing.buy(app, id);
-      if (r.ok) { sfx.fanfare(); confetti({ count: 80 }); toast(r.pearls ? t('wal.gotPack', { n: num(r.pearls) }) : t('shop.thanks')); refreshBalance(); }
-      else if (r.status === 'pending') toast(t('shop.pending'));
+    if (busy) return;
+    busy = true; sfx.tap();
+    for (const b of box.querySelectorAll('[data-buy]')) b.disabled = true;
+    const label = btn.innerHTML;
+    btn.classList.add('buying'); btn.replaceChildren(h('span.spinner'), ' ', t('shop.buying'));
+    let r = null;
+    try { r = await billing.buy(app, id); } catch { r = { ok: false, status: 'error' }; }
+    busy = false;
+    if (r.ok) { refreshBalance(); celebrate(id, r); }
+    else {
+      btn.innerHTML = label; btn.classList.remove('buying');
+      if (r.status === 'pending') toast(t('shop.pending'));
       else if (r.status !== 'cancelled') toast(t('shop.failed'));
-    } catch { toast(t('shop.failed')); }
+    }
     paint();
+  }
+  /** نافذة نجاح واضحة: ماذا حصلت ورصيدك الجديد */
+  function celebrate(id, r) {
+    sfx.fanfare(); confetti({ count: 90 });
+    const pr = PRODUCTS[id];
+    app.modal((m, close) => {
+      m.classList.add('buy-ok');
+      m.append(h('div.bo-ic', pr.icon || '🎉'), h('h2', t('shop.successTitle')),
+        r.pearls ? h('div.bo-pearls', '\u2066+' + num(r.pearls) + ' 💎\u2069') : null,
+        h('p.note', r.pearls && pr.consumable ? t('wal.gotPack', { n: num(r.pearls) }) : t('shop.p.' + id)),
+        h('p.faint', t('wal.balance'), ': ', h('b', num(pearls(data)), ' 💎')),
+        h('button.btn.gold.block.lg', { 'data-autofocus': true, id: 'buyOkClose', on: { click: () => close() } }, t('shop.great')));
+    });
   }
 
   const paint = async () => {
-    clear(box).append(spendSection());
+    clear(box);
+    if (tab === 'spend') { box.append(spendSection()); return; }
     if (!billing.available()) {
       box.append(h('section.card.section', h('h2', t('shop.appOnly')), h('p.note', t('shop.appOnlyBody')),
         h('a.btn.primary.block', { href: PLAY_URL, target: '_blank', rel: 'noopener' }, '▶ ', t('share.getApp'))));
@@ -106,7 +133,7 @@ registerScreen('shop', (app) => {
     // عرض البداية (مرة واحدة)
     const st = P('starter_pack');
     if (st && !ent.starter) {
-      const b = h('button.btn.gold.lg', { id: 'buy-starter_pack', type: 'button', on: { click: () => buyFlow('starter_pack', b) } }, st.price);
+      const b = h('button.btn.gold.lg', { id: 'buy-starter_pack', type: 'button', 'data-buy': '1', on: { click: () => buyFlow('starter_pack', b) } }, st.price);
       box.append(h('section.starter-card.section', h('span.shop-tag', t('shop.once')),
         h('div.st-ic', '🎁'), h('div.grow', h('div.t', t('shop.p.starter_pack')), h('div.d', t('shop.p.starter_packD', { n: num(PRODUCTS.starter_pack.pearls) }))), b));
     }
@@ -116,7 +143,7 @@ registerScreen('shop', (app) => {
     for (const id of PEARL_PACKS) {
       const p = P(id); if (!p) continue;
       const pr = PRODUCTS[id];
-      const b = h('button.pack' + (pr.popular ? '.popular' : ''), { id: 'buy-' + id, type: 'button', on: { click: () => buyFlow(id, b) } },
+      const b = h('button.pack' + (pr.popular ? '.popular' : ''), { id: 'buy-' + id, type: 'button', 'data-buy': '1', on: { click: () => buyFlow(id, b) } },
         pr.popular ? h('span.pk-tag', t('shop.popular')) : pr.bonus ? h('span.pk-tag.bonus', t('shop.bonus', { n: num(pr.bonus) })) : null,
         h('span.pk-ic', id === 'pearls_xl' ? '💰' : id === 'pearls_l' ? '💎💎' : '💎'),
         h('span.pk-n', num(pr.pearls)), h('span.pk-u', t('wal.pearls')), h('span.pk-p', p.price));
@@ -129,7 +156,7 @@ registerScreen('shop', (app) => {
     for (const id of ['pro_bundle', 'remove_ads', 'skins_pack']) {
       const p = P(id); if (!p) continue;
       const owned = owns(ent, id);
-      const btn = h('button.btn' + (p.best ? '.gold' : '.primary'), { id: 'buy-' + id, type: 'button', disabled: owned, on: { click: () => buyFlow(id, btn) } }, owned ? t('shop.owned') : p.price);
+      const btn = h('button.btn' + (p.best ? '.gold' : '.primary'), { id: 'buy-' + id, type: 'button', 'data-buy': '1', disabled: owned, on: { click: () => buyFlow(id, btn) } }, owned ? t('shop.owned') : p.price);
       sec.append(h('section.card.shop-item' + (p.best ? '.best' : ''),
         p.best ? h('span.shop-tag', t('shop.best')) : null,
         h('div.shop-ic', PRODUCTS[id].icon),
@@ -144,5 +171,5 @@ registerScreen('shop', (app) => {
     box.append(h('p.note', t('shop.fair')));
   };
   paint();
-  return { el };
+  return { el, nav: 'shop' };
 });

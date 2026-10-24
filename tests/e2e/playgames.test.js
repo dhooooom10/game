@@ -47,7 +47,7 @@ test('play games bridge: signs in, unlocks achievements, submits best scores onc
   assert.deepEqual(out.calls.filter((c) => c[0] === 'score'), [['score', 'LB_STARS', 5], ['score', 'LB_SURV', 17]]);
   // أزرار Play Games في شاشة الأصدقاء
   await page.evaluate(() => window.__mc.go('friends'));
-  await page.waitForSelector('text=Google Play Games');
+  await page.waitForSelector('button:has-text("الإنجازات")');
   await page.click('button:has-text("الإنجازات")');
   await page.click('button:has-text("لوحات الصدارة")');
   const calls = await page.evaluate(() => window.__pgCalls.map((c) => c[0]));
