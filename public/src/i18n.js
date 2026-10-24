@@ -630,6 +630,19 @@ const ar = {
   "shop.buying": "جارٍ الشراء…",
   "shop.successTitle": "تم الشراء بنجاح!",
   "shop.great": "رائع!",
+  "menu.levels": "المراحل",
+  "menu.challenges": "التحديات",
+  "menu.how": "كيف تلعب",
+  "how.1t": "معادلات تسقط",
+  "how.1d": "كل قطرة تحمل مسألة حساب سريعة.",
+  "how.2t": "اكتب الناتج",
+  "how.2d": "تنفجر القطرة فورًا عند الإجابة الصحيحة — لا حاجة لزر.",
+  "how.3t": "لا تدعها تصل الماء",
+  "how.3d": "كل قطرة تسقط تُفقدك قلبًا ❤️ — لديك ٣.",
+  "how.4t": "اصنع سلسلة",
+  "how.4d": "الإجابات المتتالية تضاعف النقاط 🔥 والقطرات الخاصة 🎁⭐❄️ تمنحك مفاجآت.",
+  "how.try": "جرّب الشرح التفاعلي",
+  "how.ok": "فهمت!",
 };
 
 const en = {
@@ -1249,6 +1262,19 @@ const en = {
   "shop.buying": "Buying…",
   "shop.successTitle": "Purchase complete!",
   "shop.great": "Great!",
+  "menu.levels": "Levels",
+  "menu.challenges": "Challenges",
+  "menu.how": "How to play",
+  "how.1t": "Falling equations",
+  "how.1d": "Each drop carries a quick sum.",
+  "how.2t": "Type the answer",
+  "how.2d": "The drop pops the moment you're right — no button needed.",
+  "how.3t": "Don't let them land",
+  "how.3d": "Each drop that lands costs a heart ❤️ — you have 3.",
+  "how.4t": "Build a streak",
+  "how.4d": "Answers in a row multiply points 🔥, and special drops 🎁⭐❄️ bring surprises.",
+  "how.try": "Try the quick tutorial",
+  "how.ok": "Got it!",
 };
 
 /* لغات النسخة السابقة: العناوين الأساسية فقط (والباقي بالإنجليزية) */

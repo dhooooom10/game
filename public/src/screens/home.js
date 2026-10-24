@@ -1,5 +1,6 @@
 /* الشاشة الرئيسية — بسيطة: زر «العب الآن» كبير، التحدي اليومي و«تحدّيك الخاص»، وسطر لمهام اليوم. */
 import { app, registerScreen } from '../app.js';
+import { topbar } from './setup.js';
 import { h, icon, num } from '../ui/dom.js';
 import { mascotSVG } from '../ui/mascot.js';
 import { sfx } from '../ui/audio.js';
@@ -40,22 +41,38 @@ registerScreen('home', (app) => {
   }
   if (app.migrated) { el.appendChild(h('p.note', { style: { color: 'var(--ok)' } }, t('prof.migrated', { n: app.migrated }))); app.migrated = 0; }
 
-  // البطل: العب الآن
+  // ===== القائمة الرئيسية للعبة: العب الآن · المراحل · التحديات · الأصدقاء · المتجر · الإعدادات · كيف تلعب =====
   const L = nextJourneyLevel(data);
   const w = WORLDS[worldOf(L)];
-  const totalStars = Object.values(data.journey.stars).reduce((a, b) => a + b, 0);
   const ds = dailyStatus(data);
-  const rain = h('div.rainlines', { aria: { hidden: 'true' } });
-  if (!reducedMotion()) for (let i = 0; i < 9; i++) rain.appendChild(h('i', { style: { left: (8 + i * 11) + '%', animationDelay: (i * 0.29) + 's', animationDuration: (2.2 + (i % 3) * 0.5) + 's' } }));
   const firstTime = !data.settings.tutorialDone && data.stats.rounds === 0;
   const playSub = firstTime ? t('home.playFirst') : data.journey.stars[100] && L === 100 ? t('home.allDone') : t('home.playSub', { n: L, world: t('world.' + w.key) });
   // بطاقة «جولة لم تكتمل» (تُملأ بعد الرسم إن وُجدت جولة محفوظة صالحة)
   const resumeSlot = h('div', { id: 'resumeSlot' });
   el.appendChild(resumeSlot);
-  el.appendChild(h('section.hero', { aria: { label: t('home.play') } }, rain,
-    h('span.mascot-wrap.hero-mascot', { html: mascotSVG({ skin: cos.skin, acc: cos.acc, mood: 'happy', size: 110, label: t('mascot.name') }) }),
-    h('button.btn.gold.play-btn', { id: 'playNow', on: { click: playNow } }, icon('play', 'fill'), t('home.play')),
-    h('div.play-sub', playSub, totalStars ? ' · ★ ' + num(totalStars) : '')));
+
+  const rain = h('div.rainlines', { aria: { hidden: 'true' } });
+  if (!reducedMotion()) for (let i = 0; i < 12; i++) rain.appendChild(h('i', { style: { left: (4 + i * 8.3) + '%', animationDelay: (i * 0.23) + 's', animationDuration: (1.8 + (i % 4) * 0.45) + 's' } }));
+  const ms = data.missions.list || [];
+  const doneN = ms.filter((m) => m.done).length;
+  const mbtn = (id, ic, title, fn, badge) => h('button.menu-btn', { id, type: 'button', on: { click: () => { sfx.tap(); fn(); } } },
+    h('span.mb-ic', ic), h('span.mb-t', title), badge ? h('span.mb-badge', badge) : null);
+  el.appendChild(h('section.main-menu', { aria: { label: t('app.name') } }, rain,
+    h('div.logo',
+      h('span.logo-mascot', { html: mascotSVG({ skin: cos.skin, acc: cos.acc, mood: 'happy', size: 112, label: t('mascot.name') }) }),
+      h('h1.wordmark', t('app.name')),
+      h('div.tagline', t('app.tagline'))),
+    h('button.menu-play', { id: 'playNow', type: 'button', on: { click: playNow } },
+      h('span.mp-ic', icon('play', 'fill')), h('span.mp-txt', h('b', t('home.play')), h('small', playSub))),
+    h('div.menu-grid',
+      mbtn('menuLevels', '🗺️', t('menu.levels'), () => app.go('journey')),
+      mbtn('menuChallenges', '🏆', t('menu.challenges'), () => app.go('challenges'), ds.done ? null : '!'),
+      mbtn('menuFriends', '👥', t('nav.friends'), () => app.go('friends')),
+      mbtn('menuShop', '🛍️', t('nav.shop'), () => app.go('shop'))),
+    h('div.menu-row',
+      h('button.menu-small', { id: 'missionsRow', type: 'button', on: { click: openMissions } }, doneN === ms.length && ms.length ? '🏆 ' : '🎯 ', t('home.missions'), h('b', ` ${num(doneN)}/${num(ms.length)}`)),
+      h('button.menu-small', { id: 'menuHow', type: 'button', on: { click: () => { sfx.tap(); howToPlay(); } } }, '❓ ', t('menu.how')),
+      h('button.menu-small.icon-only', { id: 'menuSettings', type: 'button', aria: { label: t('nav.settings') }, on: { click: () => { sfx.tap(); app.go('settings'); } } }, icon('gear')))));
 
   function playNow() {
     sfx.tap();
@@ -63,54 +80,6 @@ registerScreen('home', (app) => {
     app.go('rainPlay', { kind: 'journey', args: { level: L } });
   }
 
-  // بطاقتان فقط: التحدي اليومي و«تحدّيك الخاص»
-  el.appendChild(h('section.section.quick-grid',
-    h('button.quick-card' + (ds.done ? '.done' : ''), { id: 'dailyCard', type: 'button', on: { click: openDaily } },
-      h('span.qc-ic', ds.done ? '✅' : '📅'), h('span.qc-t', t('daily.title')), ds.streak ? h('span.qc-n', '🔥' + num(ds.streak)) : null),
-    h('button.quick-card', { id: 'modeCustom', type: 'button', on: { click: () => { sfx.tap(); app.go('setupCustom'); } } },
-      h('span.qc-ic', '🎛️'), h('span.qc-t', t('mode.custom')))));
-
-  function openDaily() {
-    sfx.tap();
-    const today = todayStr();
-    const st = dailyStatus(data, today);
-    app.modal((box, close) => {
-      box.append(h('h2', t('daily.title')),
-        h('p.note', t('daily.sub', { n: DAILY_COUNT })),
-        h('p.note', t('daily.leaveNote')),
-        st.done ? h('p.note', { style: { color: 'var(--ok)', fontWeight: 800 } }, t('daily.done', { score: num(st.result.score) })) : null,
-        shieldBox(close),
-        h('div.stack',
-          st.done
-            ? h('button.btn.primary.block.lg', { 'data-autofocus': true, on: { click: () => { close(); app.go('rainPlay', { kind: 'daily', args: { date: today, official: false } }); } } }, icon('refresh'), t('daily.practice'))
-            : h('button.btn.gold.block.lg', { 'data-autofocus': true, on: { click: () => { close(); app.go('rainPlay', { kind: 'daily', args: { date: today, official: true } }); } } }, icon('play', 'fill'), t('daily.start')),
-          h('button.btn.ghost.block', { on: { click: () => close() } }, t('common.close'))));
-    });
-  }
-
-  /** دروع السلسلة 🛡️: تحمي سلسلتك إن فاتك يوم. تُكسب من القطرات الغامضة أو بإعلان بمكافأة. */
-  function shieldBox(close) {
-    const need = shieldsNeeded(data);
-    const box = h('div.shield-box', h('div.t', '🛡️ ', t('shield.title'), ' · ', num(data.shields || 0), '/', num(MAX_SHIELDS)), h('div.d', t('shield.sub')));
-    if (need && need <= (data.shields || 0) && !dailyStatus(data).done) box.append(h('div.d.ok', t('shield.saving', { n: need })));
-    if ((data.shields || 0) < MAX_SHIELDS && ads.rewardedReady()) {
-      box.append(h('button.btn.sm.gold', { id: 'shieldAd', type: 'button', on: { click: async () => {
-        if (!(await ads.showRewarded())) return;
-        data.shields = Math.min(MAX_SHIELDS, (data.shields || 0) + 1); app.save(); sfx.reward();
-        toast(t('shield.got')); close(); app.go('home', {}, { root: true });
-      } } }, '🎬 ', t('shield.watch')));
-    }
-    return box;
-  }
-
-  // مهام اليوم: سطر واحد يفتح القائمة
-  const ms = data.missions.list || [];
-  const doneN = ms.filter((m) => m.done).length;
-  const mFill = h('i', { style: { width: (ms.length ? doneN / ms.length : 0) * 100 + '%' } });
-  el.appendChild(h('button.missions-row.section', { id: 'missionsRow', type: 'button', on: { click: openMissions } },
-    h('span.mr-ic', doneN === ms.length && ms.length ? '🏆' : '🎯'),
-    h('span.grow', h('b', t('home.missions')), h('div.bar.ok', { role: 'progressbar', aria: { valuenow: doneN, valuemax: ms.length, valuemin: 0 } }, mFill)),
-    h('span.mx', `${num(doneN)}/${num(ms.length)}`)));
   function openMissions() {
     sfx.tap();
     app.modal((box, close) => {
@@ -143,7 +112,7 @@ registerScreen('home', (app) => {
   }
 
   return {
-    el, nav: 'home',
+    el,
     afterMount: () => {
       // استئناف جولة انقطعت (تحديث الصفحة أو إغلاق التطبيق)
       // جولة محفوظة من إصدار قديم (الوقت/البقاء المستقلان) ← «تحدّيك الخاص» بنفس القواعد، أو تُلغى إن تعذّر ذلك
@@ -156,6 +125,74 @@ registerScreen('home', (app) => {
       try { resumeSlot.replaceChildren(resumeCard(active, resumeSlot)); } catch (e) { console.error(e); app.logError?.(e, 'resume-card'); app.store.clearActive(app.pid); }
     },
   };
+});
+
+/** التحدي اليومي: نافذة البدء (تُستخدم من القائمة والتحديات والمهام) */
+export function openDaily() {
+  sfx.tap();
+  const data = app.data;
+  const today = todayStr();
+  const st = dailyStatus(data, today);
+  app.modal((box, close) => {
+    box.append(h('h2', '📅 ', t('daily.title')),
+      h('p.note', t('daily.sub', { n: DAILY_COUNT })),
+      h('p.note', t('daily.leaveNote')),
+      st.done ? h('p.note', { style: { color: 'var(--ok)', fontWeight: 800 } }, t('daily.done', { score: num(st.result.score) })) : null,
+      shieldBox(close),
+      h('div.stack',
+        st.done
+          ? h('button.btn.primary.block.lg', { 'data-autofocus': true, on: { click: () => { close(); app.go('rainPlay', { kind: 'daily', args: { date: today, official: false } }); } } }, icon('refresh'), t('daily.practice'))
+          : h('button.btn.gold.block.lg', { 'data-autofocus': true, on: { click: () => { close(); app.go('rainPlay', { kind: 'daily', args: { date: today, official: true } }); } } }, icon('play', 'fill'), t('daily.start')),
+        h('button.btn.ghost.block', { on: { click: () => close() } }, t('common.close'))));
+  });
+}
+
+/** دروع السلسلة 🛡️: تحمي سلسلتك إن فاتك يوم. تُكسب من القطرات الغامضة أو بإعلان بمكافأة. */
+function shieldBox(close) {
+  const data = app.data;
+  const need = shieldsNeeded(data);
+  const box = h('div.shield-box', h('div.t', '🛡️ ', t('shield.title'), ' · ', num(data.shields || 0), '/', num(MAX_SHIELDS)), h('div.d', t('shield.sub')));
+  if (need && need <= (data.shields || 0) && !dailyStatus(data).done) box.append(h('div.d.ok', t('shield.saving', { n: need })));
+  if ((data.shields || 0) < MAX_SHIELDS && ads.rewardedReady()) {
+    box.append(h('button.btn.sm.gold', { id: 'shieldAd', type: 'button', on: { click: async () => {
+      if (!(await ads.showRewarded())) return;
+      data.shields = Math.min(MAX_SHIELDS, (data.shields || 0) + 1); app.save(); sfx.reward();
+      toast(t('shield.got')); close(); app.go('home', {}, { root: true });
+    } } }, '🎬 ', t('shield.watch')));
+  }
+  return box;
+}
+
+/** «كيف تلعب»: شرح سريع في ٤ خطوات + الشرح التفاعلي */
+export function howToPlay() {
+  app.modal((box, close) => {
+    const step = (ic, title, d) => h('div.how-step', h('span.hs-ic', ic), h('div', h('b', title), h('div.d', d)));
+    box.classList.add('how-modal');
+    box.append(h('h2', '❓ ', t('menu.how')),
+      step('💧', t('how.1t'), t('how.1d')),
+      step('⌨️', t('how.2t'), t('how.2d')),
+      step('🌊', t('how.3t'), t('how.3d')),
+      step('🔥', t('how.4t'), t('how.4d')),
+      h('div.stack', { style: { marginTop: '12px' } },
+        h('button.btn.gold.block.lg', { id: 'howTry', 'data-autofocus': true, on: { click: () => { sfx.tap(); close(); app.go('rainPlay', { kind: 'tutorial', args: {} }); } } }, icon('play'), t('how.try')),
+        h('button.btn.ghost.block', { id: 'howOk', on: { click: () => { sfx.tap(); close(); } } }, t('how.ok'))));
+  });
+}
+
+/* التحديات: اليومي + الوقت + البقاء + تخصيص + التدريب الحر — صفحة واحدة بأزرار كبيرة */
+registerScreen('challenges', (app) => {
+  const data = app.data;
+  const ds = dailyStatus(data);
+  const el = h('main', topbar(t('menu.challenges')));
+  const card = (id, ic, title, sub, fn, extra) => h('button.ch-big', { id, type: 'button', on: { click: () => { sfx.tap(); fn(); } } },
+    h('span.cb-ic', ic), h('span.grow', h('b', title), h('small', sub)), extra || null);
+  el.append(h('div.ch-list',
+    card('dailyCard', ds.done ? '✅' : '📅', t('daily.title'), ds.done ? t('daily.done', { score: num(ds.result.score) }) : t('home.dailyShort'), openDaily, h('span.chip.gold', '🔥 ' + num(ds.streak))),
+    card('chTime', '⏱️', t('ch.time'), t('ch.timeSub'), () => app.go('setupCustom', { mode: 'time' })),
+    card('chSurvival', '❤️', t('ch.survival'), t('ch.survivalSub'), () => app.go('setupCustom', { mode: 'survival' })),
+    card('modeCustom', '🎛️', t('ch.custom'), t('ch.customSub'), () => app.go('setupCustom', { mode: 'custom' })),
+    card('chPractice', '📚', t('mode.practice'), t('mode.practiceSub'), () => app.go('practice'))));
+  return { el };
 });
 
 /** بطاقة هادئة في الرئيسية بدل نافذة تعترض اللاعب: «أكمل ▶» أو «✕» لتجاهلها */

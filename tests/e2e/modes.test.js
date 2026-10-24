@@ -29,6 +29,7 @@ const data = (p) => p.evaluate(() => JSON.parse(JSON.stringify(window.__mc.data)
 test('time challenge: reachable from home in two taps, completes at time-out, counts the time mission only', async () => {
   const p = await fresh({ clock: true });
   await setMissions(p, ['time1', 'survive1', 'custom1']);
+  await p.click('#menuChallenges');
   await p.click('#modeCustom');
   await waitScreen(p, 'setupCustom');
   for (const id of ['#ch-time', '#ch-survival', '#ch-custom']) await p.waitForSelector(id);

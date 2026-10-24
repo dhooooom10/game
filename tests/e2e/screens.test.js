@@ -12,7 +12,7 @@ test('every screen renders without errors and without horizontal overflow at 320
   const page = await newPage(browser, { width: 320, height: 640 });
   await page.goto(URL_);
   await waitScreen(page, 'home');
-  const screens = [['home'], ['journey'], ['world', { w: 0 }], ['world', { w: 9 }], ['locker'], ['locker', { tab: 'looks' }],
+  const screens = [['home'], ['journey'], ['world', { w: 0 }], ['world', { w: 9 }], ['challenges'], ['locker'], ['locker', { tab: 'looks' }],
     ['settings'], ['profiles'], ['setupCustom', { mode: 'time' }], ['setupCustom', { mode: 'survival' }], ['setupCustom', { mode: 'custom' }], ['practice'], ['practice', { tab: 'lessons' }], ['lessonPath', { pid: 'mul' }],
     ['friendSetup'], ['friends'], ['friendCompose'], ['party']];
   for (const [name, params] of screens) {
@@ -38,13 +38,22 @@ test('every screen renders without errors and without horizontal overflow at 320
   assert.deepEqual(page.errors, []);
 });
 
-test('bottom navigation tabs and settings work; language switch to English flips direction', async () => {
+test('main menu opens every section and each has a way back; language switch to English flips direction', async () => {
   const page = await newPage(browser);
   await page.goto(URL_);
-  for (const [nav, name] of [['journey', 'journey'], ['friends', 'friends'], ['shop', 'shop'], ['home', 'home'], ['settings', 'settings']]) {
-    await page.click(`#nav [data-nav="${nav}"]`);
+  await waitScreen(page, 'home');
+  assert.equal(await page.locator('#nav:not([hidden])').count(), 0, 'no bottom bar — the menu is the start');
+  for (const [btn, name] of [['#menuLevels', 'journey'], ['#menuChallenges', 'challenges'], ['#menuFriends', 'friends'], ['#menuShop', 'shop']]) {
+    await page.click(btn);
     await waitScreen(page, name);
+    await page.click('.topbar .back');
+    await waitScreen(page, 'home');
   }
+  await page.click('#menuHow');
+  await page.waitForSelector('.how-modal .how-step');
+  await page.click('#howOk');
+  await page.click('#menuSettings');
+  await waitScreen(page, 'settings');
   await page.selectOption('select', 'en');
   await page.waitForFunction(() => document.documentElement.dir === 'ltr');
   assert.match(await page.locator('h1').innerText(), /Settings/);
@@ -153,7 +162,7 @@ test('legacy v1 save in localStorage migrates on first load', async () => {
   assert.equal(d.settings.digits, 'western');
   assert.match(await page.locator('main').innerText(), /خالد/);
   assert.match(await page.locator('main').innerText(), /نُقلت بيانات 1 لاعب/);
-  assert.match(await page.locator('.play-sub').innerText(), /23/);
+  assert.match(await page.locator('#playNow small').innerText(), /23/);
 });
 
 test('keyboard-only play works (Tab focus + keys)', async () => {

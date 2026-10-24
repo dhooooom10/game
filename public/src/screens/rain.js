@@ -47,7 +47,9 @@ registerScreen('rainPlay', (app, params) => {
   const scoreEl = h('span', num(0));
   const livesEl = h('span.lives');
   const streakEl = h('span.chip.streak-chip', { hidden: true });
-  const goalEl = h('span.chip');
+  // التقدّم نحو الهدف: شريط رفيع في أعلى الشاشة بدل شارة
+  const goalFill = h('i'); const goalText = h('span.goal-t');
+  const goalEl = h('div.goal-bar', { aria: { hidden: 'true' } }, goalFill, goalText);
   const timerFill = h('i'); const timerEl = h('div.timer', timerFill); const timerText = h('span.timer-text');
   const iceEl = h('span.chip.ice-chip', { hidden: true }, '❄️');
   const speedEl = h('span.chip.speed-chip', { hidden: !cfg.accel, aria: { label: t('rain.speedA11y') } });
@@ -64,6 +66,7 @@ registerScreen('rainPlay', (app, params) => {
     h('div.ground', { aria: { hidden: 'true' } }, h('i.wave'), h('i.wave.w2')));
   if (meta.tint) sky.style.setProperty('--sky-tint', meta.tint);
   const coach = h('div.rain-coach', { hidden: true });
+  // ما تكتبه يظهر فقاعةً داخل السماء (لا خانة منفصلة تأخذ مساحة)
   const display = h('div.display.empty', { role: 'status', aria: { live: 'polite' } }, t('game.typeHere'));
   const live = h('div.sr-only', { aria: { live: 'polite' } });
   const kp = h('div.keypad.rain-keypad', { role: 'group', aria: { label: t('game.typeHere') } });
@@ -78,11 +81,14 @@ registerScreen('rainPlay', (app, params) => {
     b.addEventListener('click', (e) => { if (e.detail === 0) fn(); });
     kp.appendChild(b); return b;
   };
-  for (const d of ['1', '2', '3', '4', '5', '6', '7', '8', '9']) fastKey(num(d), () => press(d), '', num(d));
-  if (negAllowed) fastKey('−', () => press('-'), 'fn', t('game.neg')); else fastKey('C', () => press('clear'), 'fn', t('game.del'));
-  fastKey(num('0'), () => press('0'), '', num('0'));
-  fastKey(icon('backspace'), () => press('back'), 'fn', t('game.del'));
-  fastKey(h('span', { style: { display: 'inline-flex', gap: '8px', alignItems: 'center' } }, icon('check'), t('game.check')), () => press('ok'), 'go', t('game.check'));
+  // لوحة مدمجة ٤×٣: [١ ٢ ٣ ⌫] [٤ ٥ ٦ ٠] [٧ ٨ ٩ ✓] — الإجابة الصحيحة تُطلق تلقائيًا، و✓ عند الحاجة فقط
+  const digitKey = (d) => fastKey(num(d), () => press(d), '', num(d));
+  ['1', '2', '3'].forEach(digitKey); fastKey(icon('backspace'), () => press('back'), 'fn', t('game.del'));
+  ['4', '5', '6'].forEach(digitKey);
+  if (negAllowed) fastKey('−', () => press('-'), 'fn', t('game.neg')); else digitKey('0');
+  ['7', '8', '9'].forEach(digitKey);
+  if (negAllowed) digitKey('0');
+  fastKey(icon('check'), () => press('ok'), 'go' + (negAllowed ? '.wide' : ''), t('game.check'));
 
   const quitBtn = h('button.icon-btn', { aria: { label: t('game.quit') }, on: { click: () => askQuit() } }, icon('close'));
   const pauseBtn = meta.tutorial
@@ -90,10 +96,13 @@ registerScreen('rainPlay', (app, params) => {
     : realtime ? null : h('button.icon-btn', { aria: { label: t('game.pause') }, on: { click: () => pause() } }, icon('pause'));
   const center = h('div.grow');
   if (R.limitTicks) center.append(h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, h('div', { style: { flex: '1' } }, timerEl), timerText));
+  center.append(goalEl);
   const el = h('main.game-view.rain-view',
-    h('div.hud', quitBtn, center, pauseBtn, h('div.score', scoreEl, h('small', t('game.score')))),
-    h('div.hud-sub', h('span.label', meta.label), goalEl, streakEl, speedEl, iceEl, livesEl),
-    chaseEl, oppBox, h('div.sky-wrap', sky, coach), h('div.answer-area', display, kp), live);
+    h('div.hud', quitBtn, livesEl, center, h('div.score', scoreEl), pauseBtn),
+    h('span.sr-only', meta.label),
+    chaseEl, oppBox,
+    h('div.sky-wrap', sky, coach, h('div.sky-chips', streakEl, speedEl, iceEl), display),
+    h('div.answer-area', kp), live);
 
   /* ---------- HUD ---------- */
   function paintHud(lost = false) {
@@ -104,9 +113,8 @@ registerScreen('rainPlay', (app, params) => {
       for (let i = 0; i < 3; i++) { const ic = icon('heart', 'fill' + (i >= S.lives ? ' lost' : '')); if (lost && i === S.lives) ic.classList.add('lose-anim'); livesEl.appendChild(ic); }
       livesEl.setAttribute('aria-label', t('a11y.lives', { n: S.lives }));
     } else livesEl.hidden = true;
-    goalEl.hidden = !cfg.target;
-    if (cfg.target) goalEl.textContent = '💧 ' + t('rain.pops', { a: num(S.popped), b: num(cfg.target) });
-    else { goalEl.hidden = false; goalEl.textContent = '💧 ' + num(S.popped); }
+    if (cfg.target) { goalFill.style.transform = `scaleX(${Math.min(1, S.popped / cfg.target)})`; goalText.textContent = '💧 ' + t('rain.pops', { a: num(S.popped), b: num(cfg.target) }); }
+    else { goalFill.style.transform = 'scaleX(0)'; goalText.textContent = '💧 ' + num(S.popped); }
     if (S.streak >= 2) { streakEl.hidden = false; clear(streakEl).append(icon('fire'), h('span', `${num(S.streak)} · ${speedText(streakMultiplier(S.streak))}`)); }
     else streakEl.hidden = true;
     if (cfg.accel) speedEl.textContent = '⚡ ' + speedText(R.speedX());
@@ -150,6 +158,14 @@ registerScreen('rainPlay', (app, params) => {
   }
 
   /* ---------- الأحداث المرئية ---------- */
+  /** انفجار القطرة: رذاذ ملوّن + حلقة + رقم النقاط يطير من القطرة نفسها (أكبر مع السلسلة) */
+  function burstFx(de, ev) {
+    const color = ev.drop.kind === 'gold' ? '#FFD86B' : ev.drop.kind === 'ice' ? '#DFF8FF' : ev.drop.kind === 'storm' ? '#B9A6FF' : ev.drop.kind === 'gift' ? '#FF8FD0' : ev.fever ? '#FFB347' : '#7BE3FF';
+    const special = ev.drop.kind !== 'normal' && ev.drop.kind != null;
+    burst(de, color, special || ev.fever);
+    const st = R.state.streak;
+    floatText(de, '+' + num(ev.points), [ev.drop.kind === 'gold' || ev.fever ? 'gold' : '', st >= 10 ? 'big' : ''].filter(Boolean).join('.'));
+  }
   function dropLabel(q) {
     const parts = q.format === 'missing' ? q.parts : q.parts.filter((p) => !p.eq && !p.blank);
     return mathText(parts);
@@ -164,10 +180,11 @@ registerScreen('rainPlay', (app, params) => {
     placeOne(d, de);
     live.textContent = dropLabel(d.q);
   }
-  function burst(de, color) {
+  function burst(de, color, big = false) {
     if (reducedMotion()) return;
     const r = de.getBoundingClientRect(), s = sky.getBoundingClientRect();
-    popBurst(sky, r.left - s.left + r.width / 2, r.top - s.top + r.height * 0.62, color);
+    // كلما طالت السلسلة كبر الانفجار
+    popBurst(sky, r.left - s.left + r.width / 2, r.top - s.top + r.height * 0.62, color, big ? 22 : 14 + Math.min(8, R.state.streak));
   }
   function handle(events) {
     for (const ev of events) {
@@ -175,15 +192,18 @@ registerScreen('rainPlay', (app, params) => {
       else if (ev.type === 'pop') {
         const de = dropEls.get(ev.drop.id);
         if (de) {
-          burst(de, ev.drop.kind === 'gold' ? '#FFD86B' : ev.drop.kind === 'ice' ? '#DFF8FF' : ev.drop.kind === 'storm' ? '#B9A6FF' : ev.drop.kind === 'gift' ? '#FF8FD0' : ev.fever ? '#FFB347' : '#7BE3FF');
-          floatText(de, '+' + num(ev.points), ev.drop.kind === 'gold' || ev.fever ? 'gold' : '');
+          burstFx(de, ev);
           de.classList.add('popped'); setTimeout(() => de.remove(), 260); dropEls.delete(ev.drop.id);
         }
         if (!ev.chain) { sfx.pop(R.state.streak); buzz(ev.fever ? 18 : 12); }
         const a = R.state.answers[R.state.answers.length - 1];
         if (meta.stats && a && a.correct) recordAnswer(data, { ...a, adapt: true });
         const st = R.state.streak;
-        if (!ev.chain && (st === 5 || st === 10 || st % 15 === 0)) { sfx.combo(); buzz([10, 40, 10]); floatText(sky, t('game.streakMsg', { n: st, m: streakMultiplier(st).toFixed(1) }), 'gold'); replay(streakEl, 'bump'); }
+        replay(el.querySelector('.hud .score'), 'bump'); replay(display, 'ok-flash');
+        if (!ev.chain && (st === 5 || st === 10 || st % 15 === 0)) {
+          sfx.combo(); buzz([10, 40, 10]); floatText(sky, t('game.streakMsg', { n: st, m: streakMultiplier(st).toFixed(1) }), 'gold.big'); replay(streakEl, 'bump');
+          if (!reducedMotion()) replay(sky, 'combo-pulse');
+        }
         if (meta.tutorial) coachSay();
       } else if (ev.type === 'miss') {
         const de = dropEls.get(ev.drop.id);
@@ -205,7 +225,7 @@ registerScreen('rainPlay', (app, params) => {
         if (!reducedMotion()) replay(sky, 'shake');
         replay(sky, 'wrong-flash');
       } else if (ev.type === 'speedup') {
-        sfx.combo(); floatText(sky, t('rain.fasterX', { x: speedText(R.speedX()) }), 'gold');
+        sfx.whoosh(); sfx.combo(); buzz([8, 30, 8]); floatText(sky, t('rain.fasterX', { x: speedText(R.speedX()) }), 'gold.big');
         if (!reducedMotion()) { replay(sky, 'speed-pulse'); replay(speedEl, 'bump'); }
         sky.style.setProperty('--speed', String(Math.min(3, R.speedX())));
         sky.classList.toggle('hyper', R.speedX() >= 2);

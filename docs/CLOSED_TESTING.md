@@ -10,10 +10,10 @@
 
 | الملف | الاستخدام |
 |---|---|
-| `release/qatra-challenge-1.5.1-v14.aab` | **هذا الذي يُرفع إلى Google Play** (موقّع بمفتاح الرفع) |
-| `release/tahaddi-qatra-test-v14.apk` | للتجربة المباشرة على جوالك فقط، لا يُرفع |
+| `release/qatra-challenge-1.6.0-v15.aab` | **هذا الذي يُرفع إلى Google Play** (موقّع بمفتاح الرفع) |
+| `release/tahaddi-qatra-test-v15.apk` | للتجربة المباشرة على جوالك فقط، لا يُرفع |
 
-مع كل رفع جديد يجب أن يزيد `versionCode`. ملف الإصدار هذا رقمه **14**، فإن رفعت قبله رقمًا أعلى فأخبرني لأرفع الرقم.
+مع كل رفع جديد يجب أن يزيد `versionCode`. ملف الإصدار هذا رقمه **15**، فإن رفعت قبله رقمًا أعلى فأخبرني لأرفع الرقم.
 
 ---
 
@@ -38,9 +38,9 @@
    - احفظ.
 4. تبويب **Countries / regions:** اختر الدول التي فيها مختبروك (السعودية على الأقل)، أو كل الدول.
 5. **Create new release**:
-   - ارفع ملف `qatra-challenge-1.5.1-v14.aab`.
-   - اسم الإصدار يُملأ تلقائيًا (1.5.1).
-   - **Release notes:** انسخ نص 1.5.1 من `docs/store/release-notes.md`.
+   - ارفع ملف `qatra-challenge-1.6.0-v15.aab`.
+   - اسم الإصدار يُملأ تلقائيًا (1.6.0).
+   - **Release notes:** انسخ نص 1.6.0 من `docs/store/release-notes.md`.
    - **Next** ← **Save** ← **Go to overview** ← **Send changes for review**.
 6. انتظر مراجعة Google (عادة من ساعات إلى بضعة أيام في أول مرة).
 
@@ -102,6 +102,6 @@
 - [ ] App content مكتمل (الخصوصية، الإعلانات، التصنيف، الجمهور 13+، Data safety).
 - [ ] صفحة المتجر: العنوان والوصف والأيقونة 512×512 وصورة الغلاف 1024×500 وصورتا شاشة على الأقل (الجاهزة في `release/qatra-store-graphics.zip` و`docs/store/`).
 - [ ] مجموعة Google للمختبرين جاهزة ومضافة في تبويب Testers.
-- [ ] رُفع `qatra-challenge-1.5.1-v14.aab` إلى Closed testing وأُرسل للمراجعة.
+- [ ] رُفع `qatra-challenge-1.6.0-v15.aab` إلى Closed testing وأُرسل للمراجعة.
 - [ ] 15 إلى 20 مختبرًا اشتركوا من رابط «Join on the web».
 - [ ] مرّت 14 يومًا ← Apply for production.

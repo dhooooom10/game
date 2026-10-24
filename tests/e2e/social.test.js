@@ -40,16 +40,16 @@ const popUntil = async (P, n) => {
 };
 const QUICK = { mode: 'custom', ops: ['add'], level: 'easy', speed: 'fast', dur: 0, lives: 1, accel: false };
 
-test('home is simple (Play + two cards + missions); friends tab offers code challenge and same-phone room', async () => {
+test('home is a simple game menu; friends offers code challenge and same-phone room', async () => {
   const p = await newPage(browser);
   await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   // الرئيسية بسيطة: «العب الآن» + بطاقتان + سطر المهام فقط
   await p.waitForSelector('#playNow');
-  assert.equal(await p.locator('main .quick-card').count(), 2);
+  assert.equal(await p.locator('.main-menu .menu-btn').count(), 4, 'Levels · Challenges · Friends · Shop');
   assert.equal(await p.locator('#homeBell, #homeQuick, #homeTurbo, .turbo-row, .mode-grid, .online-hero').count(), 0, 'no clutter');
-  // الأصدقاء في الشريط السفلي: تحدٍّ برمز أو غرفة على نفس الجوال
-  await p.click('#nav button.nav-hero[data-nav="friends"]');
+  // الأصدقاء من القائمة: تحدٍّ برمز أو غرفة على نفس الجوال
+  await p.click('#menuFriends');
   await waitScreen(p, 'friends');
   assert.equal(await p.locator('.fr2-act').count(), 2);
   await p.click('[data-go="friendCompose"]');

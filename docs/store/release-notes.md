@@ -1,5 +1,23 @@
 # ما الجديد — نص جاهز لحقل «ملاحظات الإصدار» في Google Play
 
+## الإصدار 1.6.0 (رقم البناء 15)
+
+### العربية (ar)
+```
+🎮 قائمة رئيسية جديدة: العب الآن · المراحل · التحديات · الأصدقاء · المتجر · كيف تلعب
+🌧️ شاشة لعب أوسع: السماء أكبر ولوحة أرقام مدمجة، والإجابة تنطلق تلقائيًا
+💥 انفجارات وأصوات أقوى، والقطرة القريبة من الماء تنبض بالأحمر
+🗺️ خريطة طريق للمراحل والشخصية تمشي معك
+```
+
+### English (en-US)
+```
+🎮 New main menu: Play · Levels · Challenges · Friends · Shop · How to play
+🌧️ Roomier play screen: bigger sky, compact keypad, answers fire automatically
+💥 Stronger pops and sounds; drops near the water pulse red
+🗺️ A level map with your character walking the path
+```
+
 ## الإصدار 1.5.1 (رقم البناء 14)
 
 ### العربية (ar)

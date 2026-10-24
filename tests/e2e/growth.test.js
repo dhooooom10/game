@@ -97,6 +97,7 @@ test('custom challenge: pick ops/speed/accel, play, wrong answer flashes red, sp
   await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; });
+  await p.click('#menuChallenges');
   await p.click('#modeCustom');
   await waitScreen(p, 'setupCustom');
   await p.click('#ch-custom');

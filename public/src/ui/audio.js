@@ -45,6 +45,19 @@ function tone(freq, dur = 0.12, type = 'sine', delay = 0, vol = 0.2, dest = null
   o.start(t); o.stop(t + dur + 0.03);
 }
 
+/** ضوضاء مرشّحة قصيرة (رذاذ/نقرة/اندفاع) — تعطي الأصوات ملمسًا مائيًا */
+let noiseBuf = null;
+function noise(dur = 0.1, vol = 0.1, freq = 1500, sweep = false) {
+  const c = ctx();
+  if (!c || levels.sfx <= 0) return;
+  if (!noiseBuf) { noiseBuf = c.createBuffer(1, c.sampleRate * 0.5, c.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+  const t = c.currentTime, src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  src.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.setValueAtTime(freq, t); f.Q.value = 0.9;
+  if (sweep) f.frequency.exponentialRampToValueAtTime(freq * 4, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f); f.connect(g); g.connect(sfxGain); src.start(t); src.stop(t + dur + 0.02);
+}
+
 export const sfx = {
   tap: () => tone(420, 0.05, 'triangle', 0, 0.08),
   key: () => tone(560, 0.04, 'triangle', 0, 0.06),
@@ -53,11 +66,17 @@ export const sfx = {
   combo: () => [784, 988, 1319].forEach((f, i) => tone(f, 0.09, 'triangle', i * 0.05, 0.12)),
   tick: () => tone(1200, 0.03, 'square', 0, 0.03),
   // الطبقة ترتفع مع السلسلة (حتى أوكتاف تقريبًا) — إحساس «الاندفاع»
-  pop: (streak = 0) => { const k = Math.pow(2, Math.min(12, Math.max(0, streak - 1)) / 12); tone(700 * k, 0.07, 'sine', 0, 0.16); tone(1050 * k, 0.09, 'sine', 0.05, 0.12); },
+  // «بوب» مائي: نقرة ناعمة + نغمتان ترتفعان مع السلسلة، ولمعة إضافية من ٥ متتالية
+  pop: (streak = 0) => {
+    const k = Math.pow(2, Math.min(12, Math.max(0, streak - 1)) / 12);
+    noise(0.05, 0.10, 2200); tone(620 * k, 0.07, 'sine', 0, 0.17); tone(1240 * k, 0.1, 'sine', 0.045, 0.12);
+    if (streak >= 5) tone(1860 * k, 0.12, 'triangle', 0.09, 0.07);
+  },
+  whoosh: () => noise(0.35, 0.12, 900, true),
   fever: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.12, 'square', i * 0.06, 0.07)),
   gift: () => [1047, 1319, 1568, 2093].forEach((f, i) => tone(f, 0.1, 'triangle', i * 0.07, 0.11)),
   record: () => [659, 784, 988, 1319, 1568].forEach((f, i) => tone(f, 0.14, 'triangle', i * 0.08, 0.13)),
-  splash: () => { tone(200, 0.18, 'sine', 0, 0.14); tone(130, 0.22, 'triangle', 0.05, 0.1); },
+  splash: () => { noise(0.25, 0.14, 700); tone(200, 0.18, 'sine', 0, 0.14); tone(120, 0.26, 'triangle', 0.05, 0.11); },
   win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.18, 'sine', i * 0.1, 0.16)),
   fanfare: () => [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, 0.2, 'triangle', i * 0.09, 0.14)),
   lose: () => [440, 392, 330].forEach((f, i) => tone(f, 0.22, 'sine', i * 0.13, 0.12)),

@@ -35,7 +35,7 @@ test('first run: drop tutorial → level 1 → 3 stars (no drop landed) → prog
   await waitScreen(page, 'home');
   d = await data(page);
   assert.equal(d.journey.unlocked, 2);
-  assert.match(await page.locator('.play-sub').innerText(), /2|٢/);
+  assert.match(await page.locator('#playNow small').innerText(), /2|٢/);
   assert.deepEqual(page.errors, []);
 });
 
@@ -217,6 +217,7 @@ test('daily challenge: one official result (no pause), replays are practice only
   await page.clock.install();
   await page.goto(URL_);
   await skipTut(page);
+  await page.click('#menuChallenges');
   await page.click('#dailyCard');
   await page.getByRole('button', { name: 'ابدأ تحدي اليوم' }).click();
   await waitScreen(page, 'rainPlay');

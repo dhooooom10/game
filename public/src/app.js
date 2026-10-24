@@ -11,7 +11,7 @@ import * as notify from './net/notify.js';
 import * as pgs from './net/playgames.js';
 import { nativePlugin } from './net/native.js';
 
-export const VERSION = '1.5.1';
+export const VERSION = '1.6.0';
 
 /* ---------------- سجل الأخطاء (على الجهاز فقط) ----------------
    آخر الأخطاء تُحفظ محليًا ليتمكن اللاعب من نسخها وإرسالها من الإعدادات. لا يُرسل شيء تلقائيًا. */
@@ -38,6 +38,7 @@ export const app = {
   root: null,
   nav: null,
   migrated: 0,
+  navEnabled: false,
 
   get settings() { return this.data.settings; },
   get profile() { return this.store.currentProfile(); },
@@ -136,7 +137,8 @@ export const app = {
 
   renderNav(active) {
     clear(this.nav);
-    if (!active) { this.nav.hidden = true; return; }
+    // لا شريط سفلي: القائمة الرئيسية هي نقطة الانطلاق، وكل شاشة لها زر رجوع
+    if (!active || !this.navEnabled) { this.nav.hidden = true; return; }
     this.nav.hidden = false;
     const items = [['home', 'home', 'nav.home'], ['journey', 'map', 'nav.journey'], ['friends', 'users', 'nav.friends'], ['shop', 'bag', 'nav.shop'], ['settings', 'gear', 'nav.settings']];
     const inner = h('div.inner');
