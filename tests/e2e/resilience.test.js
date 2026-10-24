@@ -110,3 +110,30 @@ test('Android without the Capacitor JS layer (no registerPlugin): the game still
   assert.ok((await p.evaluate(() => window.__native.map((c) => c.join('.')))).includes('Share.share'));
   assert.deepEqual(p.errors, []);
 });
+
+test('language is easy to change: 🌐 on the home screen opens a big picker; the game starts in the device language', async () => {
+  const p = await newPage(browser, { locale: 'en-US' });
+  await p.goto(S.url + '?e2e=1'); await waitScreen(p, 'home');
+  assert.equal(await p.evaluate(() => window.__mc.data.settings.lang), 'en', 'device language');
+  await p.click('#homeLang');
+  await p.click('.lang-opt[data-lang="ar"]');
+  await p.waitForFunction(() => document.documentElement.dir === 'rtl');
+  assert.match(await p.textContent('#homeLang'), /AR/);
+  // ولغة جهاز غير مترجمة ← الإنجليزية
+  const q = await newPage(browser, { locale: 'de-DE' });
+  await q.goto(S.url + '?e2e=1'); await waitScreen(q, 'home');
+  assert.equal(await q.evaluate(() => window.__mc.data.settings.lang), 'en');
+  assert.deepEqual([...p.errors, ...q.errors], []);
+});
+
+test('challenges are short: three cards that start playing in one tap, plus Customize', async () => {
+  const p = await newPage(browser);
+  await p.goto(S.url + '?e2e=1'); await waitScreen(p, 'home');
+  await p.evaluate(() => { window.__mc.data.settings.tutorialDone = true; });
+  await p.click('#menuChallenges');
+  assert.equal(await p.locator('.ch-big').count(), 3);
+  await p.click('#chTime');
+  await waitScreen(p, 'rainPlay');
+  assert.equal(await p.evaluate(() => window.__mc.current.rain().cfg.timeLimit), 60);
+  assert.deepEqual(p.errors, []);
+});

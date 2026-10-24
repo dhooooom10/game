@@ -218,8 +218,7 @@ test('daily challenge: one official result (no pause), replays are practice only
   await page.goto(URL_);
   await skipTut(page);
   await page.click('#menuChallenges');
-  await page.click('#dailyCard');
-  await page.getByRole('button', { name: 'ابدأ تحدي اليوم' }).click();
+  await page.click('#dailyCard');   // يبدأ مباشرة بضغطة واحدة
   await waitScreen(page, 'rainPlay');
   assert.equal(await page.locator('.hud button[aria-label="إيقاف مؤقت"]').count(), 0, 'no pause in daily');
   for (let i = 0; i < 50 && (await page.evaluate(() => window.__mc.current.name)) === 'rainPlay'; i++) await page.clock.runFor(2000);

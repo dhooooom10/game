@@ -78,7 +78,8 @@ test('languages: full translations load on demand (Spanish), LTR, no missing-key
   await waitScreen(p, 'home');
   await p.evaluate(() => window.__mc.go('settings'));
   await waitScreen(p, 'settings');
-  await p.selectOption('main select', 'es');
+  await p.click('#langBtn');
+  await p.click('.lang-opt[data-lang="es"]');
   await p.waitForFunction(() => document.documentElement.lang === 'es' && document.documentElement.dir === 'ltr');
   await p.evaluate(() => window.__mc.go('home', {}, { root: true }));
   await waitScreen(p, 'home');

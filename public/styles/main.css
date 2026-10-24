@@ -1172,3 +1172,23 @@ button.badge.goal { font: inherit; color: inherit; cursor: pointer; border: 1px 
 .menu-row > * { min-width: 0; }
 .menu-small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 360px) { .menu-small { font-size: .75rem; padding: 6px; } .menu-play b { font-size: 1.5rem; } .menu-play .mp-ic { width: 46px; height: 46px; } }
+.ch-big .cb-go { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--primary); color: var(--on-primary); flex: none; }
+.ch-big .cb-go .ic { width: 20px; height: 20px; }
+.ch-big.gold { border-color: rgba(255, 201, 74, .65); background: linear-gradient(100deg, color-mix(in srgb, #FFC94A 20%, var(--surface-2)), var(--surface)); }
+.ch-big.gold .cb-go { background: linear-gradient(180deg, #FFE07A, #F5A524); color: #3a2400; }
+.shop-notice { margin-top: 12px; border-color: rgba(124, 200, 255, .35); }
+.shop-notice .t { font-weight: 900; }
+.shop-notice .note { margin: 6px 0 10px; }
+.pack:disabled, .shop-item .btn:disabled, .starter-card .btn:disabled { opacity: .55; cursor: default; }
+.wallet .w-main .faint { white-space: nowrap; }
+/* اللغة */
+.lang-chip { min-height: 40px; padding: 0 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 900; font-size: .8rem; cursor: pointer; flex: none; }
+.lang-btn { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px; margin: 4px 0 12px; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--primary) 45%, var(--line)); background: color-mix(in srgb, var(--primary) 10%, var(--surface)); color: var(--ink); font: inherit; text-align: start; cursor: pointer; }
+.lang-btn .lb-ic { font-size: 1.7rem; }
+.lang-btn b { display: block; }
+.lang-btn small { color: var(--muted); font-weight: 800; }
+.lang-btn .lb-go { font-size: 1.6rem; color: var(--muted); }
+.lang-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+.lang-opt { min-height: 52px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font: inherit; font-weight: 800; font-size: 1rem; cursor: pointer; }
+.lang-opt.on { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 18%, var(--surface-2)); }
+.ch-big .grow { flex: 1; min-width: 0; }

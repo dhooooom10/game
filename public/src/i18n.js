@@ -643,6 +643,11 @@ const ar = {
   "how.4d": "الإجابات المتتالية تضاعف النقاط 🔥 والقطرات الخاصة 🎁⭐❄️ تمنحك مفاجآت.",
   "how.try": "جرّب الشرح التفاعلي",
   "how.ok": "فهمت!",
+  "shop.notReadyT": "الأسعار غير متاحة الآن",
+  "shop.notReadyD": "الشراء يعمل عند تثبيت اللعبة من Google Play وبعد تفعيل المنتجات. تأكد من الاتصال ثم أعد المحاولة.",
+  "net.retry2": "أعد المحاولة",
+  "ch.quickTime": "{n} ثانية — ابدأ فورًا",
+  "ch.customize": "تخصيص التحدي",
 };
 
 const en = {
@@ -1275,6 +1280,11 @@ const en = {
   "how.4d": "Answers in a row multiply points 🔥, and special drops 🎁⭐❄️ bring surprises.",
   "how.try": "Try the quick tutorial",
   "how.ok": "Got it!",
+  "shop.notReadyT": "Prices aren't available yet",
+  "shop.notReadyD": "Purchases work when the game is installed from Google Play and the products are active. Check your connection and try again.",
+  "net.retry2": "Try again",
+  "ch.quickTime": "{n} seconds — start now",
+  "ch.customize": "Customize",
 };
 
 /* لغات النسخة السابقة: العناوين الأساسية فقط (والباقي بالإنجليزية) */
@@ -1296,6 +1306,8 @@ const DICT = { ar, en, ...partial };
 
 /** لغات مترجمة بالكامل في ملفات منفصلة تُحمَّل عند الحاجة فقط (لا تبطئ الإقلاع) */
 export const FULL_LANGS = ['es', 'pt', 'fr', 'tr', 'id', 'hi'];
+/** اللغات المعروضة في الاختيار (المترجمة بالكامل فقط) */
+export const PICKER_LANGS = ['ar', 'en', ...FULL_LANGS];
 const loaded = new Set();
 export const isLoaded = (lang) => !FULL_LANGS.includes(lang) || loaded.has(lang);
 export async function loadLang(lang) {
@@ -1334,8 +1346,9 @@ export function digitsOut(s) {
 
 export function detectLang() {
   try {
+    // لغة الجهاز إن كانت مترجمة بالكامل، وإلا الإنجليزية
     const n = (navigator.language || 'ar').slice(0, 2).toLowerCase();
-    return LANGS[n] ? n : 'ar';
+    return PICKER_LANGS.includes(n) ? n : 'en';
   } catch { return 'ar'; }
 }
 

@@ -6,7 +6,7 @@ import { h, icon, clear } from '../ui/dom.js';
 import { mascotSVG } from '../ui/mascot.js';
 import { sfx, setLevels, hapticsSupported, buzz } from '../ui/audio.js';
 import { toast } from '../ui/fx.js';
-import { t, tRaw, LANGS, loadLang } from '../i18n.js';
+import { t, tRaw, LANGS, loadLang, PICKER_LANGS } from '../i18n.js';
 import { hashPass } from '../core/storage.js';
 import { newProfileData, todayStr, levelFromXp } from '../core/progression.js';
 import { topbar, seg } from './setup.js';
@@ -16,6 +16,22 @@ function sw(on, label, onChange) {
   return b;
 }
 const row = (title, desc, control) => h('div.row', h('div.grow', h('div.t', title), desc ? h('div.d', desc) : null), control);
+
+/** اختيار اللغة: قائمة كبيرة بأسماء اللغات بلغتها (يُستخدم من الرئيسية والإعدادات) */
+export function openLanguagePicker() {
+  const s = app.data.settings;
+  app.modal((box, close) => {
+    box.classList.add('lang-modal');
+    box.append(h('h2', '🌐 ', t('set.language'), s.lang === 'en' ? '' : ' · Language'),
+      h('div.lang-list', ...PICKER_LANGS.map((k) => h('button.lang-opt' + (k === s.lang ? '.on' : ''), { type: 'button', 'data-lang': k, dir: LANGS[k].rtl ? 'rtl' : 'ltr', on: { click: async () => {
+        sfx.tap(); close();
+        if (k === s.lang) return;
+        s.lang = k; if (k === 'ar' && !s._digitsSet) s.digits = 'arabic';
+        app.save(); await loadLang(k); app.applyLook(); app.refresh();
+      } } }, LANGS[k].n, k === s.lang ? h('span', ' ✓') : null))),
+      h('button.btn.ghost.block', { on: { click: () => close() } }, t('common.close')));
+  });
+}
 
 registerScreen('settings', (app) => {
   const s = app.data.settings;
@@ -27,10 +43,10 @@ registerScreen('settings', (app) => {
     on: { change: () => { app.store.updateProfile(app.pid, { name: nameIn.value.trim().slice(0, 20) }); toast('✓'); } } });
   el.append(h('section.card',
     h('h2.section-title', t('set.general')),
+    // اللغة أولًا وبوضوح (بعنوان ثنائي اللغة حتى يجدها من لا يقرأ اللغة الحالية)
+    h('button.lang-btn', { id: 'langBtn', type: 'button', on: { click: () => { sfx.tap(); openLanguagePicker(); } } },
+      h('span.lb-ic', '🌐'), h('span.grow', h('b', t('set.language') + (s.lang === 'en' ? '' : ' · Language')), h('small', LANGS[s.lang]?.n || s.lang)), h('span.lb-go', '›')),
     h('div.field', h('label', t('set.name')), nameIn),
-    h('div.field', h('div.label', t('set.language')),
-      h('select.input', { aria: { label: t('set.language') }, on: { change: async (e) => { s.lang = e.target.value; if (s.lang === 'ar' && !s._digitsSet) s.digits = 'arabic'; app.save(); await loadLang(s.lang); app.applyLook(); app.refresh(); } } },
-        ...Object.entries(LANGS).map(([k, v]) => h('option', { value: k, selected: k === s.lang }, v.n)))),
     s.lang === 'ar' ? h('div.field', h('div.label', t('set.digits')), seg([['arabic', '٠١٢٣'], ['western', '0123']], s.digits, (v) => { s.digits = v; s._digitsSet = true; app.save(); app.applyLook(); app.refresh(); }, t('set.digits'))) : null,
   ));
 

@@ -1,5 +1,21 @@
 # ما الجديد — نص جاهز لحقل «ملاحظات الإصدار» في Google Play
 
+## الإصدار 1.6.1 (رقم البناء 16)
+
+### العربية (ar)
+```
+🏆 التحديات صارت ٣ بطاقات تبدأ اللعب بضغطة واحدة
+🌐 تغيير اللغة بسهولة من زر 🌐 في الرئيسية، واللعبة تبدأ بلغة جوالك
+🛍️ متجر أوضح: كل الحزم والعروض ظاهرة دائمًا
+```
+
+### English (en-US)
+```
+🏆 Challenges are now 3 cards that start playing in one tap
+🌐 Change language easily from the 🌐 button; the game starts in your phone's language
+🛍️ Clearer shop: all packs and offers always visible
+```
+
 ## الإصدار 1.6.0 (رقم البناء 15)
 
 ### العربية (ar)

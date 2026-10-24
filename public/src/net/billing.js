@@ -19,6 +19,7 @@ function getPlugin() {
   return plugin;
 }
 export const available = () => !!getPlugin();
+export const resetCatalog = () => { catalog = null; };
 
 /** يطبّق الصلاحيات على بيانات اللاعب (دمج: لا نسحب ما مُنح سابقًا إلا عبر الاسترجاع الصريح) */
 export function applyEntitlements(app, ent, { replace = false } = {}) {
@@ -35,8 +36,10 @@ export async function products() {
   if (!p) return [];
   if (catalog) return catalog;
   const r = await p.getProducts({ ids: PRODUCT_IDS });
-  catalog = r.products.map((x) => ({ ...x, ...PRODUCTS[x.id] }));
-  return catalog;
+  const list = (r?.products || []).filter((x) => PRODUCTS[x.id]).map((x) => ({ ...x, ...PRODUCTS[x.id] }));
+  // قائمة فارغة لا تُحفظ: نعيد المحاولة في المرة القادمة (اتصال، أو منتجات أُنشئت للتو في Play Console)
+  if (list.length) catalog = list;
+  return list;
 }
 
 /** شراء منتج. يعيد { ok, status, entitlements, pearls } */

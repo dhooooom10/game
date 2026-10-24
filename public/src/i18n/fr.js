@@ -920,4 +920,9 @@ export default {
   "how.4d": "Les bonnes réponses d'affilée multiplient les points 🔥 et les gouttes spéciales 🎁⭐❄️ réservent des surprises.",
   "how.try": "Essayer le tutoriel",
   "how.ok": "Compris !",
+  "shop.notReadyT": "Les prix ne sont pas encore disponibles",
+  "shop.notReadyD": "Les achats fonctionnent quand le jeu est installé depuis Google Play et que les produits sont actifs. Vérifie ta connexion et réessaie.",
+  "net.retry2": "Réessayer",
+  "ch.quickTime": "{n} secondes — c'est parti",
+  "ch.customize": "Personnaliser",
 };

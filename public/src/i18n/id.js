@@ -920,4 +920,9 @@ export default {
   "how.4d": "Jawaban beruntun melipatgandakan poin 🔥 dan tetes spesial 🎁⭐❄️ membawa kejutan.",
   "how.try": "Coba tutorial singkat",
   "how.ok": "Mengerti!",
+  "shop.notReadyT": "Harga belum tersedia",
+  "shop.notReadyD": "Pembelian berfungsi jika game dipasang dari Google Play dan produk aktif. Periksa koneksi lalu coba lagi.",
+  "net.retry2": "Coba lagi",
+  "ch.quickTime": "{n} detik — mulai sekarang",
+  "ch.customize": "Sesuaikan",
 };

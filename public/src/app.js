@@ -11,7 +11,7 @@ import * as notify from './net/notify.js';
 import * as pgs from './net/playgames.js';
 import { nativePlugin } from './net/native.js';
 
-export const VERSION = '1.6.0';
+export const VERSION = '1.6.1';
 
 /* ---------------- سجل الأخطاء (على الجهاز فقط) ----------------
    آخر الأخطاء تُحفظ محليًا ليتمكن اللاعب من نسخها وإرسالها من الإعدادات. لا يُرسل شيء تلقائيًا. */

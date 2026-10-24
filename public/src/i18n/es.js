@@ -920,4 +920,9 @@ export default {
   "how.4d": "Los aciertos seguidos multiplican puntos 🔥 y las gotas especiales 🎁⭐❄️ traen sorpresas.",
   "how.try": "Prueba el tutorial",
   "how.ok": "¡Entendido!",
+  "shop.notReadyT": "Los precios aún no están disponibles",
+  "shop.notReadyD": "Las compras funcionan si el juego se instala desde Google Play y los productos están activos. Revisa tu conexión y reintenta.",
+  "net.retry2": "Reintentar",
+  "ch.quickTime": "{n} segundos — empieza ya",
+  "ch.customize": "Personalizar",
 };

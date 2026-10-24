@@ -920,4 +920,9 @@ export default {
   "how.4d": "Art arda doğrular puanı katlar 🔥, özel damlalar 🎁⭐❄️ sürpriz getirir.",
   "how.try": "Kısa eğitimi dene",
   "how.ok": "Anladım!",
+  "shop.notReadyT": "Fiyatlar henüz yok",
+  "shop.notReadyD": "Satın alma, oyun Google Play'den yüklendiğinde ve ürünler aktifken çalışır. Bağlantını kontrol edip tekrar dene.",
+  "net.retry2": "Tekrar dene",
+  "ch.quickTime": "{n} saniye — hemen başla",
+  "ch.customize": "Özelleştir",
 };

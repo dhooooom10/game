@@ -54,10 +54,12 @@ test('main menu opens every section and each has a way back; language switch to 
   await page.click('#howOk');
   await page.click('#menuSettings');
   await waitScreen(page, 'settings');
-  await page.selectOption('select', 'en');
+  await page.click('#langBtn');
+  await page.click('.lang-opt[data-lang="en"]');
   await page.waitForFunction(() => document.documentElement.dir === 'ltr');
   assert.match(await page.locator('h1').innerText(), /Settings/);
-  await page.selectOption('select', 'ar');
+  await page.click('#langBtn');
+  await page.click('.lang-opt[data-lang="ar"]');
   await page.waitForFunction(() => document.documentElement.dir === 'rtl');
   assert.deepEqual(page.errors, []);
 });

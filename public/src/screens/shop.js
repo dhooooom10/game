@@ -116,55 +116,67 @@ registerScreen('shop', (app) => {
   const paint = async () => {
     clear(box);
     if (tab === 'spend') { box.append(spendSection()); return; }
-    if (!billing.available()) {
-      box.append(h('section.card.section', h('h2', t('shop.appOnly')), h('p.note', t('shop.appOnlyBody')),
-        h('a.btn.primary.block', { href: PLAY_URL, target: '_blank', rel: 'noopener' }, '▶ ', t('share.getApp'))));
-      return;
+    // نعرض المتجر كاملًا دائمًا. إن لم تصل أسعار Google Play (متصفح، أو تثبيت من خارج Play،
+    // أو المنتجات لم تُنشأ بعد في Play Console) تبقى البطاقات ظاهرة بلا سعر مع شرح واضح.
+    const native = billing.available();
+    let list = [];
+    if (native) {
+      const loading = h('div.loading', h('span.spinner'), t('net.loading'));
+      box.append(loading);
+      try { list = await billing.products(); } catch { list = []; }
+      loading.remove();
     }
-    const loading = h('div.loading', h('span.spinner'), t('net.loading'));
-    box.append(loading);
-    let list;
-    try { list = await billing.products(); }
-    catch { loading.replaceWith(h('p.note', t('shop.unavailable'))); return; }
-    loading.remove();
+    const ready = list.length > 0;
     const ent = data.ent || {};
-    const P = (id) => list.find((x) => x.id === id);
+    const P = (id) => list.find((x) => x.id === id) || null;
+    const priceOf = (id) => P(id)?.price || '—';
+    const buyBtn = (id, cls, label) => {
+      const b = h('button' + cls, { id: 'buy-' + id, type: 'button', 'data-buy': '1', disabled: !P(id), on: { click: () => buyFlow(id, b) } }, label);
+      return b;
+    };
+
+    if (!ready) {
+      box.append(h('section.card.shop-notice', { id: 'shopNotice' },
+        h('div.t', '🛈 ', t(native ? 'shop.notReadyT' : 'shop.appOnly')),
+        h('p.note', t(native ? 'shop.notReadyD' : 'shop.appOnlyBody')),
+        native
+          ? h('button.btn.sm', { type: 'button', on: { click: () => { sfx.tap(); billing.resetCatalog(); paint(); } } }, icon('refresh'), t('net.retry2'))
+          : h('a.btn.sm.primary', { href: PLAY_URL, target: '_blank', rel: 'noopener' }, '▶ ', t('share.getApp'))));
+    }
 
     // عرض البداية (مرة واحدة)
-    const st = P('starter_pack');
-    if (st && !ent.starter) {
-      const b = h('button.btn.gold.lg', { id: 'buy-starter_pack', type: 'button', 'data-buy': '1', on: { click: () => buyFlow('starter_pack', b) } }, st.price);
+    if (!ent.starter) {
       box.append(h('section.starter-card.section', h('span.shop-tag', t('shop.once')),
-        h('div.st-ic', '🎁'), h('div.grow', h('div.t', t('shop.p.starter_pack')), h('div.d', t('shop.p.starter_packD', { n: num(PRODUCTS.starter_pack.pearls) }))), b));
+        h('div.st-ic', '🎁'), h('div.grow', h('div.t', t('shop.p.starter_pack')), h('div.d', t('shop.p.starter_packD', { n: num(PRODUCTS.starter_pack.pearls) }))),
+        buyBtn('starter_pack', '.btn.gold.lg', priceOf('starter_pack'))));
     }
 
     // حزم اللآلئ
     const grid = h('div.packs', { id: 'packs' });
     for (const id of PEARL_PACKS) {
-      const p = P(id); if (!p) continue;
       const pr = PRODUCTS[id];
-      const b = h('button.pack' + (pr.popular ? '.popular' : ''), { id: 'buy-' + id, type: 'button', 'data-buy': '1', on: { click: () => buyFlow(id, b) } },
+      grid.append(buyBtn(id, '.pack' + (pr.popular ? '.popular' : ''), [
         pr.popular ? h('span.pk-tag', t('shop.popular')) : pr.bonus ? h('span.pk-tag.bonus', t('shop.bonus', { n: num(pr.bonus) })) : null,
         h('span.pk-ic', id === 'pearls_xl' ? '💰' : id === 'pearls_l' ? '💎💎' : '💎'),
-        h('span.pk-n', num(pr.pearls)), h('span.pk-u', t('wal.pearls')), h('span.pk-p', p.price));
-      grid.append(b);
+        h('span.pk-n', num(pr.pearls)), h('span.pk-u', t('wal.pearls')), h('span.pk-p', priceOf(id))]));
     }
-    if (grid.children.length) box.append(h('section.section', h('h2.section-title', '🛍️ ', t('wal.buyPearls')), grid));
+    box.append(h('section.section', h('h2.section-title', '💎 ', t('wal.buyPearls')), grid));
 
-    // الدائمة وتذكرة الموسم
+    // الدائمة
     const sec = h('section.section', h('h2.section-title', '⭐ ', t('shop.permanent')));
     for (const id of ['pro_bundle', 'remove_ads', 'skins_pack']) {
-      const p = P(id); if (!p) continue;
+      const pr = PRODUCTS[id];
       const owned = owns(ent, id);
-      const btn = h('button.btn' + (p.best ? '.gold' : '.primary'), { id: 'buy-' + id, type: 'button', 'data-buy': '1', disabled: owned, on: { click: () => buyFlow(id, btn) } }, owned ? t('shop.owned') : p.price);
-      sec.append(h('section.card.shop-item' + (p.best ? '.best' : ''),
-        p.best ? h('span.shop-tag', t('shop.best')) : null,
-        h('div.shop-ic', PRODUCTS[id].icon),
-        h('div.grow', h('div.t', t('shop.p.' + id)), h('div.d', t('shop.p.' + id + 'D'), PRODUCTS[id].pearls ? ' · ' : '', PRODUCTS[id].pearls ? h('b', '\u2066+' + num(PRODUCTS[id].pearls) + ' 💎\u2069') : null)),
+      const btn = buyBtn(id, '.btn' + (pr.best ? '.gold' : '.primary'), owned ? t('shop.owned') : priceOf(id));
+      if (owned) btn.disabled = true;
+      sec.append(h('section.card.shop-item' + (pr.best ? '.best' : ''),
+        pr.best ? h('span.shop-tag', t('shop.best')) : null,
+        h('div.shop-ic', pr.icon),
+        h('div.grow', h('div.t', t('shop.p.' + id)), h('div.d', t('shop.p.' + id + 'D'), pr.pearls ? ' · ' : '', pr.pearls ? h('b', '⁦+' + num(pr.pearls) + ' 💎⁩') : null)),
         btn));
     }
     box.append(sec);
-    box.append(h('button.btn.block.ghost', { id: 'restoreBtn', type: 'button', on: { click: async () => {
+    if (native) box.append(h('button.btn.block.ghost', { id: 'restoreBtn', type: 'button', on: { click: async () => {
       sfx.tap();
       try { await billing.restore(app); toast(t('shop.restored')); refreshBalance(); paint(); } catch { toast(t('shop.failed')); }
     } } }, icon('refresh'), t('shop.restore')));

@@ -1,6 +1,7 @@
 /* الشاشة الرئيسية — بسيطة: زر «العب الآن» كبير، التحدي اليومي و«تحدّيك الخاص»، وسطر لمهام اليوم. */
 import { app, registerScreen } from '../app.js';
 import { topbar } from './setup.js';
+import { openLanguagePicker } from './settings.js';
 import { h, icon, num } from '../ui/dom.js';
 import { mascotSVG } from '../ui/mascot.js';
 import { sfx } from '../ui/audio.js';
@@ -29,7 +30,8 @@ registerScreen('home', (app) => {
     h('div.who',
       h('div.name', name ? t('home.hello', { name }) : t('home.helloAnon')),
       h('div.lvl', h('span.lvl-badge', t('home.level', { n: lv.level })), h('div.bar.gold', { role: 'progressbar', aria: { valuenow: Math.round(lv.pct * 100), valuemin: 0, valuemax: 100, label: t('home.xp', { a: lv.into, b: lv.need }) } }, xpFill))),
-    h('button.pearl-chip', { id: 'homePearls', type: 'button', aria: { label: t('wal.balance') }, on: { click: () => { sfx.tap(); app.go('shop'); } } }, '💎 ', num(data.pearls || 0), h('span.plus', '+'))));
+    h('button.pearl-chip', { id: 'homePearls', type: 'button', aria: { label: t('wal.balance') }, on: { click: () => { sfx.tap(); app.go('shop'); } } }, '💎 ', num(data.pearls || 0), h('span.plus', '+')),
+    h('button.lang-chip', { id: 'homeLang', type: 'button', aria: { label: t('set.language') + ' · Language' }, on: { click: () => { sfx.tap(); openLanguagePicker(); } } }, '🌐 ', data.settings.lang.toUpperCase())));
 
   if (!app.store.persistent) el.appendChild(h('p.note.warn', { role: 'alert' }, '⚠️ ' + t('home.storageWarn')));
   // زائر من رابط على جوال Android في المتصفح: دعوة هادئة لتحميل التطبيق (يمكن إخفاؤها)
@@ -179,19 +181,22 @@ export function howToPlay() {
   });
 }
 
-/* التحديات: اليومي + الوقت + البقاء + تخصيص + التدريب الحر — صفحة واحدة بأزرار كبيرة */
+/* التحديات — مختصرة جدًا: ٣ بطاقات تبدأ اللعب بضغطة واحدة، و«تخصيص» لمن يريد التفاصيل */
 registerScreen('challenges', (app) => {
   const data = app.data;
   const ds = dailyStatus(data);
+  const P = data.prefs.challenge || {};
+  const today = todayStr();
   const el = h('main', topbar(t('menu.challenges')));
-  const card = (id, ic, title, sub, fn, extra) => h('button.ch-big', { id, type: 'button', on: { click: () => { sfx.tap(); fn(); } } },
-    h('span.cb-ic', ic), h('span.grow', h('b', title), h('small', sub)), extra || null);
+  const card = (id, ic, title, sub, fn, cls = '') => h('button.ch-big' + cls, { id, type: 'button', on: { click: () => { sfx.tap(); fn(); } } },
+    h('span.cb-ic', ic), h('span.grow', h('b', title), h('small', sub)), h('span.cb-go', icon('play', 'fill')));
   el.append(h('div.ch-list',
-    card('dailyCard', ds.done ? '✅' : '📅', t('daily.title'), ds.done ? t('daily.done', { score: num(ds.result.score) }) : t('home.dailyShort'), openDaily, h('span.chip.gold', '🔥 ' + num(ds.streak))),
-    card('chTime', '⏱️', t('ch.time'), t('ch.timeSub'), () => app.go('setupCustom', { mode: 'time' })),
-    card('chSurvival', '❤️', t('ch.survival'), t('ch.survivalSub'), () => app.go('setupCustom', { mode: 'survival' })),
-    card('modeCustom', '🎛️', t('ch.custom'), t('ch.customSub'), () => app.go('setupCustom', { mode: 'custom' })),
-    card('chPractice', '📚', t('mode.practice'), t('mode.practiceSub'), () => app.go('practice'))));
+    card('dailyCard', ds.done ? '✅' : '📅', t('daily.title'),
+      ds.done ? t('daily.done', { score: num(ds.result.score) }) : `🔥 ${num(ds.streak)} · ${t('home.dailyShort')}`,
+      () => app.go('rainPlay', { kind: 'daily', args: { date: today, official: !ds.done } }), ds.done ? '' : '.gold'),
+    card('chTime', '⏱️', t('ch.time'), t('ch.quickTime', { n: num(P.time?.dur || 60) }), () => app.go('rainPlay', { kind: 'custom', args: normalizeChallenge({ ...(P.time || {}), mode: 'time' }) })),
+    card('chSurvival', '❤️', t('ch.survival'), t('ch.survivalSub'), () => app.go('rainPlay', { kind: 'custom', args: normalizeChallenge({ ...(P.survival || {}), mode: 'survival' }) }))),
+    h('button.btn.ghost.block', { id: 'modeCustom', type: 'button', style: { marginTop: '14px' }, on: { click: () => { sfx.tap(); app.go('setupCustom', { mode: 'custom' }); } } }, '⚙️ ', t('ch.customize')));
   return { el };
 });
 

@@ -76,7 +76,7 @@ test('streak shield shows in the daily dialog', async () => {
   await p.goto(S.url + '?e2e=1');
   await waitScreen(p, 'home');
   await p.evaluate(() => { const d = window.__mc.data; d.shields = 2; d.daily.last = '2026-01-01'; d.daily.streak = 4; window.__mc.go('challenges'); });
-  await p.click('#dailyCard');
+  await p.evaluate(async () => (await import('/src/screens/home.js')).openDaily());
   await p.waitForSelector('.shield-box');
   assert.deepEqual(p.errors, []);
 });
