@@ -4,6 +4,7 @@
    ويستهلك حزم اللآلئ بعد منحها (وإلا تسترد Google المبلغ تلقائيًا بعد ٣ أيام).
    الاسترجاع: Google Play هو المرجع لملكية المنتجات الدائمة (يعمل بعد إعادة التثبيت).
    ========================================================================= */
+import { nativePlugin } from './native.js';
 import { PRODUCTS, PRODUCT_IDS, grantsFrom } from '../core/products.js';
 import { grantPurchasePearls } from '../core/wallet.js';
 import { isNativeApp } from '../config.js';
@@ -14,7 +15,7 @@ function getPlugin() {
   if (plugin) return plugin;
   const C = typeof window !== 'undefined' ? window.Capacitor : null;
   if (!isNativeApp() || !C?.isPluginAvailable?.('Billing')) return null;
-  plugin = C.registerPlugin('Billing');
+  plugin = nativePlugin('Billing');
   return plugin;
 }
 export const available = () => !!getPlugin();

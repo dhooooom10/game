@@ -12,7 +12,7 @@ test('every screen renders without errors and without horizontal overflow at 320
   const page = await newPage(browser, { width: 320, height: 640 });
   await page.goto(URL_);
   await waitScreen(page, 'home');
-  const screens = [['home'], ['journey'], ['world', { w: 0 }], ['world', { w: 9 }], ['progress'], ['locker'], ['locker', { tab: 'looks' }],
+  const screens = [['home'], ['journey'], ['world', { w: 0 }], ['world', { w: 9 }], ['locker'], ['locker', { tab: 'looks' }],
     ['settings'], ['profiles'], ['setupCustom', { mode: 'time' }], ['setupCustom', { mode: 'survival' }], ['setupCustom', { mode: 'custom' }], ['practice'], ['practice', { tab: 'lessons' }], ['lessonPath', { pid: 'mul' }],
     ['friendSetup'], ['friends'], ['friendCompose'], ['party']];
   for (const [name, params] of screens) {
@@ -51,26 +51,6 @@ test('bottom navigation tabs and settings work; language switch to English flips
   await page.selectOption('select', 'ar');
   await page.waitForFunction(() => document.documentElement.dir === 'rtl');
   assert.deepEqual(page.errors, []);
-});
-
-test('progress page: clear empty state, then real metrics after playing', async () => {
-  const page = await newPage(browser);
-  await page.goto(URL_);
-  await page.click('#homeProgress');
-  await waitScreen(page, 'progress');
-  assert.match(await page.locator('main').innerText(), /لا توجد بيانات بعد/);
-  await page.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.save(); });
-  await go(page, 'play', { kind: 'practice', args: { opts: { topics: ['add', 'mul'], level: 3, format: 'mixed', timer: false, length: 10 } } });
-  await playRound(page, (i) => i % 4 !== 0);
-  await waitScreen(page, 'results');
-  await go(page, 'progress');
-  await waitScreen(page, 'progress');
-  const txt = await page.locator('main').innerText();
-  assert.match(txt, /الأسئلة المجابة/);
-  assert.match(txt, /١٠/);
-  assert.match(txt, /٧٠٪/);
-  assert.equal(await page.locator('svg.chart').count(), 1);
-  assert.doesNotMatch(txt, /خالد|سارة|ترتيب عالمي/);
 });
 
 test('friend challenge (turns): equivalent questions, both play, winner shown', async () => {

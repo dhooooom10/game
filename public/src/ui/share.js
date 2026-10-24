@@ -4,6 +4,7 @@
    وفي المتصفح Web Share API، وإلا ننسخ النص إلى الحافظة.
    ========================================================================= */
 import { t } from '../i18n.js';
+import { nativePlugin } from '../net/native.js';
 import { num } from './dom.js';
 import { toast } from './fx.js';
 import { CONFIG, PLAY_URL, isNativeApp } from '../config.js';
@@ -39,8 +40,9 @@ export function dailyShareText({ date, score, sum }) {
 /** مشاركة نص ورابط بأفضل وسيلة متاحة. يعيد 'shared' | 'copied' | 'cancel' */
 export async function shareText(text, url) {
   const full = url ? `${text}\n${url}` : text;
-  if (isNativeApp() && window.Capacitor.isPluginAvailable?.('Share')) {
-    try { await window.Capacitor.registerPlugin('Share').share({ text, url, dialogTitle: t('share.title') }); return 'shared'; }
+  const sharePlugin = isNativeApp() ? nativePlugin('Share') : null;
+  if (sharePlugin) {
+    try { await sharePlugin.share({ text, url, dialogTitle: t('share.title') }); return 'shared'; }
     catch { return 'cancel'; }
   }
   if (navigator.share) {

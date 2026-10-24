@@ -5,6 +5,7 @@
    تُعاد جدولتها كل مرة يغادر فيها اللاعب التطبيق، ولا تُرسل شيئًا إن أطفأها من الإعدادات.
    كلها محلية على الجهاز — لا خادم ولا Push.
    ========================================================================= */
+import { nativePlugin } from './native.js';
 import { isNativeApp } from '../config.js';
 import { dailyStatus, todayStr } from '../core/progression.js';
 import { t } from '../i18n.js';
@@ -15,7 +16,7 @@ function getPlugin() {
   if (plugin) return plugin;
   const C = typeof window !== 'undefined' ? window.Capacitor : null;
   if (!isNativeApp() || !C?.isPluginAvailable?.('LocalNotifications')) return null;
-  plugin = C.registerPlugin('LocalNotifications');
+  plugin = nativePlugin('LocalNotifications');
   return plugin;
 }
 export const available = () => !!getPlugin();

@@ -5,6 +5,7 @@
      ولا في الجولات الأولى، ولا في قسم التعلّم أو الأونلاين.
    - موافقة المستخدم (UMP / GDPR) تُطلب قبل أي إعلان حيث يلزم.
    ========================================================================= */
+import { nativePlugin } from './native.js';
 import { MONEY, TEST_UNITS } from './monetization-config.js';
 import { isNativeApp } from '../config.js';
 
@@ -19,7 +20,7 @@ function getPlugin() {
   if (plugin) return plugin;
   const C = typeof window !== 'undefined' ? window.Capacitor : null;
   if (!isNativeApp() || !C?.isPluginAvailable?.('AdMob')) return null;
-  plugin = C.registerPlugin('AdMob');
+  plugin = nativePlugin('AdMob');
   return plugin;
 }
 

@@ -6,7 +6,6 @@ import { sfx } from '../ui/audio.js';
 import { reducedMotion, toast } from '../ui/fx.js';
 import { t } from '../i18n.js';
 import { levelFromXp, dailyStatus, todayStr, shieldsNeeded } from '../core/progression.js';
-import { speedText } from './rain.js';
 import * as ads from '../net/ads.js';
 import { WORLDS, worldOf, DAILY_COUNT } from '../core/modes.js';
 import { createSession } from '../core/session.js';
@@ -26,7 +25,7 @@ registerScreen('home', (app) => {
   const xpFill = h('i', { style: { width: lv.pct * 100 + '%' } });
   el.appendChild(h('header.profile-bar',
     h('button.avatar', { aria: { label: t('nav.locker') }, on: { click: () => { sfx.tap(); app.go('locker'); } }, html: mascotSVG({ skin: cos.skin, acc: cos.acc, size: 40, label: t('mascot.name') }) }),
-    h('button.who', { type: 'button', id: 'homeProgress', aria: { label: t('nav.progress') }, on: { click: () => { sfx.tap(); app.go('progress'); } } },
+    h('div.who',
       h('div.name', name ? t('home.hello', { name }) : t('home.helloAnon')),
       h('div.lvl', h('span.lvl-badge', t('home.level', { n: lv.level })), h('div.bar.gold', { role: 'progressbar', aria: { valuenow: Math.round(lv.pct * 100), valuemin: 0, valuemax: 100, label: t('home.xp', { a: lv.into, b: lv.need }) } }, xpFill))),
     h('button.pearl-chip', { id: 'homePearls', type: 'button', aria: { label: t('wal.balance') }, on: { click: () => { sfx.tap(); app.go('shop'); } } }, '💎 ', num(data.pearls || 0), h('span.plus', '+'))));
@@ -45,9 +44,7 @@ registerScreen('home', (app) => {
   const L = nextJourneyLevel(data);
   const w = WORLDS[worldOf(L)];
   const totalStars = Object.values(data.journey.stars).reduce((a, b) => a + b, 0);
-  const bestSpeed = data.speedBest && data.speedBest > 1 ? data.speedBest : null;
   const ds = dailyStatus(data);
-  const lines = [t('home.mascotLine1'), t('home.mascotLine2'), ds.done ? t('home.mascotLine2') : t('home.mascotLine3')];
   const rain = h('div.rainlines', { aria: { hidden: 'true' } });
   if (!reducedMotion()) for (let i = 0; i < 9; i++) rain.appendChild(h('i', { style: { left: (8 + i * 11) + '%', animationDelay: (i * 0.29) + 's', animationDuration: (2.2 + (i % 3) * 0.5) + 's' } }));
   const firstTime = !data.settings.tutorialDone && data.stats.rounds === 0;
@@ -56,17 +53,9 @@ registerScreen('home', (app) => {
   const resumeSlot = h('div', { id: 'resumeSlot' });
   el.appendChild(resumeSlot);
   el.appendChild(h('section.hero', { aria: { label: t('home.play') } }, rain,
-    h('div.hero-top',
-      h('span.mascot-wrap', { html: mascotSVG({ skin: cos.skin, acc: cos.acc, mood: 'happy', size: 84, label: t('mascot.name') }) }),
-      h('div', { style: { flex: '1' } },
-        h('div.brand-mark', h('b', t('app.name'))),
-        h('div.bubble', lines[(new Date().getDate() + data.stats.rounds) % lines.length]))),
+    h('span.mascot-wrap.hero-mascot', { html: mascotSVG({ skin: cos.skin, acc: cos.acc, mood: 'happy', size: 110, label: t('mascot.name') }) }),
     h('button.btn.gold.play-btn', { id: 'playNow', on: { click: playNow } }, icon('play', 'fill'), t('home.play')),
-    h('div.play-sub', playSub),
-    h('div.hero-stats',
-      h('div.hs', h('div.v', '★ ' + num(totalStars)), h('div.l', t('home.stars'))),
-      h('div.hs', h('div.v', bestSpeed ? '⚡ ' + speedText(bestSpeed) : '—'), h('div.l', t('home.bestSpeed'))),
-      h('div.hs', h('div.v', '🔥 ' + num(ds.streak)), h('div.l', t('home.streak'))))));
+    h('div.play-sub', playSub, totalStars ? ' · ★ ' + num(totalStars) : '')));
 
   function playNow() {
     sfx.tap();
@@ -77,14 +66,9 @@ registerScreen('home', (app) => {
   // بطاقتان فقط: التحدي اليومي و«تحدّيك الخاص»
   el.appendChild(h('section.section.quick-grid',
     h('button.quick-card' + (ds.done ? '.done' : ''), { id: 'dailyCard', type: 'button', on: { click: openDaily } },
-      h('span.qc-ic', ds.done ? '✅' : '📅'),
-      h('span.qc-t', t('daily.title')),
-      h('span.qc-d', ds.done ? t('daily.done', { score: num(ds.result.score) }) : t('home.dailyShort')),
-      h('span.chip.gold', '🔥 ' + num(ds.streak))),
+      h('span.qc-ic', ds.done ? '✅' : '📅'), h('span.qc-t', t('daily.title')), ds.streak ? h('span.qc-n', '🔥' + num(ds.streak)) : null),
     h('button.quick-card', { id: 'modeCustom', type: 'button', on: { click: () => { sfx.tap(); app.go('setupCustom'); } } },
-      h('span.qc-ic', '🎛️'),
-      h('span.qc-t', t('mode.custom')),
-      h('span.qc-d', t('home.customShort')))));
+      h('span.qc-ic', '🎛️'), h('span.qc-t', t('mode.custom')))));
 
   function openDaily() {
     sfx.tap();

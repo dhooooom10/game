@@ -1025,3 +1025,13 @@ button.badge.goal { font: inherit; color: inherit; cursor: pointer; border: 1px 
 .buy-ok .bo-ic { font-size: 3.2rem; animation: bo-pop .5s cubic-bezier(.2, 1.6, .4, 1); }
 .buy-ok .bo-pearls { font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--accent); }
 @keyframes bo-pop { from { transform: scale(.3); opacity: 0; } }
+
+/* ---------- الرئيسية: أقل أيقونات — الشخصية + زر اللعب فقط ---------- */
+.hero .hero-mascot { display: flex; justify-content: center; margin: 4px 0 10px; }
+.hero .play-btn { font-size: 1.6rem; min-height: 78px; }
+.quick-grid .quick-card { min-height: 0; flex-direction: row; align-items: center; gap: 8px; padding: 12px 14px; }
+.quick-card .qc-ic { font-size: 1.3rem; }
+.quick-card .qc-n { margin-inline-start: auto; font-weight: 900; font-size: .85rem; }
+.code-entry .btn-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; }
+.code-entry .btn-row .btn { width: auto; padding-inline: 14px; }
+.code-entry .code-in { width: 100%; }

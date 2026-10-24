@@ -157,9 +157,7 @@ test('an old (v2) player loads with progress kept and lands on the new screens w
   assert.equal(d.records['time:60:medium'].value, 22);
   assert.ok(d.records['legacy:survival:medium:turbo']);
   assert.equal(d.prefs.challenge.time.dur, 120);
-  await p.click('#homeProgress');
-  await waitScreen(p, 'progress');
-  assert.match(await p.locator('main').innerText(), /٢٢|22/);
+  assert.equal(await p.locator('#homeProgress').count(), 0, 'no progress page any more');
   await p.evaluate(() => window.__mc.go('home', {}, { root: true }));
   await p.click('.profile-bar .avatar');
   await waitScreen(p, 'locker');

@@ -1,5 +1,23 @@
 # ما الجديد — نص جاهز لحقل «ملاحظات الإصدار» في Google Play
 
+## الإصدار 1.5.1 (رقم البناء 14)
+
+### العربية (ar)
+```
+🛠️ إصلاح خطأ التشغيل على أجهزة Android
+🏠 رئيسية أبسط: زر «العب الآن» كبير وأيقونات أقل
+⚡ قطرات أسرع وحماس من المرحلة الأولى
+🛍️ متجر أوضح وشراء آمن
+```
+
+### English (en-US)
+```
+🛠️ Fixed the startup error on Android devices
+🏠 Simpler home: a big Play button and fewer icons
+⚡ Faster drops and excitement from level 1
+🛍️ Clearer shop and safer purchases
+```
+
 ## الإصدار 1.5.0 (رقم البناء 13)
 
 ### العربية (ar)

@@ -88,3 +88,25 @@ test('unfinished round: a calm card on home (no blocking dialog) — resume it o
   assert.equal(await p.locator('#resumeCard').count(), 0, 'gone for good');
   assert.deepEqual(p.errors, []);
 });
+
+test('Android without the Capacitor JS layer (no registerPlugin): the game still boots, and plugins work through the native bridge', async () => {
+  const p = await newPage(browser);
+  await p.addInitScript(() => {
+    window.__native = [];
+    const available = new Set(['App', 'Share', 'LocalNotifications']);
+    window.Capacitor = {
+      isNativePlatform: () => true, getPlatform: () => 'android',
+      isPluginAvailable: (n) => available.has(n),
+      nativePromise: (plugin, method, opts) => { window.__native.push([plugin, method]); return Promise.resolve(method === 'checkPermissions' ? { display: 'granted' } : {}); },
+      addListener: (plugin, ev) => { window.__native.push([plugin, 'addListener:' + ev]); return { remove: async () => {} }; },
+    };
+  });
+  await p.goto(S.url + '?e2e=1'); await waitScreen(p, 'home');
+  await p.waitForSelector('#playNow');
+  const calls = await p.evaluate(() => window.__native.map((c) => c.join('.')));
+  assert.ok(calls.includes('App.addListener:backButton'), 'back button wired through the bridge');
+  // المشاركة تمر عبر الجسر الأصلي
+  await p.evaluate(async () => { const m = await import('/src/ui/share.js'); await m.shareText('hi', 'https://x'); });
+  assert.ok((await p.evaluate(() => window.__native.map((c) => c.join('.')))).includes('Share.share'));
+  assert.deepEqual(p.errors, []);
+});

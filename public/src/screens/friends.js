@@ -62,7 +62,7 @@ registerScreen('friends', (app, params) => {
     action('party', '👥', t('party.title'), t('party.sub'))));
 
   // ٢) إدخال رمز وصلك
-  const input = h('input.input.code-in', { id: 'codeIn', dir: 'ltr', placeholder: t('code.enter'), aria: { label: t('code.enter') }, on: { keydown: (e) => { if (e.key === 'Enter') open(); } } });
+  const input = h('input.input.code-in', { id: 'codeIn', dir: 'auto', placeholder: t('code.enter'), aria: { label: t('code.enter') }, on: { keydown: (e) => { if (e.key === 'Enter') open(); } } });
   const out = h('div', { id: 'codeOut' });
   const pasteBtn = navigator.clipboard?.readText ? h('button.btn', { type: 'button', on: { click: async () => {
     try { input.value = await navigator.clipboard.readText(); open(); } catch { toast(t('code.pasteFail')); }

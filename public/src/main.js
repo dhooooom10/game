@@ -5,7 +5,6 @@ import './screens/journey.js';
 import './screens/setup.js';
 import './screens/game.js';
 import './screens/results.js';
-import './screens/progress.js';
 import './screens/locker.js';
 import './screens/settings.js';
 import './screens/friend.js';

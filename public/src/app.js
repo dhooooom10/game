@@ -9,8 +9,9 @@ import { setLevels, setHaptics, sfx, unlockAudio, startMusic, pauseAll, resumeAl
 import { setMotion, toast } from './ui/fx.js';
 import * as notify from './net/notify.js';
 import * as pgs from './net/playgames.js';
+import { nativePlugin } from './net/native.js';
 
-export const VERSION = '1.5.0';
+export const VERSION = '1.5.1';
 
 /* ---------------- سجل الأخطاء (على الجهاز فقط) ----------------
    آخر الأخطاء تُحفظ محليًا ليتمكن اللاعب من نسخها وإرسالها من الإعدادات. لا يُرسل شيء تلقائيًا. */
@@ -270,11 +271,10 @@ export async function boot() {
   });
 
   // زر الرجوع في تطبيق Android: يتنقل داخل اللعبة، وفي الرئيسية يطلب ضغطة ثانية للخروج
-  const C = window.Capacitor;
-  if (C?.isNativePlatform?.() && C.isPluginAvailable?.('App')) {
-    const AppPlugin = C.registerPlugin('App');
+  const AppPlugin = nativePlugin('App');
+  if (AppPlugin) {
     let lastBack = 0;
-    AppPlugin.addListener('backButton', () => {
+    try { Promise.resolve(AppPlugin.addListener('backButton', () => {
       if (document.querySelector('.modal-backdrop')) { app._modalClose && app._modalClose(null); return; }
       const handled = app.current?.onBack ? app.current.onBack() : false;
       if (handled) return;
@@ -282,7 +282,7 @@ export async function boot() {
       if (Date.now() - lastBack < 2000) { AppPlugin.exitApp(); return; }
       lastBack = Date.now();
       toast(t('app.exitHint'));
-    });
+    })).catch((e) => logError(e, 'back-button')); } catch (e) { logError(e, 'back-button'); }
   }
 
   document.addEventListener('visibilitychange', () => {

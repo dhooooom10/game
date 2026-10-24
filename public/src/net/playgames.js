@@ -4,6 +4,7 @@
    يوفّر بلا أي خادم: لوحات صدارة عالمية وبين أصدقاء Play Games، وإنجازات.
    الإضافة الأصلية: android/app/src/main/java/.../PlayGamesPlugin.kt
    ========================================================================= */
+import { nativePlugin } from './native.js';
 import { PGS } from './playgames-config.js';
 
 let plugin = null, authed = false, syncing = false, timer = 0;
@@ -12,7 +13,7 @@ function getPlugin() {
   if (plugin) return plugin;
   const C = typeof window !== 'undefined' ? window.Capacitor : null;
   if (!C || !C.isNativePlatform?.() || !C.isPluginAvailable?.('PlayGames')) return null;
-  plugin = C.registerPlugin('PlayGames');
+  plugin = nativePlugin('PlayGames');
   return plugin;
 }
 

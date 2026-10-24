@@ -2,7 +2,7 @@
    يخزّن اللعبة محليًا لتعمل بلا إنترنت بعد أول زيارة.
    قائمة الملفات ورقم الإصدار يولّدهما: node scripts/build-sw.mjs */
 
-const CACHE = 'qatra-68dd703006';
+const CACHE = 'qatra-f4234cefa7';
 const ASSETS = [
   './',
   './admin.html',
@@ -52,6 +52,7 @@ const ASSETS = [
   './src/net/ads.js',
   './src/net/billing.js',
   './src/net/monetization-config.js',
+  './src/net/native.js',
   './src/net/notify.js',
   './src/net/playgames-config.js',
   './src/net/playgames.js',
@@ -62,7 +63,6 @@ const ASSETS = [
   './src/screens/home.js',
   './src/screens/journey.js',
   './src/screens/locker.js',
-  './src/screens/progress.js',
   './src/screens/rain.js',
   './src/screens/results.js',
   './src/screens/settings.js',
