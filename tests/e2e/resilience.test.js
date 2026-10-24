@@ -23,7 +23,7 @@ test('a damaged saved round never blocks the game: it is dropped and home opens'
     await p.evaluate((bad) => { const a = window.__mc; a.data.settings.tutorialDone = true; a.save(); localStorage.setItem('mc2:active:' + a.pid, JSON.stringify(bad)); }, bad);
     await p.reload(); await waitScreen(p, 'home');
     await p.waitForSelector('#playNow');
-    assert.equal(await p.locator('.modal').count(), 0, 'no resume offer for a damaged round');
+    assert.equal(await p.locator('.modal, #resumeCard').count(), 0, 'no resume offer for a damaged round');
     assert.equal(await p.evaluate(() => localStorage.getItem('mc2:active:' + window.__mc.pid)), null, 'damaged round removed');
     assert.deepEqual(p.errors, [], JSON.stringify(bad));
     await p.context().close();
@@ -60,4 +60,30 @@ test('a screen that fails to build goes back safely, and the problem appears in 
   const log = await p.evaluate(() => JSON.parse(localStorage.getItem('mc2:errors')));
   assert.equal(log.length, 1); assert.match(log[0].w, /screen:rainPlay/);
   assert.ok(p.errors.every((e) => /rain kind/.test(e)), 'only the expected (logged) error');
+});
+
+test('unfinished round: a calm card on home (no blocking dialog) — resume it or dismiss it', async () => {
+  const p = await newPage(browser);
+  await p.goto(S.url + '?e2e=1'); await waitScreen(p, 'home');
+  await p.evaluate(() => { const a = window.__mc; a.data.settings.tutorialDone = true; a.save(); a.go('rainPlay', { kind: 'journey', args: { level: 2 } }); });
+  await p.waitForFunction(() => window.__mc.current?.rain?.()?.state?.tick > 90, null, { timeout: 10000 });
+  await p.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+  await p.reload(); await waitScreen(p, 'home');
+  await p.waitForSelector('#resumeCard');
+  assert.equal(await p.locator('.modal').count(), 0, 'no blocking dialog');
+  assert.match(await p.textContent('#resumeCard'), /المرحلة/);
+  // البطاقة فوق «العب الآن» واللاعب يستطيع اللعب مباشرة
+  await p.waitForSelector('#playNow');
+  await p.click('#resumeBtn');
+  await waitScreen(p, 'rainPlay');
+  assert.ok(await p.evaluate(() => window.__mc.current.rain().state.tick > 0), 'restored, not restarted');
+  // نرجع للرئيسية ونجرّب التجاهل
+  await p.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+  await p.reload(); await waitScreen(p, 'home');
+  await p.click('#resumeDismiss');
+  assert.equal(await p.locator('#resumeCard').count(), 0);
+  assert.equal(await p.evaluate(() => localStorage.getItem('mc2:active:' + window.__mc.pid)), null);
+  await p.reload(); await waitScreen(p, 'home'); await p.waitForSelector('#playNow');
+  assert.equal(await p.locator('#resumeCard').count(), 0, 'gone for good');
+  assert.deepEqual(p.errors, []);
 });

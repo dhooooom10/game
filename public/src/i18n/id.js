@@ -892,4 +892,8 @@ export default {
   "set.errorsNone": "Tidak ada masalah tercatat 👍",
   "set.errorsCopy": "Salin log",
   "set.errorsClear": "Hapus",
+  "resume.now": "baru saja",
+  "resume.min": "{n} mnt lalu",
+  "resume.hour": "{n} jam lalu",
+  "resume.day": "{n} hari lalu",
 };

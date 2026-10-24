@@ -131,7 +131,7 @@ test('reload mid-round: resume finishes once; reloading after the results gives 
   await p.reload();
   await waitScreen(p, 'home');
   await p.waitForTimeout(500);
-  assert.equal(await p.locator('.modal').count(), 0, 'no resume offer after finishing');
+  assert.equal(await p.locator('.modal, #resumeCard').count(), 0, 'no resume offer after finishing');
   const d2 = await data(p);
   assert.equal(d2.stats.rounds, 1); assert.equal(d2.xp, d1.xp); assert.equal(d2.pearls, d1.pearls);
   assert.deepEqual(p.errors, []);

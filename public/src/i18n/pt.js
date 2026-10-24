@@ -892,4 +892,8 @@ export default {
   "set.errorsNone": "Nenhum problema registrado 👍",
   "set.errorsCopy": "Copiar registro",
   "set.errorsClear": "Limpar",
+  "resume.now": "agora mesmo",
+  "resume.min": "há {n} min",
+  "resume.hour": "há {n} h",
+  "resume.day": "há {n} d",
 };

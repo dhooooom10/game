@@ -168,7 +168,7 @@ test('refresh mid-level → resume restores the exact storm (paused) → finish;
   await waitScreen(page, 'home');
   d = await data(page);
   assert.equal(d.xp, xp);
-  assert.equal(await page.locator('.modal').count(), 0);
+  assert.equal(await page.locator('.modal, #resumeCard').count(), 0);
 });
 
 test('pause hides the drops and freezes the storm; going to background pauses too', async () => {

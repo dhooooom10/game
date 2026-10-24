@@ -892,4 +892,8 @@ export default {
   "set.errorsNone": "Kayıtlı sorun yok 👍",
   "set.errorsCopy": "Kaydı kopyala",
   "set.errorsClear": "Temizle",
+  "resume.now": "az önce",
+  "resume.min": "{n} dk önce",
+  "resume.hour": "{n} sa önce",
+  "resume.day": "{n} gün önce",
 };

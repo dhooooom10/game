@@ -55,6 +55,9 @@ registerScreen('home', (app) => {
   if (!reducedMotion()) for (let i = 0; i < 9; i++) rain.appendChild(h('i', { style: { left: (8 + i * 11) + '%', animationDelay: (i * 0.29) + 's', animationDuration: (2.2 + (i % 3) * 0.5) + 's' } }));
   const firstTime = !data.settings.tutorialDone && data.stats.rounds === 0;
   const playSub = firstTime ? t('home.playFirst') : data.journey.stars[100] && L === 100 ? t('home.allDone') : t('home.playSub', { n: L, world: t('world.' + w.key) });
+  // بطاقة «جولة لم تكتمل» (تُملأ بعد الرسم إن وُجدت جولة محفوظة صالحة)
+  const resumeSlot = h('div', { id: 'resumeSlot' });
+  el.appendChild(resumeSlot);
   el.appendChild(h('section.hero', { aria: { label: t('home.play') } }, rain,
     h('div.hero-top',
       h('span.mascot-wrap', { html: mascotSVG({ skin: cos.skin, acc: cos.acc, mood: 'happy', size: 84, label: t('mascot.name') }) }),
@@ -184,25 +187,35 @@ registerScreen('home', (app) => {
       if (!active) return;
       // لقطة تالفة أو غير مفهومة ← تُحذف بهدوء (لا تمنع فتح اللعبة أبدًا)
       if (!validActive(active)) { app.store.clearActive(app.pid); return; }
-      try { offerResume(active); } catch (e) { console.error(e); app.logError?.(e, 'resume-offer'); app.store.clearActive(app.pid); }
+      try { resumeSlot.replaceChildren(resumeCard(active, resumeSlot)); } catch (e) { console.error(e); app.logError?.(e, 'resume-card'); app.store.clearActive(app.pid); }
     },
   };
 });
 
-function offerResume(active) {
+/** بطاقة هادئة في الرئيسية بدل نافذة تعترض اللاعب: «أكمل ▶» أو «✕» لتجاهلها */
+function resumeCard(active, slot) {
   const official = active.kind === 'daily' && active.args?.official;
-  const modeName = active.kind === 'lesson' ? t('mode.lesson') : active.kind === 'custom' ? challengeLabel(normalizeChallenge(active.args)) : active.kind === 'levelDuel' ? t('jr.levelN', { n: active.args.level }) : t('mode.' + active.kind);
-  app.modal((box, close) => {
-    box.append(h('h2', t('game.resumeTitle')), h('p.note', t('game.resumeBody', { mode: modeName })),
-      official ? h('p.note', t('game.quitDaily')) : null,
-      h('div.stack',
-        h('button.btn.primary.block.lg', { 'data-autofocus': true, on: { click: () => {
-          close('resume');
-          if (active.engine === 'rain') app.go('rainPlay', { kind: active.kind, args: active.args, restore: active });
-          else app.go('play', { kind: active.kind, args: active.args, restore: { seed: active.seed, snap: active.snap } });
-        } } }, icon('play'), t('game.resumeBtn')),
-        h('button.btn.ghost.block', { on: { click: () => { close('discard'); discard(active); } } }, official ? t('game.endNow') : t('game.discard'))));
-  }, { dismissible: false });
+  const modeName = active.kind === 'lesson' ? t('mode.lesson') : active.kind === 'custom' ? challengeLabel(normalizeChallenge(active.args))
+    : active.kind === 'levelDuel' || active.kind === 'journey' ? t('jr.levelN', { n: active.args.level }) : t('mode.' + active.kind);
+  const ago = active.savedAt ? Math.max(0, Math.round((Date.now() - active.savedAt) / 60000)) : null;
+  const when = ago == null ? '' : ago < 1 ? t('resume.now') : ago < 60 ? t('resume.min', { n: num(ago) }) : ago < 1440 ? t('resume.hour', { n: num(Math.round(ago / 60)) }) : t('resume.day', { n: num(Math.round(ago / 1440)) });
+  const resume = () => {
+    sfx.tap();
+    if (active.engine === 'rain') app.go('rainPlay', { kind: active.kind, args: active.args, restore: active });
+    else app.go('play', { kind: active.kind, args: active.args, restore: { seed: active.seed, snap: active.snap } });
+  };
+  const dismiss = async () => {
+    sfx.tap();
+    // اليومي الرسمي لا يُلغى: تجاهله يعتمد نتيجته الحالية — نطلب تأكيدًا
+    if (official && !(await app.confirm({ title: t('game.resumeTitle'), body: t('game.quitDaily'), ok: t('game.endNow'), danger: true }))) return;
+    slot.replaceChildren();
+    discard(active);
+  };
+  return h('section.resume-card.section', { id: 'resumeCard', role: 'region', aria: { label: t('game.resumeTitle') } },
+    h('span.rc-ic', active.kind === 'daily' ? '📅' : '⏸️'),
+    h('div.grow', h('div.t', t('game.resumeTitle')), h('div.d', modeName, when ? ' · ' + when : '')),
+    h('button.btn.gold.sm', { id: 'resumeBtn', type: 'button', on: { click: resume } }, icon('play'), t('game.resumeBtn')),
+    h('button.icon-btn', { id: 'resumeDismiss', type: 'button', aria: { label: official ? t('game.endNow') : t('game.discard') }, on: { click: dismiss } }, icon('close')));
 }
 
 function discard(active) {

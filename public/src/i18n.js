@@ -615,6 +615,10 @@ const ar = {
   "set.errorsNone": "لا توجد مشكلات مسجّلة 👍",
   "set.errorsCopy": "نسخ السجل",
   "set.errorsClear": "مسح",
+  "resume.now": "الآن",
+  "resume.min": "قبل {n} د",
+  "resume.hour": "قبل {n} س",
+  "resume.day": "قبل {n} يوم",
 };
 
 const en = {
@@ -1219,6 +1223,10 @@ const en = {
   "set.errorsNone": "No problems logged 👍",
   "set.errorsCopy": "Copy log",
   "set.errorsClear": "Clear",
+  "resume.now": "just now",
+  "resume.min": "{n} min ago",
+  "resume.hour": "{n} h ago",
+  "resume.day": "{n} d ago",
 };
 
 /* لغات النسخة السابقة: العناوين الأساسية فقط (والباقي بالإنجليزية) */

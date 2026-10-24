@@ -976,3 +976,13 @@ button.badge.goal { font: inherit; color: inherit; cursor: pointer; border: 1px 
 .party-name { display: flex; align-items: center; gap: 8px; }
 .party-name .dot, .party-board .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
 .party-board { display: grid; gap: 6px; margin-top: 12px; }
+
+/* ---------- بطاقة «جولة لم تكتمل» في الرئيسية ---------- */
+.resume-card { display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 14px; border-radius: 18px; margin-bottom: 12px;
+  border: 1px solid rgba(255, 201, 74, .55); background: linear-gradient(100deg, color-mix(in srgb, #FFC94A 16%, var(--surface)), var(--surface)); animation: rc-in .35s ease-out; }
+.resume-card .rc-ic { font-size: 1.6rem; }
+.resume-card .t { font-weight: 900; }
+.resume-card .d { font-size: .8rem; color: var(--muted); }
+.resume-card .icon-btn { width: 40px; height: 40px; }
+@keyframes rc-in { from { opacity: 0; transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) { .resume-card { animation: none; } }

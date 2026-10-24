@@ -891,4 +891,8 @@ export default {
   "set.errorsNone": "कोई समस्या दर्ज नहीं 👍",
   "set.errorsCopy": "लॉग कॉपी करें",
   "set.errorsClear": "साफ़ करें",
+  "resume.now": "अभी",
+  "resume.min": "{n} मिनट पहले",
+  "resume.hour": "{n} घंटे पहले",
+  "resume.day": "{n} दिन पहले",
 };
