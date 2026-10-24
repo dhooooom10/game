@@ -1,5 +1,19 @@
 # ما الجديد — نص جاهز لحقل «ملاحظات الإصدار» في Google Play
 
+## الإصدار 1.4.3 (رقم البناء 12)
+
+### العربية (ar)
+```
+⏸️ جولتك غير المكتملة تنتظرك في بطاقة هادئة بالرئيسية: «استئناف» أو تجاهلها
+🛠️ إصلاحات في الثبات عند فتح اللعبة
+```
+
+### English (en-US)
+```
+⏸️ Your unfinished round now waits in a calm card on the home screen: Resume or dismiss it
+🛠️ Stability fixes when opening the game
+```
+
 ## الإصدار 1.4.2 (رقم البناء 11)
 
 ### العربية (ar)
