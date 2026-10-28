@@ -31,7 +31,7 @@ registerScreen('home', (app) => {
       h('div.name', name ? t('home.hello', { name }) : t('home.helloAnon')),
       h('div.lvl', h('span.lvl-badge', t('home.level', { n: lv.level })), h('div.bar.gold', { role: 'progressbar', aria: { valuenow: Math.round(lv.pct * 100), valuemin: 0, valuemax: 100, label: t('home.xp', { a: lv.into, b: lv.need }) } }, xpFill))),
     h('button.pearl-chip', { id: 'homePearls', type: 'button', aria: { label: t('wal.balance') }, on: { click: () => { sfx.tap(); app.go('shop'); } } }, '💎 ', num(data.pearls || 0), h('span.plus', '+')),
-    h('button.lang-chip', { id: 'homeLang', type: 'button', aria: { label: t('set.language') + ' · Language' }, on: { click: () => { sfx.tap(); openLanguagePicker(); } } }, '🌐 ', data.settings.lang.toUpperCase())));
+    h('button.lang-chip', { id: 'homeLang', type: 'button', aria: { label: t('set.language') + ' · Language' }, on: { click: () => { sfx.tap(); openLanguagePicker(); } } }, icon('globe'), data.settings.lang.toUpperCase())));
 
   if (!app.store.persistent) el.appendChild(h('p.note.warn', { role: 'alert' }, '⚠️ ' + t('home.storageWarn')));
   // زائر من رابط على جوال Android في المتصفح: دعوة هادئة لتحميل التطبيق (يمكن إخفاؤها)
@@ -57,23 +57,27 @@ registerScreen('home', (app) => {
   if (!reducedMotion()) for (let i = 0; i < 12; i++) rain.appendChild(h('i', { style: { left: (4 + i * 8.3) + '%', animationDelay: (i * 0.23) + 's', animationDuration: (1.8 + (i % 4) * 0.45) + 's' } }));
   const ms = data.missions.list || [];
   const doneN = ms.filter((m) => m.done).length;
-  const mbtn = (id, ic, title, fn, badge) => h('button.menu-btn', { id, type: 'button', on: { click: () => { sfx.tap(); fn(); } } },
-    h('span.mb-ic', ic), h('span.mb-t', title), badge ? h('span.mb-badge', badge) : null);
-  el.appendChild(h('section.main-menu', { aria: { label: t('app.name') } }, rain,
+  // أزرار القائمة: أيقونات SVG من مجموعة اللعبة داخل دائرة بلون الدور (لا إيموجي في التنقل)
+  const mbtn = (id, ic, color, title, fn, badge) => h('button.menu-btn', { id, type: 'button', style: { '--mc': color }, aria: badge ? { label: `${title} — ${badge}` } : null, on: { click: () => { sfx.tap(); fn(); } } },
+    h('span.mb-ic', icon(ic)), h('span.mb-t', title), badge ? h('span.mb-dot', { aria: { hidden: 'true' } }) : null);
+  // الظهور الأول بالتتابع: مرة واحدة لكل جلسة فقط (لا يتكرر عند كل رجوع للرئيسية)
+  let stagger = false;
+  try { stagger = !sessionStorage.getItem('qatra.menuIn'); sessionStorage.setItem('qatra.menuIn', '1'); } catch { /* تخزين غير متاح */ }
+  el.appendChild(h('section.main-menu' + (stagger ? '.stagger' : ''), { aria: { label: t('app.name') } }, rain,
     h('div.logo',
       h('span.logo-mascot', { html: mascotSVG({ skin: cos.skin, acc: cos.acc, mood: 'happy', size: 112, label: t('mascot.name') }) }),
       h('h1.wordmark', t('app.name')),
       h('div.tagline', t('app.tagline'))),
-    h('button.menu-play', { id: 'playNow', type: 'button', on: { click: playNow } },
+    h('button.menu-play' + (data.stats.rounds === 0 ? '.first' : ''), { id: 'playNow', type: 'button', on: { click: playNow } },
       h('span.mp-ic', icon('play', 'fill')), h('span.mp-txt', h('b', t('home.play')), h('small', playSub))),
     h('div.menu-grid',
-      mbtn('menuLevels', '🗺️', t('menu.levels'), () => app.go('journey')),
-      mbtn('menuChallenges', '🏆', t('menu.challenges'), () => app.go('challenges'), ds.done ? null : '!'),
-      mbtn('menuFriends', '👥', t('nav.friends'), () => app.go('friends')),
-      mbtn('menuShop', '🛍️', t('nav.shop'), () => app.go('shop'))),
+      mbtn('menuLevels', 'map', '#38D6F5', t('menu.levels'), () => app.go('journey')),
+      mbtn('menuChallenges', 'trophy', '#FFC94A', t('menu.challenges'), () => app.go('challenges'), ds.done ? null : t('home.dailyReady')),
+      mbtn('menuFriends', 'users', '#FF7BB0', t('nav.friends'), () => app.go('friends')),
+      mbtn('menuShop', 'bag', '#3DDC97', t('nav.shop'), () => app.go('shop'))),
     h('div.menu-row',
-      h('button.menu-small', { id: 'missionsRow', type: 'button', on: { click: openMissions } }, doneN === ms.length && ms.length ? '🏆 ' : '🎯 ', t('home.missions'), h('b', ` ${num(doneN)}/${num(ms.length)}`)),
-      h('button.menu-small', { id: 'menuHow', type: 'button', on: { click: () => { sfx.tap(); howToPlay(); } } }, '❓ ', t('menu.how')),
+      h('button.menu-small', { id: 'missionsRow', type: 'button', on: { click: openMissions } }, icon(doneN === ms.length && ms.length ? 'trophy' : 'target'), t('home.missions'), h('b', ` ${num(doneN)}/${num(ms.length)}`)),
+      h('button.menu-small', { id: 'menuHow', type: 'button', on: { click: () => { sfx.tap(); howToPlay(); } } }, icon('help'), t('menu.how')),
       h('button.menu-small.icon-only', { id: 'menuSettings', type: 'button', aria: { label: t('nav.settings') }, on: { click: () => { sfx.tap(); app.go('settings'); } } }, icon('gear')))));
 
   function playNow() {
@@ -168,13 +172,13 @@ function shieldBox(close) {
 /** «كيف تلعب»: شرح سريع في ٤ خطوات + الشرح التفاعلي */
 export function howToPlay() {
   app.modal((box, close) => {
-    const step = (ic, title, d) => h('div.how-step', h('span.hs-ic', ic), h('div', h('b', title), h('div.d', d)));
+    const step = (ic, title, d) => h('div.how-step', h('span.hs-ic', icon(ic)), h('div', h('b', title), h('div.d', d)));
     box.classList.add('how-modal');
-    box.append(h('h2', '❓ ', t('menu.how')),
-      step('💧', t('how.1t'), t('how.1d')),
-      step('⌨️', t('how.2t'), t('how.2d')),
-      step('🌊', t('how.3t'), t('how.3d')),
-      step('🔥', t('how.4t'), t('how.4d')),
+    box.append(h('h2', t('menu.how')),
+      step('drop', t('how.1t'), t('how.1d')),
+      step('keypad', t('how.2t'), t('how.2d')),
+      step('wave', t('how.3t'), t('how.3d')),
+      step('fire', t('how.4t'), t('how.4d')),
       h('div.stack', { style: { marginTop: '12px' } },
         h('button.btn.gold.block.lg', { id: 'howTry', 'data-autofocus': true, on: { click: () => { sfx.tap(); close(); app.go('rainPlay', { kind: 'tutorial', args: {} }); } } }, icon('play'), t('how.try')),
         h('button.btn.ghost.block', { id: 'howOk', on: { click: () => { sfx.tap(); close(); } } }, t('how.ok'))));
@@ -188,15 +192,15 @@ registerScreen('challenges', (app) => {
   const P = data.prefs.challenge || {};
   const today = todayStr();
   const el = h('main', topbar(t('menu.challenges')));
-  const card = (id, ic, title, sub, fn, cls = '') => h('button.ch-big' + cls, { id, type: 'button', on: { click: () => { sfx.tap(); fn(); } } },
-    h('span.cb-ic', ic), h('span.grow', h('b', title), h('small', sub)), h('span.cb-go', icon('play', 'fill')));
+  const card = (id, ic, color, title, sub, fn, cls = '') => h('button.ch-big' + cls, { id, type: 'button', style: { '--mc': color }, on: { click: () => { sfx.tap(); fn(); } } },
+    h('span.cb-ic', icon(ic)), h('span.grow', h('b', title), h('small', sub)), h('span.cb-go', icon('play', 'fill')));
   el.append(h('div.ch-list',
-    card('dailyCard', ds.done ? '✅' : '📅', t('daily.title'),
+    card('dailyCard', ds.done ? 'check' : 'calendar', '#FFC94A', t('daily.title'),
       ds.done ? t('daily.done', { score: num(ds.result.score) }) : `🔥 ${num(ds.streak)} · ${t('home.dailyShort')}`,
       () => app.go('rainPlay', { kind: 'daily', args: { date: today, official: !ds.done } }), ds.done ? '' : '.gold'),
-    card('chTime', '⏱️', t('ch.time'), t('ch.quickTime', { n: num(P.time?.dur || 60) }), () => app.go('rainPlay', { kind: 'custom', args: normalizeChallenge({ ...(P.time || {}), mode: 'time' }) })),
-    card('chSurvival', '❤️', t('ch.survival'), t('ch.survivalSub'), () => app.go('rainPlay', { kind: 'custom', args: normalizeChallenge({ ...(P.survival || {}), mode: 'survival' }) }))),
-    h('button.btn.ghost.block', { id: 'modeCustom', type: 'button', style: { marginTop: '14px' }, on: { click: () => { sfx.tap(); app.go('setupCustom', { mode: 'custom' }); } } }, '⚙️ ', t('ch.customize')));
+    card('chTime', 'clock', '#38D6F5', t('ch.time'), t('ch.quickTime', { n: num(P.time?.dur || 60) }), () => app.go('rainPlay', { kind: 'custom', args: normalizeChallenge({ ...(P.time || {}), mode: 'time' }) })),
+    card('chSurvival', 'heart', '#FF7BB0', t('ch.survival'), t('ch.survivalSub'), () => app.go('rainPlay', { kind: 'custom', args: normalizeChallenge({ ...(P.survival || {}), mode: 'survival' }) }))),
+    h('button.btn.ghost.block', { id: 'modeCustom', type: 'button', style: { marginTop: '14px' }, on: { click: () => { sfx.tap(); app.go('setupCustom', { mode: 'custom' }); } } }, icon('sliders'), t('ch.customize')));
   return { el };
 });
 
@@ -220,7 +224,7 @@ function resumeCard(active, slot) {
     discard(active);
   };
   return h('section.resume-card.section', { id: 'resumeCard', role: 'region', aria: { label: t('game.resumeTitle') } },
-    h('span.rc-ic', active.kind === 'daily' ? '📅' : '⏸️'),
+    h('span.rc-ic', { aria: { hidden: 'true' } }, icon(active.kind === 'daily' ? 'calendar' : 'clock')),
     h('div.grow', h('div.t', t('game.resumeTitle')), h('div.d', modeName, when ? ' · ' + when : '')),
     h('button.btn.gold.sm', { id: 'resumeBtn', type: 'button', on: { click: resume } }, icon('play'), t('game.resumeBtn')),
     h('button.icon-btn', { id: 'resumeDismiss', type: 'button', aria: { label: official ? t('game.endNow') : t('game.discard') }, on: { click: dismiss } }, icon('close')));

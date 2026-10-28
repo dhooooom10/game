@@ -128,6 +128,13 @@ const ICONS = {
   map: '<path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6z"/><path d="M9 4v14M15 6v14"/>',
   chart: '<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>',
   trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H4.5a3 3 0 0 0 3.5 4M16 6h3.5a3 3 0 0 1-3.5 4M12 13v4M8.5 20h7M10 17h4"/>',
+  // أيقونات قوائم «قطرة» (مرسومة داخليًا بنفس الخط ٢px)
+  sliders: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.8"/><path d="M12 17.2v.1"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9M12 3C9.4 5.6 8.2 8.6 8.2 12s1.2 6.4 3.8 9"/>',
+  versus: '<path d="M4 4l9 9M4 4h4M4 4v4M20 4l-9 9M20 4h-4M20 4v4"/><path d="M7.5 16.5 5 19M16.5 16.5 19 19M9.5 14.5l-3 3M14.5 14.5l3 3"/>',
+  keypad: '<rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M8 8h.01M12 8h.01M16 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h8"/>',
+  wave: '<path d="M2.5 15c2.3 0 2.3-2 4.7-2s2.4 2 4.8 2 2.4-2 4.8-2 2.4 2 4.7 2"/><path d="M2.5 19.5c2.3 0 2.3-2 4.7-2s2.4 2 4.8 2 2.4-2 4.8-2 2.4 2 4.7 2"/><path d="M12 3.5c2.2 2.8 3.4 4.8 3.4 6.3a3.4 3.4 0 0 1-6.8 0c0-1.5 1.2-3.5 3.4-6.3z"/>',
   bag: '<path d="M5 8h14l-1.2 12.2a1.6 1.6 0 0 1-1.6 1.4H7.8a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
   gear: '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/>',
   back: '<path d="M15 5l-7 7 7 7"/>',
@@ -159,6 +166,9 @@ const ICONS = {
   music: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
   volume: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11"/>',
 };
+/** رقم بإشارة (+١٢٠ · −١ · ×١٫٥) داخل نص عربي: عزل LTR حتى لا تنقلب الإشارة. */
+export const signed = (text) => '\u2066' + text + '\u2069';
+
 export function icon(name, cls = '') {
   const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   s.setAttribute('viewBox', '0 0 24 24');

@@ -925,4 +925,7 @@ export default {
   "net.retry2": "Coba lagi",
   "ch.quickTime": "{n} detik — mulai sekarang",
   "ch.customize": "Sesuaikan",
+  "home.dailyReady": "Tantangan harian tersedia",
+  "shop.na": "Tidak tersedia",
+  "set.saved": "Tersimpan ✓",
 };

@@ -1,0 +1,36 @@
+{
+  "$comment": "مرآة آلية لـ design/DESIGN-LANGUAGE.md و public/styles/tokens.css + main.css — للفيديو والعروض. لا أسرار هنا.",
+  "name": { "ar": "تحدي قطرة", "en": "Qatra Challenge" },
+  "tagline": { "ar": "تحدَّ الأرقام واكسر رقمك القياسي", "en": "Beat the numbers, break your record" },
+  "personality": ["energetic", "clear", "friendly"],
+  "profiles": { "gameplay": "Immersive", "menus": "Modern" },
+  "locale": { "primary": "ar-SA", "dir": "rtl", "secondary": ["en", "es", "pt", "fr", "tr", "id", "hi"], "digits": { "ar": "arab", "option": "latn" } },
+  "fonts": {
+    "display": { "family": "Baloo Bhaijaan 2", "weights": [500, 800], "file": "public/fonts/baloobhaijaan2-500-800-arabic.woff2" },
+    "body": { "family": "Tajawal", "weights": [500, 800], "file": "public/fonts/tajawal-500-arabic.woff2" }
+  },
+  "themes": {
+    "rain": {
+      "mode": "dark", "bg": "#0A1230", "bg2": "#111B48", "surface": "#16214F", "ink": "#F2F6FF", "muted": "#A9B6DC", "faint": "#8A99C4",
+      "primary": "#38D6F5", "primary2": "#1FA8E0", "onPrimary": "#03202C", "accent": "#FFC94A", "accentInk": "#FFC94A", "onAccent": "#2B1A00",
+      "ok": "#3DDC97", "bad": "#FF6B7A"
+    },
+    "dawn": {
+      "mode": "light", "bg": "#EEF4FF", "bg2": "#DDE8FF", "surface": "#FFFFFF", "ink": "#13204A", "muted": "#4A5B8C", "faint": "#5D6C96",
+      "primary": "#0B6FA0", "primary2": "#095E88", "onPrimary": "#FFFFFF", "accent": "#F2A900", "accentInk": "#7A4F00", "onAccent": "#2B1A00",
+      "ok": "#0A7A4E", "bad": "#C42B3D"
+    }
+  },
+  "playButton": { "gradient": ["#FFE07A", "#FFC94A", "#F5A524"], "shadow": "#C77A12", "ink": "#3A2400" },
+  "worlds": ["#5FD3F5", "#7EC8E8", "#4FB3E8", "#4A9BE0", "#3C88DA", "#8E7BEE", "#B06FE0", "#E06FA8", "#F0844C", "#FFC94A"],
+  "radius": { "sm": 12, "md": 18, "lg": 26, "full": 999 },
+  "space": { "base": 4, "scale": [4, 8, 12, 16, 20, 24, 32, 48] },
+  "motion": {
+    "durations": { "instant": 80, "fast": 150, "base": 220, "slow": 320, "enter": 450 },
+    "easing": { "standard": [0.2, 0, 0, 1], "out": [0.16, 1, 0.3, 1], "in": [0.4, 0, 1, 1], "spring": [0.34, 1.4, 0.64, 1] },
+    "signature": { "home": "ambient rain", "map": "current level glow", "results": "score count-up" },
+    "reducedMotion": "all movement off; content immediate"
+  },
+  "iconography": { "set": "in-house SVG (public/src/ui/dom.js ICONS)", "stroke": 2, "sizes": [20, 24, 32], "navigationEmoji": false },
+  "mascot": { "name": { "ar": "قطرة", "en": "Qatra" }, "shape": "water drop", "face": false }
+}

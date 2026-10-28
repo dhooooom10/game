@@ -22,7 +22,7 @@ export function openLanguagePicker() {
   const s = app.data.settings;
   app.modal((box, close) => {
     box.classList.add('lang-modal');
-    box.append(h('h2', '🌐 ', t('set.language'), s.lang === 'en' ? '' : ' · Language'),
+    box.append(h('h2', icon('globe'), ' ', t('set.language'), s.lang === 'en' ? '' : ' · Language'),
       h('div.lang-list', ...PICKER_LANGS.map((k) => h('button.lang-opt' + (k === s.lang ? '.on' : ''), { type: 'button', 'data-lang': k, dir: LANGS[k].rtl ? 'rtl' : 'ltr', on: { click: async () => {
         sfx.tap(); close();
         if (k === s.lang) return;
@@ -40,12 +40,12 @@ registerScreen('settings', (app) => {
 
   // الاسم
   const nameIn = h('input.input', { value: profile?.name || '', maxlength: 20, placeholder: t('set.namePh'), aria: { label: t('set.name') }, autocomplete: 'nickname',
-    on: { change: () => { app.store.updateProfile(app.pid, { name: nameIn.value.trim().slice(0, 20) }); toast('✓'); } } });
+    on: { change: () => { app.store.updateProfile(app.pid, { name: nameIn.value.trim().slice(0, 20) }); toast(t('set.saved')); } } });
   el.append(h('section.card',
     h('h2.section-title', t('set.general')),
     // اللغة أولًا وبوضوح (بعنوان ثنائي اللغة حتى يجدها من لا يقرأ اللغة الحالية)
     h('button.lang-btn', { id: 'langBtn', type: 'button', on: { click: () => { sfx.tap(); openLanguagePicker(); } } },
-      h('span.lb-ic', '🌐'), h('span.grow', h('b', t('set.language') + (s.lang === 'en' ? '' : ' · Language')), h('small', LANGS[s.lang]?.n || s.lang)), h('span.lb-go', '›')),
+      h('span.lb-ic', icon('globe')), h('span.grow', h('b', t('set.language') + (s.lang === 'en' ? '' : ' · Language')), h('small', LANGS[s.lang]?.n || s.lang)), h('span.lb-go', '›')),
     h('div.field', h('label', t('set.name')), nameIn),
     s.lang === 'ar' ? h('div.field', h('div.label', t('set.digits')), seg([['arabic', '٠١٢٣'], ['western', '0123']], s.digits, (v) => { s.digits = v; s._digitsSet = true; app.save(); app.applyLook(); app.refresh(); }, t('set.digits'))) : null,
   ));
@@ -63,7 +63,7 @@ registerScreen('settings', (app) => {
     })) : null));
 
   // كل ما سواها داخل «المزيد» (مطويّ)
-  const more = h('details.card.more-box', { id: 'settingsMore' }, h('summary', '⚙️ ', t('set.more')));
+  const more = h('details.card.more-box', { id: 'settingsMore' }, h('summary', icon('gear'), ' ', t('set.more')));
   el.append(more);
 
   // سهولة الاستخدام
