@@ -111,7 +111,7 @@ registerScreen('settings', (app) => {
 
   // سجل المشكلات: يُنسخ ويُرسل للمطوّر يدويًا (لا يُرسل شيء تلقائيًا)
   const errs = readErrors();
-  const errBox = h('div.more-sec', { id: 'errLog' }, h('h2.section-title', '🧰 ', t('set.errors'), h('small', String(errs.length))),
+  const errBox = h('div.more-sec', { id: 'errLog' }, h('h2.section-title', '🔧 ', t('set.errors'), h('small', String(errs.length))),
     h('p.note', errs.length ? t('set.errorsSub') : t('set.errorsNone')));
   if (errs.length) errBox.append(h('div.btn-row',
     h('button.btn.grow', { id: 'copyErrors', type: 'button', on: { click: async () => {

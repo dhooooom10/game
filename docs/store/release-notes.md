@@ -1,5 +1,23 @@
 # ما الجديد — نص جاهز لحقل «ملاحظات الإصدار» في Google Play
 
+## الإصدار 1.7.0 (رقم البناء 17)
+
+### العربية (ar)
+```
+✨ واجهة أوضح: أيقونات جديدة، وألوان أوضح في السمة الفاتحة، وأزرار أكبر للمس
+♿ دعم أفضل لقارئ الشاشة TalkBack وللخط الكبير حتى ٢٠٠٪
+⚡ فتح أسرع على الجوالات الضعيفة
+🌍 تحسين عرض كل اللغات والأسعار المحلية في المتجر
+```
+
+### English (en-US)
+```
+✨ Clearer design: new icons, better light-theme contrast, bigger touch targets
+♿ Better TalkBack support and large text up to 200%
+⚡ Faster start on low-end phones
+🌍 Every language and local shop prices display better
+```
+
 ## الإصدار 1.6.1 (رقم البناء 16)
 
 ### العربية (ar)

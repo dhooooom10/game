@@ -37,10 +37,33 @@ export function h(sel, attrs, ...kids) {
   append(el, kids);
   return el;
 }
+/* الإيموجي الزخرفي لا يُقرأ: قارئ الشاشة (TalkBack) كان يقول «حجر كريم، ١٢٠ لؤلؤة».
+   إيموجي في بداية نص يليه كلام ← يُلف بـ aria-hidden. وعنصر صغير محتواه إيموجي فقط
+   (أيقونة بجوار نص) ← يُخفى كله. الأزرار والروابط لا تُخفى أبدًا (تحتاج اسمًا). */
+const EMOJI = '(?:\\p{Extended_Pictographic}|\\p{Regional_Indicator})(?:\\uFE0F|\\u20E3|\\u200D|\\p{Extended_Pictographic}|\\p{Regional_Indicator})*';
+const LEAD_EMOJI = new RegExp(`^((?:${EMOJI}\\s*)+?)\\s+(?=[\\p{L}\\p{N}\\u2066])`, 'u');
+const ONLY_EMOJI = new RegExp(`^\\s*(?:${EMOJI}\\s*)+$`, 'u');
+const ICON_TAGS = new Set(['SPAN', 'I', 'B', 'DIV']);
 export function append(el, kids) {
+  // النصوص المتجاورة تُدمج أولًا (كما يعرضها المتصفح: مربع نص واحد) حتى لا ينفصل الإيموجي عن كلمته في flex
+  const list = [];
   for (const k of kids.flat(Infinity)) {
     if (k == null || k === false) continue;
-    el.appendChild(k instanceof Node ? k : document.createTextNode(String(k)));
+    if (!(k instanceof Node) && list.length && !(list[list.length - 1] instanceof Node)) list[list.length - 1] += String(k);
+    else list.push(k instanceof Node ? k : String(k));
+  }
+  for (const k of list) {
+    if (k instanceof Node) { el.appendChild(k); continue; }
+    const m = LEAD_EMOJI.exec(k);
+    if (list.length > 1 && ONLY_EMOJI.test(k)) {
+      el.appendChild(h('span', { aria: { hidden: 'true' } }, k));
+    } else if (m) {
+      // غلاف واحد = نفس صندوق النص الذي كان سيظهر، والإيموجي داخله مخفي عن قارئ الشاشة
+      el.appendChild(h('span', h('span', { aria: { hidden: 'true' } }, m[1]), ' ' + k.slice(m[0].length)));
+    } else el.appendChild(document.createTextNode(k));
+  }
+  if (list.length === 1 && typeof list[0] !== 'object' && ICON_TAGS.has(el.tagName) && !el.hasAttribute('aria-label') && !el.hasAttribute('role') && ONLY_EMOJI.test(String(list[0]))) {
+    el.setAttribute('aria-hidden', 'true');
   }
   return el;
 }

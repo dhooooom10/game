@@ -95,3 +95,33 @@ test('app: rewarded second chance in survival, double XP, interstitial respects 
   assert.equal(await p.evaluate(() => window.__calls.filter((c) => c[0] === 'interstitial').length), 0);
   assert.deepEqual(p.errors, []);
 });
+
+test('app: real Play price formats (Arabic RLM riyal, long rupiah) show after skeletons, isolated and inside their cards', async () => {
+  for (const [lang, prices] of [['ar', { xl: '‏٧٤٫٩٩ ر.س.‏', s: '‏٣٫٩٩ ر.س.‏' }], ['id', { xl: 'Rp 1.249.000,00', s: 'Rp 15.000,00' }]]) {
+    const p = await newPage(browser, { width: 320, height: 760 });
+    await p.addInitScript((pr) => {
+      const billing = {
+        getProducts: ({ ids }) => new Promise((r) => setTimeout(() => r({ products: ids.map((id) => ({ id, title: id, description: '', price: id === 'pearls_xl' ? pr.xl : pr.s })) }), 800)),
+        queryPurchases: async () => ({ purchases: [] }), purchase: async () => ({ status: 'cancelled' }), acknowledge: async () => {}, consume: async () => {},
+      };
+      window.Capacitor = { isNativePlatform: () => true, isPluginAvailable: (n) => n === 'Billing', registerPlugin: () => billing };
+    }, prices);
+    await p.goto(S.url + '?e2e=1');
+    await waitScreen(p, 'home');
+    await p.evaluate((l) => { window.__mc.data.settings.lang = l; window.__mc.save(); }, lang);
+    await p.reload();
+    await waitScreen(p, 'home');
+    await p.evaluate(() => window.__mc.go('shop'));
+    await p.waitForSelector('.pk-p.skel');
+    assert.equal(await p.locator('#packs').evaluate((e) => e.closest('[aria-busy]').getAttribute('aria-busy')), 'true');
+    await p.waitForSelector('#buy-pearls_xl:not([disabled])');
+    assert.equal(await p.locator('#buy-pearls_xl .pk-p bdi').innerText(), prices.xl.replace(/‏/g, '‏'));
+    const spill = await p.evaluate(() => [...document.querySelectorAll('.pk-p, [data-buy].btn')].filter((e) => {
+      const r = e.getBoundingClientRect(), c = e.closest('.pack, .card, .starter-card, .shop-item').getBoundingClientRect();
+      return r.left < c.left - 1 || r.right > c.right + 1;
+    }).length);
+    assert.equal(spill, 0, `prices stay inside their cards (${lang})`);
+    assert.deepEqual(p.errors, []);
+    await p.close();
+  }
+});

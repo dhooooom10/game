@@ -172,7 +172,7 @@ export const BADGES = [
   { id: 'correct100', icon: '💯' }, { id: 'correct1000', icon: '🏔️' }, { id: 'perfect', icon: '🎯' },
   { id: 'speed20', icon: '⚡' }, { id: 'survive25', icon: '🛡️' }, { id: 'daily3', icon: '📅' }, { id: 'daily7', icon: '🗓️' },
   { id: 'world1', icon: '🌦️' }, { id: 'world5', icon: '🌊' }, { id: 'world10', icon: '👑' }, { id: 'allstars', icon: '🌟' },
-  { id: 'allround', icon: '🧭' }, { id: 'friend', icon: '🤝' }, { id: 'scholar', icon: '🎓' }, { id: 'rain', icon: '💧' },
+  { id: 'allround', icon: '🏅' }, { id: 'friend', icon: '🤝' }, { id: 'scholar', icon: '🎓' }, { id: 'rain', icon: '💧' },
   { id: 'fever', icon: '🔥' }, { id: 'gift', icon: '🎁' }, { id: 'speedx2', icon: '🏎️' }, { id: 'speedx3', icon: '🚀' },
 ];
 

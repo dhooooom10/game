@@ -26,7 +26,7 @@ test('daily result: Wordle-style share text with number, grid and link', async (
   await p.click('#shareDaily');
   const d = (await p.evaluate(() => window.__shared))[0];
   assert.match(d.text, /#[3٣]\n/);
-  assert.match(d.text, /🟦🟩🟥🟦/);
+  assert.match(d.text, /⚡✅❌⚡/);
   assert.match(d.url, /play\.google\.com\/store\/apps\/details\?id=app\.qatra\.game/);
   assert.match(d.url, /utm_source%3Dshare/);
   assert.deepEqual(p.errors, []);

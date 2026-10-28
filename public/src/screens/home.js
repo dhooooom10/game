@@ -30,8 +30,8 @@ registerScreen('home', (app) => {
     h('div.who',
       h('div.name', name ? t('home.hello', { name }) : t('home.helloAnon')),
       h('div.lvl', h('span.lvl-badge', t('home.level', { n: lv.level })), h('div.bar.gold', { role: 'progressbar', aria: { valuenow: Math.round(lv.pct * 100), valuemin: 0, valuemax: 100, label: t('home.xp', { a: lv.into, b: lv.need }) } }, xpFill))),
-    h('button.pearl-chip', { id: 'homePearls', type: 'button', aria: { label: t('wal.balance') }, on: { click: () => { sfx.tap(); app.go('shop'); } } }, '💎 ', num(data.pearls || 0), h('span.plus', '+')),
-    h('button.lang-chip', { id: 'homeLang', type: 'button', aria: { label: t('set.language') + ' · Language' }, on: { click: () => { sfx.tap(); openLanguagePicker(); } } }, icon('globe'), data.settings.lang.toUpperCase())));
+    h('button.pearl-chip', { id: 'homePearls', type: 'button', aria: { label: `${t('wal.balance')}: ${num(data.pearls || 0)}` }, on: { click: () => { sfx.tap(); app.go('shop'); } } }, '💎 ', num(data.pearls || 0), h('span.plus', '+')),
+    h('button.lang-chip', { id: 'homeLang', type: 'button', aria: { label: t('set.language') === 'Language' ? 'Language' : t('set.language') + ' · Language' }, on: { click: () => { sfx.tap(); openLanguagePicker(); } } }, icon('globe'), data.settings.lang.toUpperCase())));
 
   if (!app.store.persistent) el.appendChild(h('p.note.warn', { role: 'alert' }, '⚠️ ' + t('home.storageWarn')));
   // زائر من رابط على جوال Android في المتصفح: دعوة هادئة لتحميل التطبيق (يمكن إخفاؤها)

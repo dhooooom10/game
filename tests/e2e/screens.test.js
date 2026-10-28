@@ -212,3 +212,50 @@ test('home menu stagger runs once per session only', async () => {
   await page.evaluate(() => window.__mc.go('home', {}, { root: true })); await waitScreen(page, 'home');
   assert.equal(await page.locator('.main-menu.stagger').count(), 0);
 });
+
+test('screen reader (TalkBack) tree: named buttons, no decorative emoji, answers announced', async () => {
+  const page = await newPage(browser, { width: 375, height: 800 });
+  await page.goto(URL_);
+  await page.evaluate(() => { window.__mc.data.settings.tutorialDone = true; window.__mc.save(); });
+  for (const [name, params] of [['home'], ['journey'], ['challenges'], ['friends'], ['shop'], ['settings'], ['locker'], ['setupCustom', { mode: 'time' }]]) {
+    await go(page, name, params || {});
+    await waitScreen(page, name);
+    const tree = await page.locator('body').ariaSnapshot();
+    assert.doesNotMatch(tree, /- (button|link|tab|radio|switch)( \[[^\]]*\])?:?\s*$/m, `unnamed control on ${name}`);
+    assert.doesNotMatch(tree, /(heading|radio|button) "\p{Extended_Pictographic}/u, `decorative emoji read aloud on ${name}`);
+  }
+  await go(page, 'journey');
+  assert.equal(await page.locator('.path-node[aria-current="step"]').count(), 1, 'current level is marked');
+  await go(page, 'rainPlay', { kind: 'journey', args: { level: 1 } });
+  await waitScreen(page, 'rainPlay');
+  assert.match(await page.locator('.hud .score').innerText(), /\d|[٠-٩]/);
+  await rainPlay(page, { until: async () => (await page.evaluate(() => window.__mc.current.rain().state.popped)) >= 1 });
+  assert.match(await page.locator('.rain-view [aria-live="polite"].sr-only').innerText(), /إجابة صحيحة|Correct answer/);
+  assert.deepEqual(page.errors, []);
+});
+
+test('Android font size 200% (WebView textZoom): no clipped or off-screen text on main screens', async () => {
+  const page = await newPage(browser, { width: 375, height: 800 });
+  await page.goto(URL_);
+  await page.evaluate(() => { window.__mc.data.stats.rounds = 3; window.__mc.save(); });
+  for (const [name, params] of [['home'], ['shop'], ['locker'], ['setupCustom', { mode: 'time' }], ['friends'], ['challenges']]) {
+    await page.reload();
+    await waitScreen(page, 'home');
+    await go(page, name, params || {});
+    await waitScreen(page, name);
+    const issues = await page.evaluate(() => {
+      const els = [...document.querySelectorAll('body *')].filter((e) => !e.closest('svg'));
+      const sizes = els.map((e) => parseFloat(getComputedStyle(e).fontSize));
+      els.forEach((e, i) => e.style.setProperty('font-size', sizes[i] * 2 + 'px', 'important'));
+      const vw = document.documentElement.clientWidth, out = [];
+      if (document.documentElement.scrollWidth > vw + 1) out.push('horizontal overflow');
+      for (const e of document.querySelectorAll('#app *')) {
+        if (!e.offsetParent || e.closest('[aria-hidden="true"],.sr-only') || e.children.length || !e.textContent.trim()) continue;
+        const r = e.getBoundingClientRect();
+        if (r.right > vw + 1 || r.left < -1) out.push(`off-screen "${e.textContent.trim().slice(0, 20)}"`);
+      }
+      return out;
+    });
+    assert.deepEqual(issues, [], `200% text on ${name}`);
+  }
+});

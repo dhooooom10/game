@@ -10,7 +10,7 @@ const L = (ar, en, sAr, sEn, topics, extra = {}) => ({ n: { ar, en }, s: { ar: s
 const T = (topic, tier, cfg = {}, w = 1) => ({ topic, tier, cfg, w });
 
 export const STAGES = [
-  { id: 'pre', name: { ar: 'المرحلة التمهيدية', en: 'Early years' }, age: { ar: '٤–٦ سنوات', en: 'Ages 4–6' }, icon: '🧸', color: '#3DDC97',
+  { id: 'pre', name: { ar: 'المرحلة التمهيدية', en: 'Early years' }, age: { ar: '٤–٦ سنوات', en: 'Ages 4–6' }, icon: '🐣', color: '#3DDC97',
     paths: [
       { id: 'count', icon: '🔢', color: '#3DDC97', name: { ar: 'العدّ والأعداد', en: 'Counting' }, desc: { ar: 'نبدأ بالعدّ قبل الرموز', en: 'Counting before symbols' },
         lessons: [

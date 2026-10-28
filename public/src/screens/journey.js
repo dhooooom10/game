@@ -35,10 +35,10 @@ function journeyScreen(app, params = {}) {
     el.style.setProperty('--wc', world.color);
 
     banner.replaceChildren(
-      h('button.icon-btn.wb-prev', { type: 'button', disabled: w === 0, aria: { label: t('jr.worldN', { n: w }) }, on: { click: () => { sfx.tap(); w--; paint(); } } }, '‹'),
+      h('button.icon-btn.wb-prev', { type: 'button', disabled: w === 0, aria: { label: t('jr.worldN', { n: w }), hidden: w === 0 ? 'true' : null }, on: { click: () => { sfx.tap(); w--; paint(); } } }, '‹'),
       h('div.wb-mid', h('span.wb-ic', locked ? '🔒' : world.icon),
         h('div', h('b', `${t('jr.worldN', { n: w + 1 })} · ${t('world.' + world.key)}`), h('small', t('world.' + world.key + 't'), ' · ★ ', num(got), '/', num(30)))),
-      h('button.icon-btn.wb-next', { type: 'button', disabled: w === WORLDS.length - 1, aria: { label: t('jr.worldN', { n: w + 2 }) }, on: { click: () => { sfx.tap(); w++; paint(); } } }, '›'));
+      h('button.icon-btn.wb-next', { type: 'button', disabled: w === WORLDS.length - 1, aria: { label: t('jr.worldN', { n: w + 2 }), hidden: w === WORLDS.length - 1 ? 'true' : null }, on: { click: () => { sfx.tap(); w++; paint(); } } }, '›'));
 
     // المسار: منحنى ناعم يمر بمراكز المراحل، والجزء المقطوع ملوّن
     const H = STEP * LEVELS_PER_WORLD + 40;
@@ -64,7 +64,7 @@ function journeyScreen(app, params = {}) {
       const lk = L > data.journey.unlocked;
       const current = L === cur && !lk;
       const node = h('button.path-node' + (st ? '.done' : '') + (current ? '.current' : '') + (lk ? '.locked' : '') + (info.kind === 'boss' ? '.boss' : ''), {
-        type: 'button', 'data-level': L, style: { left: XS[i] + '%', top: pts[i][1] + 'px' },
+        type: 'button', 'data-level': L, 'aria-current': current ? 'step' : null, style: { left: XS[i] + '%', top: pts[i][1] + 'px' },
         aria: { label: `${t('jr.levelN', { n: L })} — ${t('jr.kindName.' + info.kind)}${lk ? ' — ' + t('common.locked') : st ? ' — ' + t('a11y.stars', { n: st }) : ''}` },
         on: { click: () => { sfx.tap(); if (lk) return toast(locked ? t('jr.lockedWorld') : t('jr.unlockHint')); app.go('rainPlay', { kind: 'journey', args: { level: L } }); } },
       },

@@ -11,7 +11,7 @@ import * as notify from './net/notify.js';
 import * as pgs from './net/playgames.js';
 import { nativePlugin } from './net/native.js';
 
-export const VERSION = '1.6.1';
+export const VERSION = '1.7.0';
 
 /* ---------------- سجل الأخطاء (على الجهاز فقط) ----------------
    آخر الأخطاء تُحفظ محليًا ليتمكن اللاعب من نسخها وإرسالها من الإعدادات. لا يُرسل شيء تلقائيًا. */
@@ -68,7 +68,10 @@ export const app = {
     if (s.lang !== 'ar' && s.digits === 'arabic') s.digits = 'western';
     setLocale(s.lang, s.digits);
     // لغة لم يُحمَّل ملفها بعد (مثلًا بعد تبديل الملف الشخصي): نحمّله ثم نعيد الرسم
-    if (!isLoaded(s.lang)) loadLang(s.lang).then(() => { if (isLoaded(s.lang)) this.refresh?.(); });
+    // عنوان الصفحة بلغة اللاعب (يظهر في قائمة التطبيقات الأخيرة والمتصفح وقارئ الشاشة)
+    const setTitle = () => { document.title = `${t('app.name')} — ${t('app.tagline')}`; };
+    if (!isLoaded(s.lang)) loadLang(s.lang).then(() => { if (isLoaded(s.lang)) { setTitle(); this.refresh?.(); } });
+    setTitle();
     const de = document.documentElement;
     de.lang = s.lang;
     de.dir = isRtl() ? 'rtl' : 'ltr';

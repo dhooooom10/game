@@ -466,7 +466,7 @@ details.how ul { margin: 6px 0 0; padding-inline-start: 20px; color: var(--muted
 
 /* ---------------- الخزانة ---------------- */
 .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-@media (min-width: 480px) { .badge-grid { grid-template-columns: repeat(4, 1fr); } }
+/* الأعمدة بالـ em: تقل تلقائيًا حين يكبّر اللاعب الخط */
 .badge { border-radius: 20px; border: 1px solid var(--line); background: var(--surface); padding: 12px 6px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 128px; }
 .badge .bi { font-size: 2rem; width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--accent) 50%, transparent), color-mix(in srgb, var(--accent) 12%, transparent)); }
 .badge .bn { font-weight: 800; font-size: .88rem; line-height: 1.3; }
@@ -1240,7 +1240,6 @@ html[lang="ar"] .brand, html[lang="ar"] .wordmark, html[lang="ar"] .code, html[l
 .resume-card .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .resume-card .grow { min-width: 0; }
 /* أوصاف الشارات: سطران، والتفاصيل عند الضغط */
-.badge .bd, .badge-card .d { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .resume-card { padding-block: 12px; padding-inline: 14px 12px; }
 .resume-card .rc-ic { display: grid; place-items: center; color: var(--accent-ink); }
 .resume-card .rc-ic .ic { width: 26px; height: 26px; }
@@ -1273,3 +1272,37 @@ html[lang="ar"] .brand, html[lang="ar"] .wordmark, html[lang="ar"] .code, html[l
 .res-act .ra-ic { display: grid; place-items: center; color: var(--primary); }
 .res-act .ra-ic .ic { width: 24px; height: 24px; }
 .seg .ic { width: 18px; height: 18px; vertical-align: -3px; }
+/* حجم الخط حتى ٢٠٠٪ (إعداد Android): التخطيطات تُقاس بالـ em فتلتف بدل أن تُقص */
+.profile-bar { flex-wrap: wrap; row-gap: 8px; }
+.profile-bar .who, .profile-bar button.who { flex: 1 1 0; min-width: 3.5em; }
+.lvl-badge { white-space: nowrap; }
+.menu-row { display: flex; flex-wrap: wrap; }
+/* أساس صفري: السطر لا ينكسر إلا إن لم تتسع أقصر صيغة للنص (خط كبير)، والنص يلتف داخل الزر */
+.menu-row > * { flex: 1 1 0; }
+.menu-row .menu-small { overflow: visible; text-overflow: clip; white-space: normal; text-align: center; line-height: 1.25; }
+.menu-row > .icon-only { flex: 0 0 auto; }
+.shop-item, .starter-card, .spend-item { flex-wrap: wrap; }
+.shop-item > .grow, .starter-card > .grow, .spend-item > .grow { flex: 1 1 8em; min-width: 0; }
+.starter-card .btn, .shop-item .btn, .spend-item .btn { margin-inline-start: auto; }
+/* شرط الشارة يظهر كاملًا بكل اللغات: عمودان على الجوال (٣ على الشاشات الأوسع) بدل قص النص */
+.badge-grid { grid-template-columns: repeat(auto-fill, minmax(min(9em, 100%), 1fr)); }
+.badge .bn, .badge .bd, .badge .bp { overflow-wrap: anywhere; }
+.packs { grid-template-columns: repeat(auto-fill, minmax(min(9em, 100%), 1fr)); }
+.chip { max-width: 100%; white-space: normal; }
+.ch-tiles, .cos-grid { grid-template-columns: repeat(auto-fit, minmax(min(6em, 100%), 1fr)); }
+.stat-grid.three { grid-template-columns: repeat(auto-fit, minmax(5.5em, 1fr)); }
+/* قشرة الإقلاع: تُرسم مع HTML قبل تحميل JavaScript (أول رسم أسرع على الجوالات الضعيفة)، وتُستبدل عند أول شاشة */
+.boot-splash { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--ink); text-align: center; }
+.boot-splash b { font-family: var(--font-display); font-size: var(--text-4xl); line-height: 1.1; color: var(--primary); }
+.boot-splash small { color: var(--muted); font-weight: 700; }
+/* أهداف لمس ٤٤px دون تغيير الشكل: حد شفاف يكبّر منطقة اللمس للمفتاح */
+.switch { height: var(--target-min); border-block: 5px solid transparent; background-clip: padding-box; }
+.btn.sm { min-height: var(--target-min); }
+.pearl-chip { min-height: var(--target-min); }
+/* لغات بكلمات طويلة (التركية والفرنسية…) مع خط كبير: لا شيء يدفع الصفحة للعرض */
+.topbar { flex-wrap: wrap; }
+.topbar h1 { min-width: 0; overflow-wrap: anywhere; }
+.ch-big > :not(.cb-ic):not(.cb-go) { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.menu-grid { grid-template-columns: repeat(auto-fit, minmax(min(8.5em, 100%), 1fr)); }
+.menu-btn { min-width: 0; }
+.menu-btn .mb-t { overflow-wrap: anywhere; }

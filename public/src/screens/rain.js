@@ -45,7 +45,7 @@ registerScreen('rainPlay', (app, params) => {
 
   /* ---------- العناصر ---------- */
   const scoreEl = h('span', num(0));
-  const livesEl = h('span.lives');
+  const livesEl = h('span.lives', { role: 'img' });
   const streakEl = h('span.chip.streak-chip', { hidden: true });
   // التقدّم نحو الهدف: شريط رفيع في أعلى الشاشة بدل شارة
   const goalFill = h('i'); const goalText = h('span.goal-t');
@@ -98,7 +98,7 @@ registerScreen('rainPlay', (app, params) => {
   if (R.limitTicks) center.append(h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, h('div', { style: { flex: '1' } }, timerEl), timerText));
   center.append(goalEl);
   const el = h('main.game-view.rain-view',
-    h('div.hud', quitBtn, livesEl, center, h('div.score', { aria: { label: t('game.score') } }, icon('star', 'fill'), scoreEl), pauseBtn),
+    h('div.hud', quitBtn, livesEl, center, h('div.score', h('span.sr-only', t('game.score') + ': '), icon('star', 'fill'), scoreEl), pauseBtn),
     h('span.sr-only', meta.label),
     chaseEl, oppBox,
     h('div.sky-wrap', sky, coach, h('div.sky-chips', streakEl, speedEl, iceEl), display),
@@ -178,7 +178,13 @@ registerScreen('rainPlay', (app, params) => {
     de._w = de.offsetWidth; de._h = de.offsetHeight;
     dropEls.set(d.id, de);
     placeOne(d, de);
-    live.textContent = dropLabel(d.q);
+    // تُعلن القطرة الجديدة فقط إن كانت السماء فارغة؛ وإلا تُقرأ أقرب قطرة بعد كل إجابة (announce)
+    if (dropEls.size === 1) live.textContent = dropLabel(d.q);
+  }
+  // قارئ الشاشة: نتيجة الإجابة ثم أقرب قطرة (الأخطر) — بلا انتظار رؤية السماء
+  function announce(first) {
+    const next = R.state.drops.filter((d) => dropEls.has(d.id)).sort((a, b) => b.y - a.y)[0];
+    live.textContent = [first, next ? dropLabel(next.q) : ''].filter(Boolean).join('. ');
   }
   function burst(de, color, big = false) {
     if (reducedMotion()) return;
@@ -204,6 +210,7 @@ registerScreen('rainPlay', (app, params) => {
           sfx.combo(); buzz([10, 40, 10]); floatText(sky, t('game.streakMsg', { n: st, m: streakMultiplier(st).toFixed(1) }), 'gold.big'); replay(streakEl, 'bump');
           if (!reducedMotion()) replay(sky, 'combo-pulse');
         }
+        if (!ev.chain) announce(t('a11y.correctAnswer') + ' ' + signed('+' + num(ev.points)));
         if (meta.tutorial) coachSay();
       } else if (ev.type === 'miss') {
         const de = dropEls.get(ev.drop.id);
@@ -222,6 +229,7 @@ registerScreen('rainPlay', (app, params) => {
       } else if (ev.type === 'wrong') {
         // إجابة خطأ: اهتزاز + وميض أحمر + صوت
         sfx.wrong(); buzz([30, 40, 30]); replay(display, 'bad');
+        announce(t('a11y.wrongAnswer'));
         if (!reducedMotion()) replay(sky, 'shake');
         replay(sky, 'wrong-flash');
       } else if (ev.type === 'speedup') {

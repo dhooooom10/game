@@ -139,9 +139,10 @@ registerScreen('shop', (app) => {
     const ready = list.length > 0;
     const ent = data.ent || {};
     const P = (id) => list.find((x) => x.id === id) || null;
-    const priceOf = (id) => loading ? h('span.skel', { aria: { hidden: 'true' } }, '0000') : P(id)?.price || t('shop.na');
+    const priceOf = (id) => loading ? h('span.skel', { aria: { hidden: 'true' } }, '0000') : P(id)?.price ? h('bdi', P(id).price) : t('shop.na');
     const buyBtn = (id, cls, label) => {
-      const b = h('button' + cls, { id: 'buy-' + id, type: 'button', 'data-buy': '1', disabled: !P(id), on: { click: () => buyFlow(id, b) } }, label);
+      const named = !cls.startsWith('.pack');
+      const b = h('button' + cls, { id: 'buy-' + id, type: 'button', 'data-buy': '1', disabled: !P(id), aria: named ? { label: `${t('shop.p.' + id)} — ${loading ? t('net.loading') : typeof label === 'string' ? label : P(id)?.price || t('shop.na')}` } : null, on: { click: () => buyFlow(id, b) } }, label);
       return b;
     };
 

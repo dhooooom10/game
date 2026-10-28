@@ -18,9 +18,10 @@ export function dailyNumber(date) {
   return Math.max(1, Math.round((d - s) / 864e5) + 1);
 }
 
-/** شبكة الرموز: 🟦 سريعة (<٢ث) · 🟩 صحيحة · 🟥 فاتت. أقصى ٣ أسطر × ١٠ */
+/** شبكة الرموز: ⚡ سريعة (<٢ث) · ✅ صحيحة · ❌ فاتت. أقصى ٣ أسطر × ١٠
+ *  رموز Emoji 0.6 تظهر على كل جوال (Android 7+) ومعناها لا يعتمد على اللون وحده */
 export function emojiGrid(answers) {
-  const cells = answers.map((a) => (!a.correct ? '🟥' : a.ms == null || a.ms < 2000 ? '🟦' : '🟩'));
+  const cells = answers.map((a) => (!a.correct ? '❌' : a.ms == null || a.ms < 2000 ? '⚡' : '✅'));
   const rows = [];
   for (let i = 0; i < Math.min(cells.length, 30); i += 10) rows.push(cells.slice(i, i + 10).join(''));
   if (cells.length > 30) rows[rows.length - 1] += '…';

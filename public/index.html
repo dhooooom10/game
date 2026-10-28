@@ -18,10 +18,56 @@
 <link rel="stylesheet" href="./fonts/fonts.css">
 <link rel="stylesheet" href="./styles/tokens.css">
 <link rel="stylesheet" href="./styles/main.css">
+<!-- modulepreload:start (يولّدها scripts/build-sw.mjs: كل وحدات الإقلاع تُجلب معًا بدل سلسلة طلبات) -->
 <link rel="modulepreload" href="./src/main.js">
+<link rel="modulepreload" href="./src/app.js">
+<link rel="modulepreload" href="./src/core/storage.js">
+<link rel="modulepreload" href="./src/core/progression.js">
+<link rel="modulepreload" href="./src/core/adaptive.js">
+<link rel="modulepreload" href="./src/core/questions.js">
+<link rel="modulepreload" href="./src/core/rng.js">
+<link rel="modulepreload" href="./src/core/challenge.js">
+<link rel="modulepreload" href="./src/core/rain.js">
+<link rel="modulepreload" href="./src/core/scoring.js">
+<link rel="modulepreload" href="./src/i18n.js">
+<link rel="modulepreload" href="./src/core/numbers.js">
+<link rel="modulepreload" href="./src/ui/dom.js">
+<link rel="modulepreload" href="./src/ui/audio.js">
+<link rel="modulepreload" href="./src/ui/fx.js">
+<link rel="modulepreload" href="./src/net/notify.js">
+<link rel="modulepreload" href="./src/net/native.js">
+<link rel="modulepreload" href="./src/config.js">
+<link rel="modulepreload" href="./src/net/playgames.js">
+<link rel="modulepreload" href="./src/net/playgames-config.js">
+<link rel="modulepreload" href="./src/screens/home.js">
+<link rel="modulepreload" href="./src/screens/setup.js">
+<link rel="modulepreload" href="./src/core/modes.js">
+<link rel="modulepreload" href="./src/core/curriculum.js">
+<link rel="modulepreload" href="./src/runs.js">
+<link rel="modulepreload" href="./src/core/wallet.js">
+<link rel="modulepreload" href="./src/core/products.js">
+<link rel="modulepreload" href="./src/screens/settings.js">
+<link rel="modulepreload" href="./src/net/ads.js">
+<link rel="modulepreload" href="./src/net/monetization-config.js">
+<link rel="modulepreload" href="./src/ui/mascot.js">
+<link rel="modulepreload" href="./src/core/session.js">
+<link rel="modulepreload" href="./src/screens/journey.js">
+<link rel="modulepreload" href="./src/screens/game.js">
+<link rel="modulepreload" href="./src/screens/results.js">
+<link rel="modulepreload" href="./src/core/social.js">
+<link rel="modulepreload" href="./src/screens/friends.js">
+<link rel="modulepreload" href="./src/ui/share.js">
+<link rel="modulepreload" href="./src/screens/rain.js">
+<link rel="modulepreload" href="./src/ui/drop.js">
+<link rel="modulepreload" href="./src/screens/locker.js">
+<link rel="modulepreload" href="./src/ui/tabs.js">
+<link rel="modulepreload" href="./src/screens/friend.js">
+<link rel="modulepreload" href="./src/screens/shop.js">
+<link rel="modulepreload" href="./src/net/billing.js">
+<!-- modulepreload:end -->
 </head>
 <body>
-<div id="app" aria-live="off"></div>
+<div id="app" aria-live="off"><div class="boot-splash" aria-hidden="true"><svg viewBox="0 0 100 120" width="96" height="116"><defs><linearGradient id="bsg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9BEBFF"/><stop offset="1" stop-color="#1FA8E0"/></linearGradient></defs><path d="M50 4C50 4 12 52 12 78a38 38 0 0 0 76 0C88 52 50 4 50 4z" fill="url(#bsg)"/><ellipse cx="36" cy="72" rx="7" ry="12" fill="#fff" opacity=".45"/></svg><b>تحدي قطرة</b><small>Qatra Challenge</small></div></div>
 <nav id="nav" class="bottom-nav" aria-label="القائمة" hidden></nav>
 <noscript><p style="padding:24px;text-align:center;color:#fff">تحتاج هذه اللعبة إلى تفعيل JavaScript.</p></noscript>
 <script type="module" src="./src/main.js"></script>
