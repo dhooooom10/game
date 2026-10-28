@@ -5,7 +5,7 @@
    • محرّك حتمي بنبضات ثابتة؛ الإدخال يُسجَّل لإعادة التشغيل والتحقق.
    ========================================================================= */
 import { app, registerScreen } from '../app.js';
-import { h, icon, num, clear, mathText, mathEl } from '../ui/dom.js';
+import { h, icon, num, clear, mathText, mathEl, signed } from '../ui/dom.js';
 import { mascotSVG, SKINS } from '../ui/mascot.js';
 import { sfx, buzz, setLevels } from '../ui/audio.js';
 import { floatText, replay, reducedMotion, confetti } from '../ui/fx.js';
@@ -98,7 +98,7 @@ registerScreen('rainPlay', (app, params) => {
   if (R.limitTicks) center.append(h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, h('div', { style: { flex: '1' } }, timerEl), timerText));
   center.append(goalEl);
   const el = h('main.game-view.rain-view',
-    h('div.hud', quitBtn, livesEl, center, h('div.score', scoreEl), pauseBtn),
+    h('div.hud', quitBtn, livesEl, center, h('div.score', { aria: { label: t('game.score') } }, icon('star', 'fill'), scoreEl), pauseBtn),
     h('span.sr-only', meta.label),
     chaseEl, oppBox,
     h('div.sky-wrap', sky, coach, h('div.sky-chips', streakEl, speedEl, iceEl), display),
@@ -164,7 +164,7 @@ registerScreen('rainPlay', (app, params) => {
     const special = ev.drop.kind !== 'normal' && ev.drop.kind != null;
     burst(de, color, special || ev.fever);
     const st = R.state.streak;
-    floatText(de, '+' + num(ev.points), [ev.drop.kind === 'gold' || ev.fever ? 'gold' : '', st >= 10 ? 'big' : ''].filter(Boolean).join('.'));
+    floatText(de, signed('+' + num(ev.points)), [ev.drop.kind === 'gold' || ev.fever ? 'gold' : '', st >= 10 ? 'big' : ''].filter(Boolean).join('.'));
   }
   function dropLabel(q) {
     const parts = q.format === 'missing' ? q.parts : q.parts.filter((p) => !p.eq && !p.blank);

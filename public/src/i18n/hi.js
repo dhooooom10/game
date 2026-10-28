@@ -924,4 +924,7 @@ export default {
   "net.retry2": "फिर कोशिश करें",
   "ch.quickTime": "{n} सेकंड — अभी शुरू करें",
   "ch.customize": "कस्टमाइज़ करें",
+  "home.dailyReady": "आज की चुनौती उपलब्ध",
+  "shop.na": "उपलब्ध नहीं",
+  "set.saved": "सहेजा गया ✓",
 };

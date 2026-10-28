@@ -925,4 +925,7 @@ export default {
   "net.retry2": "Tentar de novo",
   "ch.quickTime": "{n} segundos — comece já",
   "ch.customize": "Personalizar",
+  "home.dailyReady": "Desafio diário disponível",
+  "shop.na": "Indisponível",
+  "set.saved": "Salvo ✓",
 };

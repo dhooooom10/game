@@ -178,3 +178,37 @@ test('keyboard-only play works (Tab focus + keys)', async () => {
   assert.ok(await page.evaluate(() => window.__mc.current.rain().state.popped) >= 3);
   assert.ok(await noHorizontalOverflow(page));
 });
+
+test('sliding tabs: ARIA tablist, arrow keys follow reading direction (RTL), indicator under the selected tab', async () => {
+  const page = await newPage(browser, { width: 375, height: 760 });
+  await page.goto(URL_);
+  await waitScreen(page, 'home');
+  await go(page, 'locker');
+  await waitScreen(page, 'locker');
+  const sel = () => page.evaluate(() => document.querySelector('.stabs [aria-selected="true"]').id);
+  assert.equal(await sel(), 'tabBadges');
+  assert.equal(await page.locator('.stabs[role="tablist"] [role="tab"][tabindex="0"]').count(), 1, 'roving tabindex');
+  await page.focus('#tabBadges');
+  await page.keyboard.press('ArrowLeft');            // في العربية: اليسار = التالي
+  assert.equal(await sel(), 'tabLooks');
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'tabLooks');
+  await page.waitForTimeout(400);
+  const gap = await page.evaluate(() => {
+    const a = document.querySelector('.stabs-ind').getBoundingClientRect(), b = document.querySelector('#tabLooks').getBoundingClientRect();
+    return Math.abs(a.left - b.left) + Math.abs(a.width - b.width);
+  });
+  assert.ok(gap < 2, 'indicator sits under the selected tab');
+  await page.keyboard.press('Home');
+  assert.equal(await sel(), 'tabBadges');
+  assert.deepEqual(page.errors, []);
+});
+
+test('home menu stagger runs once per session only', async () => {
+  const page = await newPage(browser, { width: 375, height: 760 });
+  await page.goto(URL_);
+  await waitScreen(page, 'home');
+  assert.equal(await page.locator('.main-menu.stagger').count(), 1);
+  await go(page, 'settings'); await waitScreen(page, 'settings');
+  await page.evaluate(() => window.__mc.go('home', {}, { root: true })); await waitScreen(page, 'home');
+  assert.equal(await page.locator('.main-menu.stagger').count(), 0);
+});

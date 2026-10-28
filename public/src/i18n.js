@@ -648,6 +648,9 @@ const ar = {
   "net.retry2": "أعد المحاولة",
   "ch.quickTime": "{n} ثانية — ابدأ فورًا",
   "ch.customize": "تخصيص التحدي",
+  "home.dailyReady": "التحدي اليومي متاح",
+  "shop.na": "غير متاح",
+  "set.saved": "حُفظ ✓",
 };
 
 const en = {
@@ -1285,6 +1288,9 @@ const en = {
   "net.retry2": "Try again",
   "ch.quickTime": "{n} seconds — start now",
   "ch.customize": "Customize",
+  "home.dailyReady": "Daily challenge available",
+  "shop.na": "Unavailable",
+  "set.saved": "Saved ✓",
 };
 
 /* لغات النسخة السابقة: العناوين الأساسية فقط (والباقي بالإنجليزية) */
@@ -1336,7 +1342,11 @@ export function tRaw(key) {
 /** نص مترجم مع استبدال {المتغيرات}. الأرقام تُحوَّل حسب التفضيل. */
 export function t(key, params) {
   let s = DICT[cur.lang]?.[key] ?? en[key] ?? ar[key] ?? key;
-  if (params) s = s.replace(/\{(\w+)\}/g, (m, k) => (params[k] !== undefined ? String(params[k]) : m));
+  // رقم بإشارة داخل جملة (+{n} · −{n} · ×{n} · {n}%): يُعزل باتجاه LTR حتى لا تنقلب الإشارة في العربية («120+»)
+  if (params) s = s.replace(/([+\-−×])\{(\w+)\}|\{(\w+)\}(%)/g, (m, sign, k1, k2, pct) => {
+    const k = k1 || k2; if (params[k] === undefined) return m;
+    return '\u2066' + (sign || '') + String(params[k]) + (pct || '') + '\u2069';
+  }).replace(/\{(\w+)\}/g, (m, k) => (params[k] !== undefined ? String(params[k]) : m));
   return digitsOut(s);
 }
 export function digitsOut(s) {

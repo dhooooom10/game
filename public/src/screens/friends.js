@@ -58,8 +58,8 @@ registerScreen('friends', (app, params) => {
 
   // ١) طريقتان فقط للعب مع أصدقائك
   el.append(h('section.fr2-actions',
-    action('friendCompose', '⚔️', t('fr2.challenge'), t('fr2.challengeSub'), 'gold'),
-    action('party', '👥', t('party.title'), t('party.sub'))));
+    action('friendCompose', 'versus', t('fr2.challenge'), t('fr2.challengeSub'), 'gold'),
+    action('party', 'users', t('party.title'), t('party.sub'))));
 
   // ٢) إدخال رمز وصلك
   const input = h('input.input.code-in', { id: 'codeIn', dir: 'auto', placeholder: t('code.enter'), aria: { label: t('code.enter') }, on: { keydown: (e) => { if (e.key === 'Enter') open(); } } });
@@ -168,7 +168,7 @@ registerScreen('friends', (app, params) => {
 
   function action(to, ic, title, sub, cls = '') {
     return h('button.fr2-act' + (cls ? '.' + cls : ''), { type: 'button', 'data-go': to, on: { click: () => { sfx.tap(); app.go(to); } } },
-      h('span.ic', ic), h('span.grow', h('b', title), h('small', sub)));
+      h('span.ic', icon(ic)), h('span.grow', h('b', title), h('small', sub)));
   }
 
   paintLists();
@@ -185,7 +185,7 @@ registerScreen('friendCompose', (app) => {
   const pref = Object.assign(fc, normalizeChallenge({ mode: 'custom', ...fc }), { tab: fc.tab === 'level' ? 'level' : 'custom', jlevel: fc.jlevel || 1 });
   const el = h('main', topbar(t('fr2.challenge'), t('fr2.composeSub')));
   const body = h('div', { style: { marginTop: '12px' } });
-  el.append(seg([['custom', '⚔️ ' + t('fr2.tabCustom')], ['level', '🗺️ ' + t('fr2.tabLevel')]], pref.tab, (v) => { pref.tab = v; app.save(); paint(); }, t('fr2.composeSub')), body);
+  el.append(seg([['custom', [icon('versus'), ' ', t('fr2.tabCustom')]], ['level', [icon('map'), ' ', t('fr2.tabLevel')]]], pref.tab, (v) => { pref.tab = v; app.save(); paint(); }, t('fr2.composeSub')), body);
   function paint() {
     clear(body);
     if (pref.tab === 'custom') {

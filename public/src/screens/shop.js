@@ -4,6 +4,7 @@
    الأسعار تأتي من Google Play بعملة اللاعب. في المتصفح: دعوة لتطبيق Android.
    ========================================================================= */
 import { app, registerScreen } from '../app.js';
+import { slidingTabs } from '../ui/tabs.js';
 import { h, icon, clear, num } from '../ui/dom.js';
 import { mascotSVG } from '../ui/mascot.js';
 import { sfx } from '../ui/audio.js';
@@ -30,9 +31,9 @@ registerScreen('shop', (app) => {
   const box = h('div');
   // تبويبان فقط: «اشترِ» (Google Play) و«استخدم لآلئك»
   let tab = 'buy';
-  const tabBtn = (id, v, label) => h('button', { id, type: 'button', role: 'tab', 'aria-selected': String(tab === v), on: { click: () => { sfx.tap(); tab = v; paintTabs(); paint(); } } }, label);
-  const tabs = h('div.shop-tabs', { role: 'tablist' }, tabBtn('tabBuy', 'buy', '🛍️ ' + t('shop.tabBuy')), tabBtn('tabSpend', 'spend', '💎 ' + t('shop.tabSpend')));
-  const paintTabs = () => { for (const b of tabs.children) b.setAttribute('aria-selected', String(b.id === (tab === 'buy' ? 'tabBuy' : 'tabSpend'))); };
+  const tabs = slidingTabs([['buy', [icon('bag'), ' ', t('shop.tabBuy')], 'tabBuy'], ['spend', [icon('sparkle'), ' ', t('shop.tabSpend')], 'tabSpend']], tab,
+    (v) => { tab = v; paint(); }, t('shop.title'));
+  tabs.classList.add('shop-tabs');
   el.append(wallet, tabs, box);
   let busy = false;   // شراء واحد في كل مرة (لا ضغط مزدوج = لا شراء مزدوج)
   const refreshBalance = () => { balance.textContent = num(pearls(data)); replayPop(balance); };
@@ -56,7 +57,7 @@ registerScreen('shop', (app) => {
   function spendSection() {
     const item = (id, ic, title, desc, price, can, doBuy, done = false) => {
       const b = h('button.btn.sm' + (done ? '' : '.primary'), { id: 'spend-' + id, type: 'button', disabled: done, on: { click: () => {
-        if (pearls(data) < price) { sfx.wrong(); toast(t('wal.notEnough')); tab = 'buy'; paintTabs(); return paint(); }
+        if (pearls(data) < price) { sfx.wrong(); toast(t('wal.notEnough')); tabs.set('buy'); return; }
         if (!can()) { sfx.wrong(); return toast(t('wal.cannot')); }
         if (doBuy()) { app.save(); sfx.reward(); refreshBalance(); toast(t('wal.bought')); paint(); }
       } } }, done ? t('shop.owned') : pearlTxt(price));
@@ -119,23 +120,33 @@ registerScreen('shop', (app) => {
     // نعرض المتجر كاملًا دائمًا. إن لم تصل أسعار Google Play (متصفح، أو تثبيت من خارج Play،
     // أو المنتجات لم تُنشأ بعد في Play Console) تبقى البطاقات ظاهرة بلا سعر مع شرح واضح.
     const native = billing.available();
-    let list = [];
+    // هياكل الأسعار: المتجر يظهر فورًا بنفس تخطيطه، والأسعار تُملأ حين تصل من Google Play
+    const gen = ++paintGen;
     if (native) {
-      const loading = h('div.loading', h('span.spinner'), t('net.loading'));
-      box.append(loading);
+      render([], true);
+      let list = [];
       try { list = await billing.products(); } catch { list = []; }
-      loading.remove();
-    }
+      if (gen !== paintGen || tab !== 'buy') return;
+      clear(box);
+      render(list, false);
+    } else render([], false);
+  };
+  let paintGen = 0;
+
+  function render(list, loading) {
+    const native = billing.available();
+    box.setAttribute('aria-busy', String(loading));
     const ready = list.length > 0;
     const ent = data.ent || {};
     const P = (id) => list.find((x) => x.id === id) || null;
-    const priceOf = (id) => P(id)?.price || '—';
+    const priceOf = (id) => loading ? h('span.skel', { aria: { hidden: 'true' } }, '0000') : P(id)?.price || t('shop.na');
     const buyBtn = (id, cls, label) => {
       const b = h('button' + cls, { id: 'buy-' + id, type: 'button', 'data-buy': '1', disabled: !P(id), on: { click: () => buyFlow(id, b) } }, label);
       return b;
     };
 
-    if (!ready) {
+    if (loading) box.append(h('p.sr-only', { role: 'status' }, t('net.loading')));
+    else if (!ready) {
       box.append(h('section.card.shop-notice', { id: 'shopNotice' },
         h('div.t', '🛈 ', t(native ? 'shop.notReadyT' : 'shop.appOnly')),
         h('p.note', t(native ? 'shop.notReadyD' : 'shop.appOnlyBody')),
@@ -158,7 +169,7 @@ registerScreen('shop', (app) => {
       grid.append(buyBtn(id, '.pack' + (pr.popular ? '.popular' : ''), [
         pr.popular ? h('span.pk-tag', t('shop.popular')) : pr.bonus ? h('span.pk-tag.bonus', t('shop.bonus', { n: num(pr.bonus) })) : null,
         h('span.pk-ic', id === 'pearls_xl' ? '💰' : id === 'pearls_l' ? '💎💎' : '💎'),
-        h('span.pk-n', num(pr.pearls)), h('span.pk-u', t('wal.pearls')), h('span.pk-p', priceOf(id))]));
+        h('span.pk-n', num(pr.pearls)), h('span.pk-u', t('wal.pearls')), h('span.pk-p' + (loading ? '.skel' : ''), loading ? '0000' : priceOf(id))]));
     }
     box.append(h('section.section', h('h2.section-title', '💎 ', t('wal.buyPearls')), grid));
 
@@ -181,7 +192,7 @@ registerScreen('shop', (app) => {
       try { await billing.restore(app); toast(t('shop.restored')); refreshBalance(); paint(); } catch { toast(t('shop.failed')); }
     } } }, icon('refresh'), t('shop.restore')));
     box.append(h('p.note', t('shop.fair')));
-  };
+  }
   paint();
   return { el, nav: 'shop' };
 });

@@ -4,7 +4,7 @@
    حلقة اللعب: سؤال ← إجابة ← تغذية راجعة فورية ← نقاط/سلسلة ← سؤال جديد.
    ========================================================================= */
 import { app, registerScreen } from '../app.js';
-import { h, clear, icon, mathEl, mathText, richText, num } from '../ui/dom.js';
+import { h, clear, icon, mathEl, mathText, richText, num, signed } from '../ui/dom.js';
 import { mascotSVG } from '../ui/mascot.js';
 import { sfx, buzz } from '../ui/audio.js';
 import { floatText, replay, reducedMotion, confetti } from '../ui/fx.js';
@@ -261,10 +261,10 @@ export function gameScreen(app, params) {
     if (r.correct) {
       const praise = t('game.praise').split('|');
       feedback.className = 'feedback ok';
-      feedback.append(h('span', `${praise[(session.state.correct + session.index) % praise.length]} ${r.points.total ? '+' + num(r.points.total) : ''}`));
+      feedback.append(h('span', `${praise[(session.state.correct + session.index) % praise.length]} ${r.points.total ? signed('+' + num(r.points.total)) : ''}`));
       sfx.correct(); buzz(12);
       if (!reducedMotion()) replay(qcard, 'pop');
-      if (r.points.total) floatText(scoreEl, '+' + num(r.points.total));
+      if (r.points.total) floatText(scoreEl, signed('+' + num(r.points.total)));
       const st = session.state.streak;
       if (st === 3 || st === 5 || st % 10 === 0) {
         sfx.combo(); buzz([10, 40, 10]);

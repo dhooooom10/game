@@ -7,7 +7,7 @@ import { toast } from '../ui/fx.js';
 import { t } from '../i18n.js';
 import { BADGES, COSMETICS, isUnlocked, levelFromXp } from '../core/progression.js';
 import { BADGE_RULES, PRESETS } from '../core/challenge.js';
-import { seg } from './setup.js';
+import { slidingTabs } from '../ui/tabs.js';
 
 const THEME_SWATCH = { rain: ['#0A1230', '#38D6F5'], dawn: ['#EEF4FF', '#0E9BD8'], oasis: ['#062824', '#3DDC97'], sunset: ['#2A0F2E', '#FF9F5A'], aurora: ['#07142A', '#7CF0D0'], gold: ['#1B1405', '#FFC94A'] };
 
@@ -15,9 +15,9 @@ registerScreen('locker', (app, params) => {
   const data = app.data;
   let tab = params.tab || 'badges';
   const el = h('main', h('header.topbar', h('h1', t('lock.title'), h('span.sub', t('home.level', { n: levelFromXp(data.xp).level }))),
-    h('button.btn.sm.gold', { id: 'openShop', on: { click: () => { sfx.tap(); app.go('shop'); } } }, '🛍️ ', t('shop.title'))));
+    h('button.btn.sm.gold', { id: 'openShop', on: { click: () => { sfx.tap(); app.go('shop'); } } }, icon('bag'), ' ', t('shop.title'))));
   const body = h('div', { style: { marginTop: '14px' } });
-  el.append(seg([['badges', t('lock.badges')], ['looks', t('lock.looks')]], tab, (v) => { tab = v; app.stack[app.stack.length - 1].params = { tab: v }; paint(); }, t('lock.title')), body);
+  el.append(slidingTabs([['badges', t('lock.badges'), 'tabBadges'], ['looks', t('lock.looks'), 'tabLooks']], tab, (v) => { tab = v; app.stack[app.stack.length - 1].params = { tab: v }; paint(); }, t('lock.title')), body);
 
   function paint() {
     clear(body);

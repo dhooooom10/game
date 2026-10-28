@@ -1,6 +1,6 @@
 /* شاشة نهاية الجولة: النتيجة، النجوم، الدقة، التقدّم، المكافآت، ونصيحة للتحسّن. */
 import { app, registerScreen } from '../app.js';
-import { h, icon, num, clear } from '../ui/dom.js';
+import { h, icon, num, clear, signed } from '../ui/dom.js';
 import { mascotSVG } from '../ui/mascot.js';
 import { sfx, buzz } from '../ui/audio.js';
 import { countUp, confetti, reducedMotion } from '../ui/fx.js';
@@ -61,7 +61,7 @@ registerScreen('results', (app, { view }) => {
   const fmtSec = (ms) => ms == null ? '—' : t('common.sec', { n: (ms / 1000).toFixed(1) }).replace('.', app.settings.digits === 'arabic' ? '٫' : '.');
   const stats = [
     [num(Math.round(sum.accuracy * 100)) + (app.settings.digits === 'arabic' ? '٪' : '%'), t('res.accuracy')],
-    [t('res.of', { a: num(sum.correct), b: num(sum.answered + sum.skipped) }), t('res.correct')],
+    [signed(`${num(sum.correct)}/${num(sum.answered + sum.skipped)}`), t('res.correct')],
     [num(sum.bestStreak), t('res.bestStreak')],
   ];
   if (view.kind === 'journey' && view.info?.kind === 'sprint' && sum.timeLeftMs != null) stats[2] = [fmtSec(sum.timeLeftMs), t('res.timeLeft')];
@@ -74,7 +74,7 @@ registerScreen('results', (app, { view }) => {
     const lvB = levelFromXp(before), lvA = levelFromXp(data.xp);
     const fill = h('i');
     const xpBox = h('div.card.xp-box',
-      h('div.top', h('span', t('home.level', { n: lvA.level })), h('span', { style: { color: 'var(--accent)' } }, t('res.xp', { n: rw.xp }))),
+      h('div.top', h('span', t('home.level', { n: lvA.level })), h('span', { style: { color: 'var(--accent-ink)' } }, t('res.xp', { n: rw.xp }))),
       h('div.bar.gold', fill),
       h('div.faint', { style: { marginTop: '6px' } }, t('home.xp', { a: num(lvA.into), b: num(lvA.need) })));
     el.appendChild(xpBox);
@@ -158,9 +158,9 @@ registerScreen('results', (app, { view }) => {
   const btns = h('div.stack', { style: { marginTop: '18px' } });
   // صف صغير للأزرار الثانوية (إعادة، تحدَّ صديقًا، الرئيسية) بدل أزرار كثيرة كبيرة
   const row = h('div.res-actions');
-  const small = (id, ic, label, fn) => h('button.res-act', { id, type: 'button', on: { click: () => { sfx.tap(); fn(); } } }, h('span.ra-ic', ic), h('span', label));
+  const small = (id, ic, label, fn) => h('button.res-act', { id, type: 'button', on: { click: () => { sfx.tap(); fn(); } } }, h('span.ra-ic', { aria: { hidden: 'true' } }, icon(ic)), h('span', label));
   const replayBtn = (label) => h('button.btn.block.lg.primary', { id: 'replayBtn', on: { click: () => { sfx.tap(); replay(); } } }, icon('refresh'), label);
-  const replaySmall = () => small('replayBtn', '🔁', t('res.retry'), () => replay());
+  const replaySmall = () => small('replayBtn', 'refresh', t('res.retry'), () => replay());
   function replay() {
     if (view.engine === 'rain') { const { makeCode: _m, ...args } = view.args || {}; return app.go('rainPlay', { kind: view.kind, args: view.kind === 'daily' ? { ...args, official: false } : args, seed: args.answer ? view.seed : undefined }, { replace: true }); }
     app.go('play', { kind: view.kind, args: view.kind === 'daily' ? { ...view.args, official: false } : view.args }, { replace: true });
@@ -181,13 +181,13 @@ registerScreen('results', (app, { view }) => {
       sfx.tap();
       shareText(dailyShareText({ date: view.args.date, score: view.score, sum }), shareUrl({ d: view.args.date }));
     } } }, icon('upload'), t('share.daily')));
-    row.append(small('replayBtn', '🔁', t('daily.practice'), () => replay()));
+    row.append(small('replayBtn', 'refresh', t('daily.practice'), () => replay()));
   } else {
     btns.append(replayBtn(t('res.retry')));
   }
   // تحدَّ صديقًا: يحوّل هذه الجولة نفسها إلى رمز يلعبه صديقك بنفس القطرات
   if (canChallenge && !codeSlot) {
-    const chBtn = small('challengeFriend', '⚔️', t('res.challengeShort'), () => {
+    const chBtn = small('challengeFriend', 'versus', t('res.challengeShort'), () => {
       codeSlot = challengeCard();
       el.insertBefore(codeSlot, btns);
       chBtn.remove();
@@ -195,7 +195,7 @@ registerScreen('results', (app, { view }) => {
     });
     row.append(chBtn);
   }
-  row.append(small('homeBtn', '🏠', t('res.home'), () => app.go('home', {}, { root: true })));
+  row.append(small('homeBtn', 'home', t('res.home'), () => app.go('home', {}, { root: true })));
   btns.append(row);
   el.appendChild(btns);
 

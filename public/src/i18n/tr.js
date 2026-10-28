@@ -925,4 +925,7 @@ export default {
   "net.retry2": "Tekrar dene",
   "ch.quickTime": "{n} saniye — hemen başla",
   "ch.customize": "Özelleştir",
+  "home.dailyReady": "Günün görevi hazır",
+  "shop.na": "Mevcut değil",
+  "set.saved": "Kaydedildi ✓",
 };
